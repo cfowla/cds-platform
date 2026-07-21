@@ -1,16 +1,19 @@
-"""Tests for shared traceability and value objects."""
+"""Tests for shared traceability, value, patient, and encounter objects."""
 
 import json
 from dataclasses import asdict
-from datetime import UTC, datetime
+from datetime import UTC, date, datetime
 from decimal import Decimal
 
 import pytest
 
+from cds.domain.enums import Sex
 from cds.domain.models import (
     Assumption,
     CodeableConcept,
+    Encounter,
     EvidenceItem,
+    Patient,
     Provenance,
     TimeRange,
     ValueWithUnit,
@@ -28,6 +31,8 @@ from cds.domain.models import (
         ValueWithUnit,
         CodeableConcept,
         TimeRange,
+        Patient,
+        Encounter,
     ],
 )
 def test_shared_models_can_be_instantiated_independently(model_type: type[object]) -> None:
@@ -202,6 +207,105 @@ def test_time_range_preserves_open_and_equal_boundaries(
     assert time_range.end == end
 
 
+def test_patient_defaults_preserve_missing_data() -> None:
+    """A patient may exist before identifiers or clinical facts are available."""
+    patient = Patient()
+
+    assert patient.patient_id is None
+    assert patient.birth_date is None
+    assert patient.sex is Sex.UNKNOWN
+    assert patient.actual_body_weight == ValueWithUnit()
+    assert patient.height == ValueWithUnit()
+    assert patient.assumptions == []
+    assert patient.warnings == []
+    assert patient.evidence == []
+    assert patient.provenance == Provenance()
+
+
+def test_patient_can_be_constructed_from_partial_source_data() -> None:
+    """Representative patient facts preserve values without requiring a complete record."""
+    patient = Patient(
+        patient_id="patient-123",
+        birth_date=date(1950, 6, 1),
+        sex=Sex.FEMALE,
+        actual_body_weight=ValueWithUnit(value=Decimal("72.4"), unit="kg"),
+    )
+
+    assert patient.patient_id == "patient-123"
+    assert patient.birth_date == date(1950, 6, 1)
+    assert patient.sex is Sex.FEMALE
+    assert patient.actual_body_weight.value == Decimal("72.4")
+    assert patient.actual_body_weight.unit == "kg"
+    assert patient.height.value is None
+
+
+def test_patient_contains_no_derived_anthropometric_or_age_fields() -> None:
+    """Age, BMI, and dosing-weight calculations remain outside the truth object."""
+    patient = Patient()
+
+    for derived_field in (
+        "age",
+        "age_years",
+        "bmi",
+        "ideal_body_weight",
+        "adjusted_body_weight",
+    ):
+        assert not hasattr(patient, derived_field)
+
+
+def test_encounter_defaults_preserve_missing_data() -> None:
+    """An encounter may represent a partially populated source record."""
+    encounter = Encounter()
+
+    assert encounter.encounter_id is None
+    assert encounter.patient_id is None
+    assert encounter.encounter_type == CodeableConcept()
+    assert encounter.period == TimeRange()
+    assert encounter.location is None
+    assert encounter.service_line is None
+    assert encounter.attending_clinician_id is None
+    assert encounter.assumptions == []
+    assert encounter.warnings == []
+    assert encounter.evidence == []
+    assert encounter.provenance == Provenance()
+
+
+def test_encounter_can_be_constructed_from_partial_source_data() -> None:
+    """Representative encounter facts preserve open timing and source coding."""
+    admitted_at = datetime(2026, 7, 21, 14, tzinfo=UTC)
+    encounter = Encounter(
+        encounter_id="encounter-456",
+        patient_id="patient-123",
+        encounter_type=CodeableConcept(text="Inpatient", system="HL7", code="IMP"),
+        period=TimeRange(start=admitted_at),
+        location="4 East",
+    )
+
+    assert encounter.encounter_id == "encounter-456"
+    assert encounter.patient_id == "patient-123"
+    assert encounter.encounter_type.code == "IMP"
+    assert encounter.period.start == admitted_at
+    assert encounter.period.end is None
+    assert encounter.location == "4 East"
+    assert encounter.service_line is None
+
+
+def test_patient_and_encounter_mutable_defaults_are_independent() -> None:
+    """Nested values and traceability collections are never shared across records."""
+    first_patient, second_patient = Patient(), Patient()
+    first_encounter, second_encounter = Encounter(), Encounter()
+
+    first_patient.warnings.append(WarningNote(code="patient-warning"))
+    first_patient.actual_body_weight.unit = "kg"
+    first_encounter.assumptions.append(Assumption(code="encounter-assumption"))
+    first_encounter.encounter_type.text = "Inpatient"
+
+    assert second_patient.warnings == []
+    assert second_patient.actual_body_weight.unit is None
+    assert second_encounter.assumptions == []
+    assert second_encounter.encounter_type.text is None
+
+
 @pytest.mark.parametrize(
     "shared_object",
     [
@@ -212,6 +316,8 @@ def test_time_range_preserves_open_and_equal_boundaries(
         ValueWithUnit(),
         CodeableConcept(),
         TimeRange(),
+        Patient(),
+        Encounter(),
     ],
 )
 def test_default_shared_objects_have_json_safe_dicts(shared_object: object) -> None:
