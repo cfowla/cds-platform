@@ -7,7 +7,7 @@ from datetime import date, datetime
 from decimal import Decimal
 from typing import Literal, TypeAlias
 
-from cds.domain.enums import RenalMethod, Severity, Sex, WeightType
+from cds.domain.enums import RenalMethod, ResultStatus, Severity, Sex, WeightType
 
 ProvenanceSourceType: TypeAlias = Literal[
     "ehr",
@@ -27,10 +27,42 @@ EvidenceLevel: TypeAlias = Literal[
     "unknown",
 ]
 WarningSeverity: TypeAlias = Literal["info", "warning", "high", "critical", "unknown"]
+RecommendationAction: TypeAlias = Literal[
+    "continue",
+    "adjust_dose",
+    "hold",
+    "stop",
+    "avoid",
+    "monitor",
+    "switch",
+    "clarify",
+    "none",
+    "unknown",
+]
+RecommendationStrength: TypeAlias = Literal[
+    "info",
+    "suggest",
+    "recommend",
+    "strongly_recommend",
+    "unknown",
+]
+AlertCategory: TypeAlias = Literal[
+    "dosing",
+    "contraindication",
+    "interaction",
+    "monitoring",
+    "allergy",
+    "duplication",
+    "general",
+    "unknown",
+]
+SupportingValue: TypeAlias = str | int | float | bool | None
 
 __all__ = [
+    "Alert",
     "Allergy",
     "Assumption",
+    "CDSRecommendation",
     "CodeableConcept",
     "Contraindication",
     "DoseRecommendation",
@@ -42,6 +74,7 @@ __all__ = [
     "Problem",
     "Provenance",
     "RenalFunctionResult",
+    "RuleResult",
     "TimeRange",
     "ValueWithUnit",
     "VitalSign",
@@ -383,6 +416,91 @@ class DoseRecommendation:
     max_daily_dose: ValueWithUnit = field(default_factory=ValueWithUnit)
     regimen_variant: str | None = None
     rationale: str | None = None
+    assumptions: list[Assumption] = field(default_factory=list)
+    warnings: list[WarningNote] = field(default_factory=list)
+    evidence: list[EvidenceItem] = field(default_factory=list)
+    provenance: Provenance = field(default_factory=Provenance)
+
+
+@dataclass(slots=True, kw_only=True)
+class CDSRecommendation:
+    """Carry a clinician-facing recommendation without selecting or enforcing an action.
+
+    ``action`` and ``strength`` use explicit unknown defaults instead of deriving meaning from
+    missing text. Renal and dosing outputs may be linked when available, while an incomplete
+    recommendation remains representable. Rule evaluation, recommendation selection, and
+    clinical-policy enforcement belong outside this passive model.
+    """
+
+    recommendation_id: str | None = None
+    patient_id: str | None = None
+    encounter_id: str | None = None
+    title: str | None = None
+    action: RecommendationAction = "unknown"
+    strength: RecommendationStrength = "unknown"
+    summary: str | None = None
+    rationale: str | None = None
+    renal_function_result: RenalFunctionResult | None = None
+    dose_recommendation: DoseRecommendation | None = None
+    contraindications: list[Contraindication] = field(default_factory=list)
+    suggested_monitoring: list[str] = field(default_factory=list)
+    linked_order_id: str | None = None
+    linked_rule_id: str | None = None
+    assumptions: list[Assumption] = field(default_factory=list)
+    warnings: list[WarningNote] = field(default_factory=list)
+    evidence: list[EvidenceItem] = field(default_factory=list)
+    provenance: Provenance = field(default_factory=Provenance)
+
+
+@dataclass(slots=True, kw_only=True)
+class Alert:
+    """Carry a presentable alert without deciding display or interruption policy.
+
+    ``interruptive=None`` means presentation policy has not been assigned and remains distinct
+    from an explicit non-interruptive alert. Category and severity use explicit unknown values;
+    deduplication, suppression, routing, and user-interface behavior belong outside the model.
+    """
+
+    alert_id: str | None = None
+    patient_id: str | None = None
+    encounter_id: str | None = None
+    category: AlertCategory = "unknown"
+    severity: WarningSeverity = "unknown"
+    title: str | None = None
+    message: str | None = None
+    interruptive: bool | None = None
+    recommendation: CDSRecommendation | None = None
+    linked_order_id: str | None = None
+    linked_rule_id: str | None = None
+    deduplication_key: str | None = None
+    assumptions: list[Assumption] = field(default_factory=list)
+    warnings: list[WarningNote] = field(default_factory=list)
+    evidence: list[EvidenceItem] = field(default_factory=list)
+    provenance: Provenance = field(default_factory=Provenance)
+
+
+@dataclass(slots=True, kw_only=True)
+class RuleResult:
+    """Carry the structured output of one rule evaluation without evaluating the rule.
+
+    The safe default is ``ResultStatus.INCOMPLETE`` with ``applied`` and ``passed`` unset, so
+    missing evaluation state is not collapsed into a negative result. Linked renal output,
+    recommendations, alerts, and primitive supporting data preserve an audit trail. Rule
+    execution, branching, orchestration, and alert policy remain outside this model.
+    """
+
+    rule_id: str | None = None
+    patient_id: str | None = None
+    encounter_id: str | None = None
+    status: ResultStatus = ResultStatus.INCOMPLETE
+    applied: bool | None = None
+    passed: bool | None = None
+    summary: str | None = None
+    renal_function_result: RenalFunctionResult | None = None
+    recommendations: list[CDSRecommendation] = field(default_factory=list)
+    alerts: list[Alert] = field(default_factory=list)
+    supporting_data: dict[str, SupportingValue] = field(default_factory=dict)
+    evaluated_at: datetime | None = None
     assumptions: list[Assumption] = field(default_factory=list)
     warnings: list[WarningNote] = field(default_factory=list)
     evidence: list[EvidenceItem] = field(default_factory=list)
