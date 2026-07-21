@@ -1,11 +1,13 @@
-"""Shared traceability and value objects for the CDS domain layer."""
+"""Shared traceability, value, patient, and encounter domain objects."""
 
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from datetime import datetime
+from datetime import date, datetime
 from decimal import Decimal
 from typing import Literal, TypeAlias
+
+from cds.domain.enums import Sex
 
 ProvenanceSourceType: TypeAlias = Literal[
     "ehr",
@@ -29,7 +31,9 @@ WarningSeverity: TypeAlias = Literal["info", "warning", "high", "critical", "unk
 __all__ = [
     "Assumption",
     "CodeableConcept",
+    "Encounter",
     "EvidenceItem",
+    "Patient",
     "Provenance",
     "TimeRange",
     "ValueWithUnit",
@@ -120,3 +124,47 @@ class TimeRange:
 
     start: datetime | None = None
     end: datetime | None = None
+
+
+@dataclass(slots=True, kw_only=True)
+class Patient:
+    """Carry patient facts supplied to CDS without deriving clinical values.
+
+    Missing identifiers, dates, and measurements use ``None``; unknown sex uses
+    :class:`~cds.domain.enums.Sex.UNKNOWN`. Weight and height preserve the source value and
+    unit. Age, body mass index, ideal or adjusted weight, and other calculations belong in
+    services and are intentionally absent from this truth object.
+    """
+
+    patient_id: str | None = None
+    birth_date: date | None = None
+    sex: Sex = Sex.UNKNOWN
+    actual_body_weight: ValueWithUnit = field(default_factory=ValueWithUnit)
+    height: ValueWithUnit = field(default_factory=ValueWithUnit)
+    assumptions: list[Assumption] = field(default_factory=list)
+    warnings: list[WarningNote] = field(default_factory=list)
+    evidence: list[EvidenceItem] = field(default_factory=list)
+    provenance: Provenance = field(default_factory=Provenance)
+
+
+@dataclass(slots=True, kw_only=True)
+class Encounter:
+    """Carry encounter facts as supplied by a source system.
+
+    Every field may be absent so an incomplete source record can still be represented.
+    Encounter type preserves source text or coding through ``CodeableConcept`` and timing
+    uses ``TimeRange``. Duration, admission status inference, and chronology checks belong
+    outside the model.
+    """
+
+    encounter_id: str | None = None
+    patient_id: str | None = None
+    encounter_type: CodeableConcept = field(default_factory=CodeableConcept)
+    period: TimeRange = field(default_factory=TimeRange)
+    location: str | None = None
+    service_line: str | None = None
+    attending_clinician_id: str | None = None
+    assumptions: list[Assumption] = field(default_factory=list)
+    warnings: list[WarningNote] = field(default_factory=list)
+    evidence: list[EvidenceItem] = field(default_factory=list)
+    provenance: Provenance = field(default_factory=Provenance)
