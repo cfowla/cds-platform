@@ -4,47 +4,25 @@ A Python prototype for one auditable clinical decision-support vertical slice: a
 
 > **Prototype only — not for direct clinical use.** Use synthetic or properly de-identified cases. This repository does not authorize diagnosis, prescribing, medication-order verification, or patient-care use.
 
-## Frozen initial scope
+## Scope
 
-The first feature is limited to:
+The first vertical slice is limited to a point-in-time adult Cockcroft–Gault creatinine-clearance calculation and versioned renal-dose evaluation for cefepime, piperacillin–tazobactam, and famotidine. The workflow fails closed when required data are missing, units are ambiguous, renal function is unstable, renal replacement therapy is present, or the medication, population, indication, formulation, or regimen is unsupported. See [`PROJECT_CHARTER.md`](PROJECT_CHARTER.md) for governing safety and scope requirements and [`FIRST_VERTICAL_SLICE.md`](FIRST_VERTICAL_SLICE.md) for the complete implementation contract.
 
-- adults aged 18 years or older;
-- a single point-in-time evaluation;
-- stable serum creatinine supplied in `mg/dL`;
-- a supplied body weight in kilograms with an explicit weight type;
-- unindexed Cockcroft–Gault creatinine clearance in `mL/min`;
-- explicit medication and regimen identifiers; and
-- versioned renal-adjustment content for cefepime, piperacillin–tazobactam, and famotidine.
+## Repository map
 
-The workflow must fail closed when required data are missing, units are ambiguous, renal function is unstable, renal replacement therapy is present, or the medication, population, indication, formulation, or regimen is unsupported.
+Source code is organized by architectural layer under `src/cds/`, with unit, integration, and contract tests under `tests/`. See [`ARCHITECTURE.md`](ARCHITECTURE.md) for component responsibilities, dependency direction, and processing flow.
 
-`PROJECT_CHARTER.md` is the governing safety and scope document. `docs/SAFETY_INVARIANTS.md` is the concise checklist for ordinary implementation work and does not supersede the charter. `FIRST_VERTICAL_SLICE.md` is the implementation contract. Open design decisions that are not required for the next domain-model task belong in `BACKLOG.md`, not in the active implementation scope.
+## Current status
 
-## Active implementation path
+See [`CURRENT.md`](CURRENT.md) for the active deliverable and next exact action.
 
-```text
-src/cds/domain/        # Enums, typed models, constants, and typed exceptions
-src/cds/validation/    # Structural and renal-task sufficiency checks
-src/cds/services/renal.py
-                       # Pure Cockcroft–Gault calculation and renal workflow logic
-src/cds/content/       # Versioned rules for the three supported medications
-src/cds/repositories/  # Content-loading boundary
-src/cds/rules/         # Simple, inspectable renal rule matching
-src/cds/app/           # One renal-evaluation use case and DTOs
-src/cds/mappers/       # Manual input and structured output mapping
-src/cds/interfaces/cli.py
-                       # Future non-production manual interface
+## Governing documents
 
-tests/unit/            # Domain, validation, calculator, content, and boundary tests
-tests/integration/     # Complete renal-evaluation flow
-tests/contract/        # Serialized renal input/output shape
-```
-
-Anything outside this path is deferred. Do not add another calculator, medication set, clinical domain, API, EHR integration, alerting system, or production interface without a separately approved scope change.
-
-## Development status
-
-The package, strict pytest runner, smoke test, and renal-calculator placeholder are established. The next implementation task is the domain enum layer named in `FIRST_VERTICAL_SLICE.md`.
+- [`PROJECT_CHARTER.md`](PROJECT_CHARTER.md) — governing safety and scope document
+- [`FIRST_VERTICAL_SLICE.md`](FIRST_VERTICAL_SLICE.md) — supported workflow and implementation contract
+- [`ARCHITECTURE.md`](ARCHITECTURE.md) — stable component boundaries and dependency rules
+- [`docs/SAFETY_INVARIANTS.md`](docs/SAFETY_INVARIANTS.md) — concise implementation safety checklist
+- [`CURRENT.md`](CURRENT.md) — active deliverable and next exact action
 
 ## Development commands
 
