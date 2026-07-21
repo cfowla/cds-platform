@@ -7,7 +7,7 @@ from datetime import date, datetime
 from decimal import Decimal
 from typing import Literal, TypeAlias
 
-from cds.domain.enums import Severity, Sex
+from cds.domain.enums import RenalMethod, Severity, Sex, WeightType
 
 ProvenanceSourceType: TypeAlias = Literal[
     "ehr",
@@ -32,6 +32,8 @@ __all__ = [
     "Allergy",
     "Assumption",
     "CodeableConcept",
+    "Contraindication",
+    "DoseRecommendation",
     "Encounter",
     "EvidenceItem",
     "LabResult",
@@ -39,6 +41,7 @@ __all__ = [
     "Patient",
     "Problem",
     "Provenance",
+    "RenalFunctionResult",
     "TimeRange",
     "ValueWithUnit",
     "VitalSign",
@@ -300,6 +303,84 @@ class Allergy:
     status: str | None = None
     verification_status: str | None = None
     severity: Severity = Severity.UNKNOWN
+    assumptions: list[Assumption] = field(default_factory=list)
+    warnings: list[WarningNote] = field(default_factory=list)
+    evidence: list[EvidenceItem] = field(default_factory=list)
+    provenance: Provenance = field(default_factory=Provenance)
+
+
+@dataclass(slots=True, kw_only=True)
+class RenalFunctionResult:
+    """Carry a renal-function result and the source facts needed to reproduce it.
+
+    ``value`` retains the supplied unit and may keep that unit when the result is missing.
+    ``normalized_to_bsa`` is ``None`` when normalization status is unknown and ``False`` for
+    an explicitly unindexed result such as Cockcroft–Gault creatinine clearance. Input facts
+    are snapshots only; calculation, weight selection, unit conversion, and sufficiency checks
+    remain in service and validation layers.
+    """
+
+    result_id: str | None = None
+    patient_id: str | None = None
+    encounter_id: str | None = None
+    method: RenalMethod = RenalMethod.UNKNOWN
+    value: ValueWithUnit = field(default_factory=ValueWithUnit)
+    normalized_to_bsa: bool | None = None
+    serum_creatinine: ValueWithUnit = field(default_factory=ValueWithUnit)
+    serum_creatinine_collected_at: datetime | None = None
+    age_years: int | None = None
+    sex: Sex = Sex.UNKNOWN
+    weight_used: ValueWithUnit = field(default_factory=ValueWithUnit)
+    weight_type_used: WeightType = WeightType.UNKNOWN
+    measured_period: ValueWithUnit = field(default_factory=ValueWithUnit)
+    calculated_at: datetime | None = None
+    assumptions: list[Assumption] = field(default_factory=list)
+    warnings: list[WarningNote] = field(default_factory=list)
+    evidence: list[EvidenceItem] = field(default_factory=list)
+    provenance: Provenance = field(default_factory=Provenance)
+
+
+@dataclass(slots=True, kw_only=True)
+class Contraindication:
+    """Carry a contraindication finding without deciding whether it applies.
+
+    ``applies=None`` means the finding has not been evaluated or available data are
+    insufficient; it is distinct from ``False``. Related concepts are optional source facts.
+    Rule matching, severity assignment, and clinical inference remain outside the model.
+    """
+
+    code: str | None = None
+    summary: str | None = None
+    applies: bool | None = None
+    rationale: str | None = None
+    severity: Severity = Severity.UNKNOWN
+    related_problem: CodeableConcept | None = None
+    related_medication: CodeableConcept | None = None
+    related_lab: CodeableConcept | None = None
+    assumptions: list[Assumption] = field(default_factory=list)
+    warnings: list[WarningNote] = field(default_factory=list)
+    evidence: list[EvidenceItem] = field(default_factory=list)
+    provenance: Provenance = field(default_factory=Provenance)
+
+
+@dataclass(slots=True, kw_only=True)
+class DoseRecommendation:
+    """Carry a structured dose recommendation without producing or validating it.
+
+    Quantitative regimen fields use ``ValueWithUnit`` so dose, interval, duration, and limit
+    units are explicit. Empty quantities represent missing or qualitative recommendations;
+    they never imply zero. Rule evaluation, unit compatibility, and dose calculations remain
+    outside this passive output object.
+    """
+
+    medication: CodeableConcept = field(default_factory=CodeableConcept)
+    recommended_dose: ValueWithUnit = field(default_factory=ValueWithUnit)
+    recommended_route: CodeableConcept = field(default_factory=CodeableConcept)
+    frequency_interval: ValueWithUnit = field(default_factory=ValueWithUnit)
+    infusion_duration: ValueWithUnit = field(default_factory=ValueWithUnit)
+    max_single_dose: ValueWithUnit = field(default_factory=ValueWithUnit)
+    max_daily_dose: ValueWithUnit = field(default_factory=ValueWithUnit)
+    rationale: str | None = None
     assumptions: list[Assumption] = field(default_factory=list)
     warnings: list[WarningNote] = field(default_factory=list)
     evidence: list[EvidenceItem] = field(default_factory=list)
