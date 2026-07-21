@@ -2,7 +2,7 @@
 
 from enum import StrEnum
 
-__all__ = ["RenalMethod", "ResultStatus", "Sex", "WeightType"]
+__all__ = ["RenalMethod", "ResultStatus", "Severity", "Sex", "WeightType"]
 
 
 class Sex(StrEnum):
@@ -31,6 +31,16 @@ class RenalMethod(StrEnum):
     CKD_EPI = "ckd_epi"
     MDRD = "mdrd"
     MEASURED_CRCL = "measured_crcl"
+    UNKNOWN = "unknown"
+
+
+class Severity(StrEnum):
+    """Declared clinical severity without inferring a value from incomplete data."""
+
+    LOW = "low"
+    MODERATE = "moderate"
+    HIGH = "high"
+    CRITICAL = "critical"
     UNKNOWN = "unknown"
 
 
