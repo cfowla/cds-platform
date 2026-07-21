@@ -5,7 +5,7 @@ from enum import StrEnum
 
 import pytest
 
-from cds.domain.enums import RenalMethod, ResultStatus, Sex, WeightType
+from cds.domain.enums import RenalMethod, ResultStatus, Severity, Sex, WeightType
 
 
 @pytest.mark.parametrize(
@@ -41,6 +41,16 @@ from cds.domain.enums import RenalMethod, ResultStatus, Sex, WeightType
             },
         ),
         (
+            Severity,
+            {
+                "LOW": "low",
+                "MODERATE": "moderate",
+                "HIGH": "high",
+                "CRITICAL": "critical",
+                "UNKNOWN": "unknown",
+            },
+        ),
+        (
             WeightType,
             {
                 "ACTUAL": "actual",
@@ -57,7 +67,7 @@ def test_enum_values_are_stable(enum_type: type[StrEnum], expected: dict[str, st
     assert {member.name: member.value for member in enum_type} == expected
 
 
-@pytest.mark.parametrize("enum_type", [Sex, ResultStatus, RenalMethod, WeightType])
+@pytest.mark.parametrize("enum_type", [Sex, ResultStatus, RenalMethod, Severity, WeightType])
 def test_enum_members_serialize_as_strings(enum_type: type[StrEnum]) -> None:
     """Domain enums serialize directly to their declared string values."""
     for member in enum_type:
@@ -65,13 +75,13 @@ def test_enum_members_serialize_as_strings(enum_type: type[StrEnum]) -> None:
         assert json.loads(json.dumps(member)) == member.value
 
 
-@pytest.mark.parametrize("enum_type", [Sex, RenalMethod, WeightType])
+@pytest.mark.parametrize("enum_type", [Sex, RenalMethod, Severity, WeightType])
 def test_unknown_states_are_explicit(enum_type: type[StrEnum]) -> None:
     """Uncertain categorical input uses a named, non-blank value."""
     assert enum_type.UNKNOWN.value == "unknown"
 
 
-@pytest.mark.parametrize("enum_type", [Sex, ResultStatus, RenalMethod, WeightType])
+@pytest.mark.parametrize("enum_type", [Sex, ResultStatus, RenalMethod, Severity, WeightType])
 def test_no_enum_value_is_blank(enum_type: type[StrEnum]) -> None:
     """No category, including an unknown state, is encoded as an empty string."""
     assert all(member.value.strip() for member in enum_type)

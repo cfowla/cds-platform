@@ -1,4 +1,4 @@
-"""Shared traceability, value, patient, encounter, medication, and observation objects."""
+"""Shared traceability and passive clinical truth objects."""
 
 from __future__ import annotations
 
@@ -7,7 +7,7 @@ from datetime import date, datetime
 from decimal import Decimal
 from typing import Literal, TypeAlias
 
-from cds.domain.enums import Sex
+from cds.domain.enums import Severity, Sex
 
 ProvenanceSourceType: TypeAlias = Literal[
     "ehr",
@@ -29,6 +29,7 @@ EvidenceLevel: TypeAlias = Literal[
 WarningSeverity: TypeAlias = Literal["info", "warning", "high", "critical", "unknown"]
 
 __all__ = [
+    "Allergy",
     "Assumption",
     "CodeableConcept",
     "Encounter",
@@ -36,6 +37,7 @@ __all__ = [
     "LabResult",
     "MedicationOrder",
     "Patient",
+    "Problem",
     "Provenance",
     "TimeRange",
     "ValueWithUnit",
@@ -247,6 +249,57 @@ class VitalSign:
     position: str | None = None
     supplemental_oxygen: bool | None = None
     status: str | None = None
+    assumptions: list[Assumption] = field(default_factory=list)
+    warnings: list[WarningNote] = field(default_factory=list)
+    evidence: list[EvidenceItem] = field(default_factory=list)
+    provenance: Provenance = field(default_factory=Provenance)
+
+
+@dataclass(slots=True, kw_only=True)
+class Problem:
+    """Carry a patient problem exactly as supplied by a source system.
+
+    ``problem`` may contain text without terminology coding; ``system`` and ``code`` remain
+    ``None`` unless the source supplied them. Unknown severity uses ``Severity.UNKNOWN``.
+    Status interpretation, coding lookup, chronology validation, and clinical inference stay
+    outside this passive truth object.
+    """
+
+    problem_id: str | None = None
+    patient_id: str | None = None
+    encounter_id: str | None = None
+    problem: CodeableConcept = field(default_factory=CodeableConcept)
+    onset_period: TimeRange = field(default_factory=TimeRange)
+    recorded_at: datetime | None = None
+    status: str | None = None
+    severity: Severity = Severity.UNKNOWN
+    assumptions: list[Assumption] = field(default_factory=list)
+    warnings: list[WarningNote] = field(default_factory=list)
+    evidence: list[EvidenceItem] = field(default_factory=list)
+    provenance: Provenance = field(default_factory=Provenance)
+
+
+@dataclass(slots=True, kw_only=True)
+class Allergy:
+    """Carry an allergy or intolerance record without interpreting clinical significance.
+
+    ``substance`` and ``reaction`` may be text-only concepts; coding fields remain ``None``
+    unless supplied by the source. An unknown reaction is an empty ``CodeableConcept`` whose
+    text, system, and code are all ``None``. Unknown severity uses ``Severity.UNKNOWN``.
+    Allergy verification, status inference, terminology lookup, and cross-reactivity logic
+    belong outside this domain model.
+    """
+
+    allergy_id: str | None = None
+    patient_id: str | None = None
+    encounter_id: str | None = None
+    substance: CodeableConcept = field(default_factory=CodeableConcept)
+    reaction: CodeableConcept = field(default_factory=CodeableConcept)
+    onset_at: datetime | None = None
+    recorded_at: datetime | None = None
+    status: str | None = None
+    verification_status: str | None = None
+    severity: Severity = Severity.UNKNOWN
     assumptions: list[Assumption] = field(default_factory=list)
     warnings: list[WarningNote] = field(default_factory=list)
     evidence: list[EvidenceItem] = field(default_factory=list)
