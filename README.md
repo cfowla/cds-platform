@@ -18,7 +18,7 @@ The first feature is limited to:
 
 The workflow must fail closed when required data are missing, units are ambiguous, renal function is unstable, renal replacement therapy is present, or the medication, population, indication, formulation, or regimen is unsupported.
 
-`PROJECT_CHARTER.md` is the governing safety and scope document. `FIRST_VERTICAL_SLICE.md` is the implementation contract. Open design decisions that are not required for the next domain-model task belong in `BACKLOG.md`, not in the active implementation scope.
+`PROJECT_CHARTER.md` is the governing safety and scope document. `docs/SAFETY_INVARIANTS.md` is the concise checklist for ordinary implementation work and does not supersede the charter. `FIRST_VERTICAL_SLICE.md` is the implementation contract. Open design decisions that are not required for the next domain-model task belong in `BACKLOG.md`, not in the active implementation scope.
 
 ## Active implementation path
 
