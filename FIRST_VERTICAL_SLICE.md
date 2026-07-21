@@ -32,3 +32,13 @@ The three medications are diverse enough to expose boundary, regimen, and conten
 - Current test scaffold check: `pytest -q` completed with `31 skipped` and no failures.
 - Installation check: `python -m pip install -e .` succeeded on Python 3.13; `import cds` resolved and package metadata reported version `0.1.0` with Python `>=3.11`.
 - **Next exact action:** implement `Sex`, `ResultStatus`, `RenalMethod`, and `WeightType` in `src/cds/domain/enums.py`, then replace `tests/unit/domain/test_enums.py` with value, string-serialization, and explicit unknown-state tests.
+
+## Test runner checkpoint — 2026-07-21
+
+- **Single deliverable:** configure a strict pytest runner that imports the package successfully and preserves a named placeholder for the first renal calculator test.
+- Prior checkpoint reviewed: the package was editable-installable and the existing suite completed with `31 skipped` and no failures.
+- `pyproject.toml` now enforces pytest `>=8.0`, limits collection to `tests`, adds `src` to the test import path, and enables strict configuration and marker validation.
+- `tests/test_smoke.py` imports the top-level `cds` package and verifies the imported module name.
+- `tests/unit/services/test_renal.py` now names the pending Cockcroft–Gault calculator behavior instead of using a generic placeholder.
+- Validation check: `python -m pytest -q` completed with `1 passed, 31 skipped`, and no failures.
+- **Next exact action:** implement `Sex`, `ResultStatus`, `RenalMethod`, and `WeightType` in `src/cds/domain/enums.py`, then replace `tests/unit/domain/test_enums.py` with value, string-serialization, and explicit unknown-state tests.
