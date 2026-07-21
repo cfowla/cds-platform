@@ -92,3 +92,15 @@ The three medications are diverse enough to expose boundary, regimen, and conten
 - Extended `tests/unit/domain/test_models.py` with zero-argument construction, missing-data, decimal precision, text-only and coded concept, open/equal time-boundary, and JSON-safe default tests.
 - Relevant fetched-file validation: `PYTHONPATH=src python -m pytest -q` completed with `47 passed, 1 skipped`; `python -m compileall -q src tests` also completed successfully. The remaining skip is the intentionally unimplemented Cockcroft–Gault calculator.
 - **Next exact action:** implement `Patient` in `src/cds/domain/models.py` with identifier, birth date, `Sex`, anthropometric value objects, traceability collections, and safe missing-data defaults; then add constructor and missing-data tests.
+
+## Patient and encounter models checkpoint — 2026-07-21
+
+- **Single deliverable:** implement passive `Patient` and `Encounter` truth objects that preserve partial source data without embedding calculations, validation, service behavior, or I/O.
+- Prior note reviewed: the shared-value-object checkpoint named `Patient` as the next domain dependency and established `ValueWithUnit`, `CodeableConcept`, and `TimeRange` as the reusable field types.
+- Implemented both models as standard-library, keyword-only, slotted dataclasses with safe zero-argument construction and the existing traceability collections.
+- `Patient` carries the source identifier, birth date, explicit `Sex`, actual body weight, and height. Age, BMI, ideal body weight, adjusted body weight, and other derived values are intentionally absent.
+- `Encounter` carries source identifiers, coded encounter type, optional time boundaries, location, service line, and attending-clinician identifier. Duration, chronology validation, and inferred status remain outside the model.
+- Missing scalar data uses `None`, unknown sex uses `Sex.UNKNOWN`, and nested values, traceability collections, and provenance use independent factories so partial records do not share mutable state.
+- Extended `tests/unit/domain/test_models.py` with default and representative partial-data constructors, explicit absence of derived patient fields, independent mutable-default checks, and JSON-safe default serialization.
+- Relevant fetched-file validation: `PYTHONPATH=src python -m pytest -q` completed with `57 passed, 1 skipped`; `python -m compileall -q src tests` also completed successfully. The remaining skip is the intentionally unimplemented Cockcroft–Gault calculator.
+- **Next exact action:** implement `LabResult` in `src/cds/domain/models.py` with patient and encounter links, a coded test, `ValueWithUnit`, collection/result timestamps, status, traceability, and partial-data tests.
