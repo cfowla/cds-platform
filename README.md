@@ -34,9 +34,30 @@ input -> mapper -> DTO -> validation -> domain models -> use case
 
 This initial commit contains package scaffolding and deliberately skipped placeholder tests. Replace each placeholder with real behavior-focused tests as modules are implemented.
 
-## Run tests
+## Development commands
+
+Run these commands from the repository root. Python 3.11 or newer is required.
+
+### Windows PowerShell
+
+```powershell
+py -3.11 -m venv .venv
+.\.venv\Scripts\Activate.ps1
+python -m pip install --upgrade pip
+python -m pip install -e ".[dev]"
+python -m pytest -q
+python -m cds.interfaces.cli
+```
+
+### macOS or Linux
 
 ```bash
+python3 -m venv .venv
+source .venv/bin/activate
+python -m pip install --upgrade pip
 python -m pip install -e ".[dev]"
-pytest
+python -m pytest -q
+python -m cds.interfaces.cli
 ```
+
+The CLI module is currently a scaffold, so the final command exits without output until CLI behavior is implemented. In later sessions, reuse the environment by activating `.venv` and starting with the test command.
