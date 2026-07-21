@@ -61,3 +61,23 @@ The three medications are diverse enough to expose boundary, regimen, and conten
 - Added `BACKLOG.md` for unresolved calculation, validation, serialization, content, and review questions, plus all deferred features.
 - Relevant current tests rerun: `python -m pytest -q tests/test_smoke.py tests/unit/services/test_renal.py` completed with `1 passed, 1 skipped`, and no failures; the skip remains the intentionally unimplemented Cockcroft–Gault calculator.
 - **Next exact action:** implement `Sex`, `ResultStatus`, `RenalMethod`, and `WeightType` in `src/cds/domain/enums.py`, then replace `tests/unit/domain/test_enums.py` with value, string-serialization, and explicit unknown-state tests.
+
+## Domain enums checkpoint — 2026-07-21
+
+- **Single deliverable:** establish the stable string vocabulary required by the first renal-dosing domain layer without using blank strings to represent uncertainty.
+- Implemented `Sex`, `ResultStatus`, `RenalMethod`, and `WeightType` as standard-library `StrEnum` classes in `src/cds/domain/enums.py`.
+- `Sex`, `RenalMethod`, and `WeightType` include an explicit `UNKNOWN = "unknown"` member. `ResultStatus` preserves the five chartered workflow states; insufficient or uncertain evaluation state is represented by `INCOMPLETE`, not an additional unchartered status.
+- Replaced the enum placeholder with exact value-contract, direct JSON string-serialization, explicit unknown-state, and nonblank-value tests.
+- Relevant fetched-file validation: `PYTHONPATH=src python -m pytest -q` across the current smoke, renal placeholder, and enum tests completed with `16 passed, 1 skipped`; the remaining skip is the intentionally unimplemented Cockcroft–Gault calculator.
+- **Next exact action:** implement the shared traceability and value objects in `src/cds/domain/models.py`—`Provenance`, `EvidenceItem`, `Assumption`, `WarningNote`, `CodeableConcept`, and `TimeRange`—then replace `tests/unit/domain/test_models.py` with constructor, safe-default, missing-data, and serialization tests.
+
+## Traceability support models checkpoint — 2026-07-21
+
+- **Single deliverable:** implement the four shared objects needed to attach provenance, evidence, assumptions, and warnings to later renal-domain results.
+- Prior note reviewed: the domain-enums checkpoint established the typed vocabulary and named traceability support models as the next domain-layer dependency.
+- Implemented `Provenance`, `EvidenceItem`, `Assumption`, and `WarningNote` as standard-library, keyword-only, slotted dataclasses in `src/cds/domain/models.py`.
+- Safe defaults use explicit `"unknown"` categorical states and `None` for missing text, timestamps, identifiers, and unevaluated assumption applicability; no default invents evidence, a source, or a warning message.
+- `EvidenceItem`, `Assumption`, and `WarningNote` each receive an independent `Provenance` through `default_factory`, preventing shared mutable traceability state.
+- Replaced the model placeholder with constructor, safe-default, independent-provenance, explicit-value, and default JSON-safe dictionary tests.
+- Relevant fetched-file validation: `PYTHONPATH=src python -m pytest -q` across the current smoke, renal placeholder, enum, and model tests completed with `32 passed, 1 skipped`; the remaining skip is the intentionally unimplemented Cockcroft–Gault calculator.
+- **Next exact action:** implement `CodeableConcept` and `TimeRange` in `src/cds/domain/models.py`, then extend `tests/unit/domain/test_models.py` with safe-default, explicit-value, and time-boundary tests.
