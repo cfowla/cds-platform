@@ -1,4 +1,4 @@
-"""Shared traceability, value, patient, and encounter domain objects."""
+"""Shared traceability, value, patient, encounter, medication, and observation objects."""
 
 from __future__ import annotations
 
@@ -33,10 +33,13 @@ __all__ = [
     "CodeableConcept",
     "Encounter",
     "EvidenceItem",
+    "LabResult",
+    "MedicationOrder",
     "Patient",
     "Provenance",
     "TimeRange",
     "ValueWithUnit",
+    "VitalSign",
     "WarningNote",
 ]
 
@@ -164,6 +167,86 @@ class Encounter:
     location: str | None = None
     service_line: str | None = None
     attending_clinician_id: str | None = None
+    assumptions: list[Assumption] = field(default_factory=list)
+    warnings: list[WarningNote] = field(default_factory=list)
+    evidence: list[EvidenceItem] = field(default_factory=list)
+    provenance: Provenance = field(default_factory=Provenance)
+
+
+@dataclass(slots=True, kw_only=True)
+class MedicationOrder:
+    """Carry medication-order facts without interpreting or evaluating the regimen.
+
+    Quantitative fields use ``ValueWithUnit`` so units remain explicit. A missing numeric
+    value is ``None`` and remains distinct from a supplied zero. Route, medication, and
+    indication preserve source coding; dose validation, frequency interpretation, unit
+    conversion, active-status inference, and renal evaluation belong outside this model.
+    """
+
+    order_id: str | None = None
+    patient_id: str | None = None
+    encounter_id: str | None = None
+    medication: CodeableConcept = field(default_factory=CodeableConcept)
+    dose: ValueWithUnit = field(default_factory=ValueWithUnit)
+    route: CodeableConcept = field(default_factory=CodeableConcept)
+    frequency_interval: ValueWithUnit = field(default_factory=ValueWithUnit)
+    ordered_period: TimeRange = field(default_factory=TimeRange)
+    indication: CodeableConcept = field(default_factory=CodeableConcept)
+    infusion_duration: ValueWithUnit = field(default_factory=ValueWithUnit)
+    prn: bool | None = None
+    status: str | None = None
+    assumptions: list[Assumption] = field(default_factory=list)
+    warnings: list[WarningNote] = field(default_factory=list)
+    evidence: list[EvidenceItem] = field(default_factory=list)
+    provenance: Provenance = field(default_factory=Provenance)
+
+
+@dataclass(slots=True, kw_only=True)
+class LabResult:
+    """Carry a laboratory observation exactly as supplied by a source system.
+
+    The result and reference boundaries use ``ValueWithUnit`` to retain explicit units.
+    Missing numeric values use ``None`` rather than zero, including when a unit is known.
+    Result interpretation, unit normalization, range validation, and status semantics remain
+    responsibilities of mapper, validation, or service layers.
+    """
+
+    result_id: str | None = None
+    patient_id: str | None = None
+    encounter_id: str | None = None
+    test: CodeableConcept = field(default_factory=CodeableConcept)
+    value: ValueWithUnit = field(default_factory=ValueWithUnit)
+    reference_range_low: ValueWithUnit = field(default_factory=ValueWithUnit)
+    reference_range_high: ValueWithUnit = field(default_factory=ValueWithUnit)
+    collected_at: datetime | None = None
+    resulted_at: datetime | None = None
+    status: str | None = None
+    specimen: CodeableConcept = field(default_factory=CodeableConcept)
+    assumptions: list[Assumption] = field(default_factory=list)
+    warnings: list[WarningNote] = field(default_factory=list)
+    evidence: list[EvidenceItem] = field(default_factory=list)
+    provenance: Provenance = field(default_factory=Provenance)
+
+
+@dataclass(slots=True, kw_only=True)
+class VitalSign:
+    """Carry a measured vital sign without normalization or derived calculations.
+
+    The measured quantity uses ``ValueWithUnit`` so the source unit is explicit. ``None``
+    represents a missing number and is distinguishable from a measured zero. Plausibility
+    checks, unit conversion, blood-pressure pairing, oxygen interpretation, and score
+    calculations belong outside this domain truth object.
+    """
+
+    vital_id: str | None = None
+    patient_id: str | None = None
+    encounter_id: str | None = None
+    vital: CodeableConcept = field(default_factory=CodeableConcept)
+    value: ValueWithUnit = field(default_factory=ValueWithUnit)
+    measured_at: datetime | None = None
+    position: str | None = None
+    supplemental_oxygen: bool | None = None
+    status: str | None = None
     assumptions: list[Assumption] = field(default_factory=list)
     warnings: list[WarningNote] = field(default_factory=list)
     evidence: list[EvidenceItem] = field(default_factory=list)
