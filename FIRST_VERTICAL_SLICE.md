@@ -42,3 +42,11 @@ The three medications are diverse enough to expose boundary, regimen, and conten
 - `tests/unit/services/test_renal.py` now names the pending Cockcroft–Gault calculator behavior instead of using a generic placeholder.
 - Validation check: `python -m pytest -q` completed with `1 passed, 31 skipped`, and no failures.
 - **Next exact action:** implement `Sex`, `ResultStatus`, `RenalMethod`, and `WeightType` in `src/cds/domain/enums.py`, then replace `tests/unit/domain/test_enums.py` with value, string-serialization, and explicit unknown-state tests.
+
+## Development commands checkpoint — 2026-07-21
+
+- **Single deliverable:** document an exact, reproducible command sequence for creating the environment, installing development dependencies, running tests, and invoking the future CLI.
+- Prior checkpoint reviewed: the strict pytest suite last completed with `1 passed, 31 skipped`, and no failures.
+- `README.md` now provides repository-root commands for Windows PowerShell and macOS/Linux using an isolated `.venv`, editable development installation, `python -m pytest -q`, and the canonical future CLI invocation `python -m cds.interfaces.cli`.
+- Relevant command validation: editable installation succeeded; the package smoke test and renal placeholder completed with `1 passed, 1 skipped`; the current CLI scaffold exited successfully without output.
+- **Next exact action:** implement `Sex`, `ResultStatus`, `RenalMethod`, and `WeightType` in `src/cds/domain/enums.py`, then replace `tests/unit/domain/test_enums.py` with value, string-serialization, and explicit unknown-state tests.
