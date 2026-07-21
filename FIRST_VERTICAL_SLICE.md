@@ -115,3 +115,14 @@ The three medications are diverse enough to expose boundary, regimen, and conten
 - Added representative partial-data, independent mutable-default, and JSON-safe serialization tests in `tests/unit/domain/test_medication_observation_models.py`.
 - Relevant local-mirror validation: `python -m pytest -q` completed with `70 passed, 1 skipped`; `python -m compileall -q src tests` also completed successfully. The remaining skip is the intentionally unimplemented Cockcroft–Gault calculator.
 - **Next exact action:** implement `RenalFunctionResult` in `src/cds/domain/models.py` with an explicit `RenalMethod`, unit-bearing result, normalization flag, reproducible input snapshot, traceability, and partial-data tests; keep the calculation itself in the renal service layer.
+
+## Problem and allergy models checkpoint — 2026-07-21
+
+- **Single deliverable:** implement passive `Problem` and `Allergy` truth objects that preserve partial, text-only clinical concepts without fabricating terminology coding.
+- Prior note reviewed: the medication-and-observation checkpoint named `RenalFunctionResult` as the next renal dependency; this user-directed domain task was completed without adding service, validation, mapper, or I/O behavior.
+- Added `Severity` as a stable `StrEnum` with an explicit `UNKNOWN = "unknown"` state, then used it for both models.
+- `Problem.problem`, `Allergy.substance`, and `Allergy.reaction` use `CodeableConcept`; free text can be supplied while `system` and `code` remain `None` unless a source provides them.
+- Unknown reaction is represented by the default empty `CodeableConcept` with `text`, `system`, and `code` all `None`; unknown severity is represented by `Severity.UNKNOWN`, never a blank string or inferred value.
+- Added focused tests for safe partial defaults, text-only concepts, explicit unknown states, independent mutable defaults, JSON-safe serialization, and the expanded enum contract.
+- Relevant local-mirror validation before the change: `python -m pytest -q` completed with `70 passed, 1 skipped`. After the change, `python -m pytest -q` completed with `82 passed, 1 skipped`; `python -m compileall -q src tests` also completed successfully. The remaining skip is the intentionally unimplemented Cockcroft–Gault calculator.
+- **Next exact action:** implement `RenalFunctionResult` in `src/cds/domain/models.py` with `RenalMethod`, an explicit unit-bearing result, normalization flag, reproducible input snapshot, traceability, and partial-data tests; keep renal calculation logic in the service layer.
