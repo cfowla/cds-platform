@@ -24,3 +24,11 @@ The three medications are diverse enough to expose boundary, regimen, and conten
 - Current relevant tests checked: the existing domain-model and renal-service tests are skipped placeholders; executing those two current files produced `2 skipped` and no failures.
 - Scope contract check: the scope statement names required inputs, structured outputs, and excluded edge cases, and the medication rationale is recorded above.
 - **Next exact action:** implement `Sex`, `ResultStatus`, `RenalMethod`, and `WeightType` in `src/cds/domain/enums.py`, then replace the corresponding placeholder with value and unknown-state tests in `tests/unit/domain/test_enums.py`.
+
+## Packaging checkpoint — 2026-07-21
+
+- **Single deliverable:** make the `src/cds` scaffold editable-installable through explicit package metadata while retaining zero runtime dependencies.
+- `pyproject.toml` now declares setuptools package discovery, project keywords and classifiers, repository URLs, Python `>=3.11`, and `dependencies = []`.
+- Current test scaffold check: `pytest -q` completed with `31 skipped` and no failures.
+- Installation check: `python -m pip install -e .` succeeded on Python 3.13; `import cds` resolved and package metadata reported version `0.1.0` with Python `>=3.11`.
+- **Next exact action:** implement `Sex`, `ResultStatus`, `RenalMethod`, and `WeightType` in `src/cds/domain/enums.py`, then replace `tests/unit/domain/test_enums.py` with value, string-serialization, and explicit unknown-state tests.
