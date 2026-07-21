@@ -8,10 +8,13 @@ Resolve conflicts in this order:
 
 1. `PROJECT_CHARTER.md` — governing safety, intended use, scope, and change control.
 2. `FIRST_VERTICAL_SLICE.md` — contract for the active renal-function and renal-dose feature.
-3. Existing public interfaces, tests, and implementation behavior on the target branch.
-4. `README.md` — setup commands and high-level repository orientation.
-5. `BACKLOG.md` — unresolved decisions and deferred work; backlog items are not approved scope.
-6. The current task prompt — authoritative only within the boundaries above.
+3. `ARCHITECTURE.md` — stable component boundaries and dependency direction.
+4. Existing public interfaces, tests, and implementation behavior on the target branch.
+5. `docs/DOMAIN_CONVENTIONS.md` — domain modeling, missing-data, unit, time, precision, traceability, and serialization conventions.
+6. `README.md` — setup commands and high-level repository orientation.
+7. `CURRENT.md` — current deliverable, relevant files, blockers, and next exact action.
+8. `BACKLOG.md` — unresolved decisions and deferred work; backlog items are not approved scope.
+9. The current task prompt — authoritative only within the boundaries above.
 
 Do not reconstruct requirements from prior chat history, memory, or earlier task summaries. Use the repository and the current task.
 
@@ -36,6 +39,8 @@ Do not reconstruct requirements from prior chat history, memory, or earlier task
 - `utils`: generic technical helpers only; do not hide clinical policy in utilities.
 
 ## Safety and missing-data conventions
+
+Detailed domain-model conventions are centralized in `docs/DOMAIN_CONVENTIONS.md`.
 
 - This is a prototype and is not for direct clinical use.
 - Use synthetic or properly de-identified data only; never commit PHI.
