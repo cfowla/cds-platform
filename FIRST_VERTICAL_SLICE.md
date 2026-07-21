@@ -126,3 +126,14 @@ The three medications are diverse enough to expose boundary, regimen, and conten
 - Added focused tests for safe partial defaults, text-only concepts, explicit unknown states, independent mutable defaults, JSON-safe serialization, and the expanded enum contract.
 - Relevant local-mirror validation before the change: `python -m pytest -q` completed with `70 passed, 1 skipped`. After the change, `python -m pytest -q` completed with `82 passed, 1 skipped`; `python -m compileall -q src tests` also completed successfully. The remaining skip is the intentionally unimplemented Cockcroft–Gault calculator.
 - **Next exact action:** implement `RenalFunctionResult` in `src/cds/domain/models.py` with `RenalMethod`, an explicit unit-bearing result, normalization flag, reproducible input snapshot, traceability, and partial-data tests; keep renal calculation logic in the service layer.
+
+## Week 2 model construction review checkpoint — 2026-07-21
+
+- **Single deliverable:** close Day 14 by verifying that every Week 2 dataclass supports safe incomplete and representative construction and that nested mutable defaults are never shared.
+- Prior note reviewed: the problem-and-allergy checkpoint completed the final Week 2 implementation task; the full baseline suite completed with `82 passed, 1 skipped`.
+- Added `tests/unit/domain/test_week_two_model_review.py` with parameterized incomplete and representative construction cases for all 14 Week 2 dataclasses.
+- Representative cases cover traceability objects, value objects, patient and encounter facts, medication and observation records, and problem and allergy records without adding clinical logic.
+- Added cross-model default-factory checks for the 10 models containing nested dataclasses or lists, confirming separate instances for every default-created nested value and collection.
+- Full local-mirror validation: `python -m pytest -q` completed with `106 passed, 1 skipped`; `python -m compileall -q src tests` also completed successfully. The remaining skip is the intentionally unimplemented Cockcroft–Gault calculator.
+- Day 14 is complete, bringing the first two weeks to `14 / 14` completed tasks.
+- **Next exact action:** implement `RenalFunctionResult`, `Contraindication`, and `DoseRecommendation` in `src/cds/domain/models.py` with explicit units, `RenalMethod`, reproducible input context, traceability, safe partial-data defaults, and focused construction tests; keep calculations and clinical evaluation logic outside the models.
