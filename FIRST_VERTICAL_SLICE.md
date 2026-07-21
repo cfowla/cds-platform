@@ -137,3 +137,15 @@ The three medications are diverse enough to expose boundary, regimen, and conten
 - Full local-mirror validation: `python -m pytest -q` completed with `106 passed, 1 skipped`; `python -m compileall -q src tests` also completed successfully. The remaining skip is the intentionally unimplemented Cockcroft–Gault calculator.
 - Day 14 is complete, bringing the first two weeks to `14 / 14` completed tasks.
 - **Next exact action:** implement `RenalFunctionResult`, `Contraindication`, and `DoseRecommendation` in `src/cds/domain/models.py` with explicit units, `RenalMethod`, reproducible input context, traceability, safe partial-data defaults, and focused construction tests; keep calculations and clinical evaluation logic outside the models.
+
+## Day 16 renal-output support models checkpoint — 2026-07-21
+
+- **Single deliverable:** implement the passive result and recommendation support objects needed to carry renal-function outputs, contraindication findings, and unit-explicit proposed regimens without embedding calculation or evaluation behavior.
+- Prior note reviewed: the Week 2 model-construction checkpoint recorded `106 passed, 1 skipped` and named `RenalFunctionResult`, `Contraindication`, and `DoseRecommendation` as the next exact action.
+- Added all three as standard-library, keyword-only, slotted dataclasses in `src/cds/domain/models.py` and exported them through `__all__`.
+- `RenalFunctionResult` records `RenalMethod`, a unit-bearing result, an explicit nullable body-surface-area normalization flag, evaluation and calculation timing, and a reproducible input snapshot containing serum creatinine, collection time, age, sex, selected weight, and `WeightType`.
+- `Contraindication.applies` defaults to `None`, preserving an unevaluated or indeterminate state separately from an explicit `False`; severity defaults to `Severity.UNKNOWN`.
+- `DoseRecommendation` uses `ValueWithUnit` for dose, interval, infusion duration, and maximum quantities, and permits text-only medication and route concepts without fabricated coding.
+- Added `tests/unit/domain/test_renal_output_models.py` covering safe partial construction, explicit units, reproducible context, unknown-versus-false and missing-versus-zero distinctions, independent mutable defaults, and JSON-safe default dictionaries.
+- Focused local-mirror validation: `PYTHONPATH=src python -m pytest -q tests/unit/domain/test_renal_output_models.py` completed with `12 passed`; `python -m compileall -q src tests` completed successfully.
+- **Next exact action:** implement `CDSRecommendation`, `Alert`, and `RuleResult` in `src/cds/domain/models.py` with `ResultStatus`, linked renal and dosing outputs, traceability, safe incomplete defaults, and focused construction tests; keep rule evaluation, alert policy, and orchestration outside the models.
