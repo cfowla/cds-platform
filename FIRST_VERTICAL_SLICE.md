@@ -50,3 +50,14 @@ The three medications are diverse enough to expose boundary, regimen, and conten
 - `README.md` now provides repository-root commands for Windows PowerShell and macOS/Linux using an isolated `.venv`, editable development installation, `python -m pytest -q`, and the canonical future CLI invocation `python -m cds.interfaces.cli`.
 - Relevant command validation: editable installation succeeded; the package smoke test and renal placeholder completed with `1 passed, 1 skipped`; the current CLI scaffold exited successfully without output.
 - **Next exact action:** implement `Sex`, `ResultStatus`, `RenalMethod`, and `WeightType` in `src/cds/domain/enums.py`, then replace `tests/unit/domain/test_enums.py` with value, string-serialization, and explicit unknown-state tests.
+
+## Initial scope freeze checkpoint — 2026-07-21
+
+- **Single deliverable:** reduce the active repository plan to the first renal-dosing vertical slice so the next development week can focus only on domain implementation.
+- Prior note and charter reviewed: `FIRST_VERTICAL_SLICE.md` and `PROJECT_CHARTER.md` already limit the feature to adult Cockcroft–Gault plus three supported medications and require unsupported work to fail closed.
+- Removed deferred service scaffolds and matching placeholder tests for anticoagulation, general risk scoring, vancomycin, and IV-to-PO conversion.
+- Removed API and EHR adapter scaffolds and their placeholder tests because both are explicit non-goals for the first feature.
+- Replaced the README’s platform-wide active architecture with the exact renal-only implementation path and an explicit rule that expansion requires a separately approved scope change.
+- Added `BACKLOG.md` for unresolved calculation, validation, serialization, content, and review questions, plus all deferred features.
+- Relevant current tests rerun: `python -m pytest -q tests/test_smoke.py tests/unit/services/test_renal.py` completed with `1 passed, 1 skipped`, and no failures; the skip remains the intentionally unimplemented Cockcroft–Gault calculator.
+- **Next exact action:** implement `Sex`, `ResultStatus`, `RenalMethod`, and `WeightType` in `src/cds/domain/enums.py`, then replace `tests/unit/domain/test_enums.py` with value, string-serialization, and explicit unknown-state tests.
