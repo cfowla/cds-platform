@@ -1,38 +1,50 @@
 # CDS Platform
 
-A Python clinical decision support platform scaffold organized around typed domain models, pure clinical services, simple rules, explicit validation, versioned content, and stable input/output boundaries.
+A Python prototype for one auditable clinical decision-support vertical slice: adult Cockcroft–Gault creatinine-clearance calculation followed by limited renal-dose evaluation.
 
-## Architecture
+> **Prototype only — not for direct clinical use.** Use synthetic or properly de-identified cases. This repository does not authorize diagnosis, prescribing, medication-order verification, or patient-care use.
 
-```text
-src/cds/
-├── app/            # Use-case orchestration and DTOs
-├── domain/         # Stable clinical models, enums, constants, exceptions
-├── services/       # Pure clinical calculations and workflows
-├── rules/          # Simple rule engine, registry, and predicates
-├── content/        # Versioned guideline content, initially YAML
-├── validation/     # Structural and task-sufficiency validation
-├── repositories/   # Content and persistence boundaries
-├── mappers/        # External-to-internal and internal-to-external mapping
-├── interfaces/     # CLI, API, and EHR adapters
-└── utils/          # Narrow shared utilities
+## Frozen initial scope
 
-tests/
-├── unit/           # Mirrors src/cds architecture
-├── integration/    # End-to-end application flows
-└── contract/       # Input/output schema and boundary contracts
-```
+The first feature is limited to:
 
-## Intended data flow
+- adults aged 18 years or older;
+- a single point-in-time evaluation;
+- stable serum creatinine supplied in `mg/dL`;
+- a supplied body weight in kilograms with an explicit weight type;
+- unindexed Cockcroft–Gault creatinine clearance in `mL/min`;
+- explicit medication and regimen identifiers; and
+- versioned renal-adjustment content for cefepime, piperacillin–tazobactam, and famotidine.
+
+The workflow must fail closed when required data are missing, units are ambiguous, renal function is unstable, renal replacement therapy is present, or the medication, population, indication, formulation, or regimen is unsupported.
+
+`PROJECT_CHARTER.md` is the governing safety and scope document. `FIRST_VERTICAL_SLICE.md` is the implementation contract. Open design decisions that are not required for the next domain-model task belong in `BACKLOG.md`, not in the active implementation scope.
+
+## Active implementation path
 
 ```text
-input -> mapper -> DTO -> validation -> domain models -> use case
-      -> repository -> service -> rules -> result -> mapper -> output
+src/cds/domain/        # Enums, typed models, constants, and typed exceptions
+src/cds/validation/    # Structural and renal-task sufficiency checks
+src/cds/services/renal.py
+                       # Pure Cockcroft–Gault calculation and renal workflow logic
+src/cds/content/       # Versioned rules for the three supported medications
+src/cds/repositories/  # Content-loading boundary
+src/cds/rules/         # Simple, inspectable renal rule matching
+src/cds/app/           # One renal-evaluation use case and DTOs
+src/cds/mappers/       # Manual input and structured output mapping
+src/cds/interfaces/cli.py
+                       # Future non-production manual interface
+
+tests/unit/            # Domain, validation, calculator, content, and boundary tests
+tests/integration/     # Complete renal-evaluation flow
+tests/contract/        # Serialized renal input/output shape
 ```
+
+Anything outside this path is deferred. Do not add another calculator, medication set, clinical domain, API, EHR integration, alerting system, or production interface without a separately approved scope change.
 
 ## Development status
 
-This initial commit contains package scaffolding and deliberately skipped placeholder tests. Replace each placeholder with real behavior-focused tests as modules are implemented.
+The package, strict pytest runner, smoke test, and renal-calculator placeholder are established. The next implementation task is the domain enum layer named in `FIRST_VERTICAL_SLICE.md`.
 
 ## Development commands
 
@@ -60,4 +72,4 @@ python -m pytest -q
 python -m cds.interfaces.cli
 ```
 
-The CLI module is currently a scaffold, so the final command exits without output until CLI behavior is implemented. In later sessions, reuse the environment by activating `.venv` and starting with the test command.
+The CLI module is currently a scaffold and exits without output. Reuse the environment in later sessions by activating `.venv` and beginning with the test command.
