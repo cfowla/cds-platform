@@ -81,3 +81,14 @@ The three medications are diverse enough to expose boundary, regimen, and conten
 - Replaced the model placeholder with constructor, safe-default, independent-provenance, explicit-value, and default JSON-safe dictionary tests.
 - Relevant fetched-file validation: `PYTHONPATH=src python -m pytest -q` across the current smoke, renal placeholder, enum, and model tests completed with `32 passed, 1 skipped`; the remaining skip is the intentionally unimplemented Cockcroft–Gault calculator.
 - **Next exact action:** implement `CodeableConcept` and `TimeRange` in `src/cds/domain/models.py`, then extend `tests/unit/domain/test_models.py` with safe-default, explicit-value, and time-boundary tests.
+
+## Shared value objects checkpoint — 2026-07-21
+
+- **Single deliverable:** implement the passive, typed value objects needed to carry quantities, coded concepts, and clinical time intervals without embedding service or I/O behavior.
+- Prior note reviewed: the traceability checkpoint named `CodeableConcept` and `TimeRange` as the next domain dependency; this task also added the quantity wrapper `ValueWithUnit`.
+- Implemented `ValueWithUnit`, `CodeableConcept`, and `TimeRange` as standard-library, keyword-only, slotted dataclasses in `src/cds/domain/models.py`.
+- Missing observations, concept fields, and temporal boundaries use `None`; `ValueWithUnit` permits a known unit with a missing value and uses `Decimal` for supplied quantitative values.
+- Docstrings define unit, missing-data, coding, timezone, and open-boundary conventions while leaving conversion, normalization, lookup, chronology validation, serialization, and all I/O outside the models.
+- Extended `tests/unit/domain/test_models.py` with zero-argument construction, missing-data, decimal precision, text-only and coded concept, open/equal time-boundary, and JSON-safe default tests.
+- Relevant fetched-file validation: `PYTHONPATH=src python -m pytest -q` completed with `47 passed, 1 skipped`; `python -m compileall -q src tests` also completed successfully. The remaining skip is the intentionally unimplemented Cockcroft–Gault calculator.
+- **Next exact action:** implement `Patient` in `src/cds/domain/models.py` with identifier, birth date, `Sex`, anthropometric value objects, traceability collections, and safe missing-data defaults; then add constructor and missing-data tests.
