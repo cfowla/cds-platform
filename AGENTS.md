@@ -2,21 +2,34 @@
 
 These instructions apply to automated and assisted work in this repository.
 
-## Source-of-truth order
+## Source-of-truth hierarchy
 
 Resolve conflicts in this order:
 
-1. `PROJECT_CHARTER.md` — governing safety, intended use, scope, and change control.
-2. `FIRST_VERTICAL_SLICE.md` — contract for the active renal-function and renal-dose feature.
-3. `ARCHITECTURE.md` — stable component boundaries and dependency direction.
-4. Existing public interfaces, tests, and implementation behavior on the target branch.
-5. `docs/DOMAIN_CONVENTIONS.md` — domain modeling, missing-data, unit, time, precision, traceability, and serialization conventions.
-6. `README.md` — setup commands and high-level repository orientation.
-7. `CURRENT.md` — current deliverable, relevant files, blockers, and next exact action.
-8. `BACKLOG.md` — unresolved decisions and deferred work; backlog items are not approved scope.
-9. The current task prompt — authoritative only within the boundaries above.
+1. `PROJECT_CHARTER.md` — governing safety and scope.
+2. `FIRST_VERTICAL_SLICE.md` — stable feature contract.
+3. `ARCHITECTURE.md` — component boundaries.
+4. `docs/DOMAIN_CONVENTIONS.md` — modeling rules.
+5. `docs/SAFETY_INVARIANTS.md` — concise implementation constraints.
+6. `CURRENT.md` — present task and next action.
+7. `BACKLOG.md` — deferred or unresolved work.
 
-Do not reconstruct requirements from prior chat history, memory, or earlier task summaries. Use the repository and the current task.
+Existing public interfaces, tests, and implementation behavior describe the current code contract but do not supersede the hierarchy above. The current task prompt defines the requested change only within those boundaries.
+
+Do not reconstruct requirements from prior chat history, memory, checkpoint notes, or earlier task summaries. Use the repository and the current task.
+
+## Ordinary implementation context
+
+Ordinary implementation prompts should direct the agent to read only:
+
+1. `AGENTS.md`;
+2. `CURRENT.md`;
+3. the directly relevant implementation file; and
+4. the directly relevant test file.
+
+Do not preload the full project documentation or scan the repository by default. Open additional files only to resolve a direct import, public interface contract, failing test, or material ambiguity that cannot be resolved from the ordinary context.
+
+Open `PROJECT_CHARTER.md` and the full `FIRST_VERTICAL_SLICE.md` only when making a scope, safety, or clinical-content decision. Do not open them merely to orient routine implementation work.
 
 ## Scope and deliverables
 
@@ -40,7 +53,7 @@ Do not reconstruct requirements from prior chat history, memory, or earlier task
 
 ## Safety and missing-data conventions
 
-Detailed domain-model conventions are centralized in `docs/DOMAIN_CONVENTIONS.md`.
+Detailed domain-model conventions are centralized in `docs/DOMAIN_CONVENTIONS.md`; concise safety constraints are centralized in `docs/SAFETY_INVARIANTS.md`.
 
 - This is a prototype and is not for direct clinical use.
 - Use synthetic or properly de-identified data only; never commit PHI.
@@ -52,17 +65,6 @@ Detailed domain-model conventions are centralized in `docs/DOMAIN_CONVENTIONS.md
 - Unsupported or insufficient cases must fail closed and must not produce a dosing recommendation.
 - Preserve assumptions, warnings, evidence, provenance, versions, and reproducible calculation inputs where applicable.
 - Calculations and rule matching must use unrounded values; rounding belongs at an explicit presentation boundary.
-
-## Bounded repository reading
-
-Start with:
-
-1. this file;
-2. the files named by the current task;
-3. the directly relevant implementation file; and
-4. the directly relevant test file.
-
-Open additional files only to resolve a direct import, interface contract, failing test, or material safety or scope question. Do not scan the entire repository by default. Read `PROJECT_CHARTER.md` or `FIRST_VERTICAL_SLICE.md` when the task changes clinical behavior, scope, content, supported populations, output states, or safety behavior.
 
 ## Implementation practice
 
@@ -86,5 +88,5 @@ Open additional files only to resolve a direct import, interface contract, faili
 - Summarize the deliverable and files changed.
 - Report verification commands and outcomes.
 - State any unresolved risk or limitation.
-- Record one exact next action in the repository's designated current-state file when one exists; otherwise place it in the pull-request description.
+- Record one exact next action in `CURRENT.md` when the task changes current project state; otherwise place it in the pull-request description.
 - Do not append completed-task history to stable scope or architecture documents.
