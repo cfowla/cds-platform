@@ -104,3 +104,14 @@ The three medications are diverse enough to expose boundary, regimen, and conten
 - Extended `tests/unit/domain/test_models.py` with default and representative partial-data constructors, explicit absence of derived patient fields, independent mutable-default checks, and JSON-safe default serialization.
 - Relevant fetched-file validation: `PYTHONPATH=src python -m pytest -q` completed with `57 passed, 1 skipped`; `python -m compileall -q src tests` also completed successfully. The remaining skip is the intentionally unimplemented Cockcroft–Gault calculator.
 - **Next exact action:** implement `LabResult` in `src/cds/domain/models.py` with patient and encounter links, a coded test, `ValueWithUnit`, collection/result timestamps, status, traceability, and partial-data tests.
+
+## Medication and observation models checkpoint — 2026-07-21
+
+- **Single deliverable:** implement passive `MedicationOrder`, `LabResult`, and `VitalSign` truth objects that preserve source coding, explicit units, partial data, and traceability without embedding validation, conversion, or clinical logic.
+- Prior note reviewed: the patient-and-encounter checkpoint named `LabResult` as the next dependency; this task completed the related medication and observation objects required by the renal vertical slice.
+- Added all three as standard-library, keyword-only, slotted dataclasses in `src/cds/domain/models.py`, reusing `CodeableConcept`, `TimeRange`, `ValueWithUnit`, and the shared traceability collections.
+- Medication dose, frequency interval, infusion duration, laboratory values and reference boundaries, and vital-sign measurements all use `ValueWithUnit`, preserving supplied unit text and `Decimal` precision.
+- Missing scalar values use `None`; a known unit may be retained while its numeric value is absent. Focused tests explicitly distinguish `None` from `Decimal("0")` for medication, laboratory, and vital-sign quantities.
+- Added representative partial-data, independent mutable-default, and JSON-safe serialization tests in `tests/unit/domain/test_medication_observation_models.py`.
+- Relevant local-mirror validation: `python -m pytest -q` completed with `70 passed, 1 skipped`; `python -m compileall -q src tests` also completed successfully. The remaining skip is the intentionally unimplemented Cockcroft–Gault calculator.
+- **Next exact action:** implement `RenalFunctionResult` in `src/cds/domain/models.py` with an explicit `RenalMethod`, unit-bearing result, normalization flag, reproducible input snapshot, traceability, and partial-data tests; keep the calculation itself in the renal service layer.
