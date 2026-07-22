@@ -2,6 +2,24 @@
 
 This file is replaced after every task. It is not an append-only diary.
 
+## Repository execution mode
+
+LOCAL CHECKOUT ONLY.
+
+GitHub is the source and destination for repository files, not the execution environment.
+
+Prohibited unless explicitly requested:
+- GitHub Actions or CI investigation
+- workflow creation or modification
+- web search
+- PR creation, management, or merge
+- broad repository review
+- substitute verification methods
+
+Absence of CI is not a blocker. Perform the requested work and verification in the local checkout using only the named files and task-specified commands.
+
+Do not describe alternative execution strategies or missing infrastructure unless they prevent local completion.
+
 ## Roadmap position
 
 - **Day 20 — Create golden JSON examples** is complete.
