@@ -21,32 +21,31 @@ Use only the named files and task-specified commands. Do not install missing tes
 
 ## Roadmap position
 
-- Days 1–34 are complete.
-- **Day 34 — Add fail-closed edge tests** is complete.
-- Current sequential task: **Day 35 — Independently verify golden renal cases and future band-boundary values**.
+- Days 1–35 are complete.
+- **Day 35 — Independently verify golden renal cases and future band-boundary values** is complete.
+- Current sequential task: **Day 36 — Design the renal-dose YAML schema**.
 
 ## Current state
 
-- Existing structural and renal-sufficiency tests confirm that missing serum creatinine remains distinct from measured zero; invalid and nonfinite values, non-exact units, unsupported sex, missing critical facts, unstable renal function, and renal replacement therapy fail closed with error-severity validation issues and no calculation or recommendation.
-- `tests/unit/services/test_renal.py` adds direct-boundary coverage for missing or malformed typed inputs, unsupported sex, invalid or nonfinite creatinine and weight values, non-exact units, unknown or malformed weight types, missing or malformed collection times, future birth dates, and naive calculation timestamps.
-- Defensive failure tests verify that `CalculationError` is raised before a `RenalFunctionResult` can be constructed.
-- Finite positive low and high serum-creatinine cases verify that the exact supplied Decimal is retained and used without a floor, cap, substitution, conversion, or presentation quantization.
-- `cds.services.renal` now rejects nonfinite Decimal inputs without leaking raw decimal exceptions, validates required dates and timezone-aware timestamps at the calculator boundary, and translates unexpected Decimal arithmetic failures to `CalculationError`.
-- The calculator remains pure and deterministic, retains the local 28-digit `ROUND_HALF_EVEN` context, and does not modify the process-wide Decimal context.
-- No validation issue codes, public imports, result fields, enum values, serialization behavior, provenance contracts, clinical content, medication rules, renal bands, recommendations, orchestration, or dependencies changed.
+- Four synthetic golden Cockcroft–Gault cases were independently recalculated from exact integer ratios, then converted at the specification's 28-significant-digit `ROUND_HALF_EVEN` operation boundaries.
+- The verification record distinguishes the female calculation's required two-step Decimal evaluation from a one-step exact-fraction rounding; the implementation matches the normative `base_crcl` then `× 0.85` sequence.
+- A focused synthetic threshold triplet proves that immediately-below, exact, and immediately-above values remain distinct in stored form even though all three would display as `60.0` at one decimal place.
+- `docs/RENAL_CALCULATOR_VERIFICATION.md` records the method, exact fractions, fixed expected values, boundary evidence, and limitations.
+- `docs/RENAL_CALCULATOR_SPEC.md` links the verification record without changing the calculation contract.
+- No calculator logic, validation behavior, public import, domain model, result field, enum value, serialization behavior, clinical content, renal band, medication rule, recommendation, interface, or dependency changed.
 
 ## Verification
 
-- `git diff --check` — completed successfully with no whitespace errors.
+- Independent exact-rational reference script — completed successfully: `7 independent reference values verified with specified operation boundaries`.
+- `python -m py_compile tests/unit/services/test_renal.py` — completed successfully.
+- `git diff --cached --check` in the bounded checkout — completed successfully with no whitespace errors.
 - Pytest execution was intentionally skipped because `pytest` is unavailable in the supplied execution environment.
 - No focused-test, full-suite, or CI passing claim is made.
-- Deferred command: `PYTHONPATH=src python -m pytest tests/unit/validation/test_lab.py tests/unit/validation/test_renal.py tests/unit/services/test_renal.py -q`.
+- Deferred command: `PYTHONPATH=src python -m pytest tests/unit/services/test_renal.py -q`.
 
 ## Additional files inspected
 
-- `src/cds/__init__.py`, `src/cds/services/__init__.py`, `src/cds/validation/__init__.py`, `tests/__init__.py`, `tests/unit/__init__.py`, `tests/unit/services/__init__.py`, and `tests/unit/validation/__init__.py` — required ancestor package markers for the bounded checkout.
-- `src/cds/domain/clinical.py`, `src/cds/domain/enums.py`, `src/cds/domain/exceptions.py`, `src/cds/domain/outputs.py`, `src/cds/domain/support.py`, `src/cds/domain/value_objects.py`, and `src/cds/validation/models.py` — inspected only to resolve domain types and public APIs imported by the focused service, validators, and tests.
-- `pyproject.toml` — materialized to preserve the bounded repository context; no dependency was installed.
+- None. The bounded Day 35 files were sufficient.
 
 ## Active constraints
 
@@ -55,13 +54,15 @@ Use only the named files and task-specified commands. Do not install missing tes
 - Missing, invalid, unsupported, ambiguous, unstable, and out-of-scope clinical facts fail closed without a dosing recommendation.
 - The calculator remains pure and deterministic with explicit typed inputs, exact Decimal arithmetic, no I/O, no hidden clock, no unit conversion, and no mutable global state.
 - Do not change the process-wide Decimal context or presentation-round stored renal values.
-- Renal-band matching must use the stored unrounded value; display formatting remains outside the calculator.
+- Future renal-band matching must use the stored unrounded value; display formatting remains outside the calculator.
 - Clinical scope, supported medications and populations, renal method, safety behavior, clinical-content requirements, intended users, interfaces, public domain contracts, and serialization behavior remain unchanged.
 
 ## Blockers
 
-- The focused test modules still require execution in an environment with the declared test dependencies installed.
+- The focused test module still requires execution in an environment with the declared test dependencies installed.
+- Actual band-selection verification remains deferred until a renal-band predicate and versioned clinical content exist.
 
 ## Next exact action
 
-> Day 35 — independently recalculate the golden renal cases, verify unrounded values used at future band boundaries, and document the verification method and limitations.
+> Day 36 — define the renal-dose YAML schema with exact medication and regimen identifiers, explicit inclusive and exclusive renal-band boundaries, dosing fields, supported context, sources, versions, reviewer metadata, and limitations for the three frozen-scope medications.
+
