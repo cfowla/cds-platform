@@ -13,6 +13,23 @@ from cds.domain.value_objects import ValueWithUnit
 __all__ = ["calculate_cockcroft_gault", "derive_age_years", "require_supplied_weight"]
 
 
+def _has_usable_utc_offset(value: object) -> bool:
+    if not isinstance(value, datetime) or value.tzinfo is None:
+        return False
+    try:
+        return value.utcoffset() is not None
+    except (TypeError, ValueError, OverflowError):
+        return False
+
+
+def _is_finite_positive_decimal(value: object) -> bool:
+    return (
+        isinstance(value, Decimal)
+        and value.is_finite()
+        and value > Decimal("0")
+    )
+
+
 def derive_age_years(*, birth_date: date, evaluation_date: date) -> int:
     """Return completed calendar years at an explicit evaluation date.
 
@@ -25,6 +42,10 @@ def derive_age_years(*, birth_date: date, evaluation_date: date) -> int:
             indicating a breach of the validated-service boundary.
     """
 
+    if not isinstance(birth_date, date) or isinstance(birth_date, datetime):
+        raise CalculationError("Birth date must be a date.")
+    if not isinstance(evaluation_date, date) or isinstance(evaluation_date, datetime):
+        raise CalculationError("Evaluation date must be a date.")
     if birth_date > evaluation_date:
         raise CalculationError("Birth date cannot be after the evaluation date.")
 
@@ -53,12 +74,10 @@ def require_supplied_weight(
 
     if not isinstance(weight, ValueWithUnit):
         raise CalculationError("Supplied weight must be a ValueWithUnit.")
-    if weight.value is None:
-        raise CalculationError("Supplied weight requires a numeric value.")
-    if not isinstance(weight.value, Decimal):
-        raise CalculationError("Supplied weight value must be a Decimal.")
-    if weight.value <= Decimal("0"):
-        raise CalculationError("Supplied weight value must be greater than zero.")
+    if not _is_finite_positive_decimal(weight.value):
+        raise CalculationError(
+            "Supplied weight value must be a finite positive Decimal."
+        )
     if weight.unit != "kg":
         raise CalculationError('Supplied weight unit must be exactly "kg".')
     if not isinstance(weight_type, WeightType) or weight_type not in {
@@ -92,11 +111,15 @@ def calculate_cockcroft_gault(
             contract.
     """
 
-    if not isinstance(patient, Patient) or patient.birth_date is None:
+    if (
+        not isinstance(patient, Patient)
+        or not isinstance(patient.birth_date, date)
+        or isinstance(patient.birth_date, datetime)
+    ):
         raise CalculationError("Patient birth date is required for calculation.")
     if not isinstance(patient.sex, Sex) or patient.sex not in {Sex.MALE, Sex.FEMALE}:
         raise CalculationError("Patient sex must be supported for calculation.")
-    if not isinstance(evaluation_date, date):
+    if not isinstance(evaluation_date, date) or isinstance(evaluation_date, datetime):
         raise CalculationError("Evaluation date must be a date.")
     if not isinstance(serum_creatinine_result, LabResult):
         raise CalculationError("Serum creatinine result must be a LabResult.")
@@ -104,13 +127,17 @@ def calculate_cockcroft_gault(
     serum_creatinine = serum_creatinine_result.value
     if not isinstance(serum_creatinine, ValueWithUnit):
         raise CalculationError("Serum creatinine must be a ValueWithUnit.")
-    if not isinstance(serum_creatinine.value, Decimal):
-        raise CalculationError("Serum creatinine value must be a Decimal.")
-    if serum_creatinine.value <= Decimal("0"):
-        raise CalculationError("Serum creatinine value must be greater than zero.")
+    if not _is_finite_positive_decimal(serum_creatinine.value):
+        raise CalculationError(
+            "Serum creatinine value must be a finite positive Decimal."
+        )
     if serum_creatinine.unit != "mg/dL":
         raise CalculationError('Serum creatinine unit must be exactly "mg/dL".')
-    if not isinstance(calculated_at, datetime) or calculated_at.utcoffset() is None:
+    if not _has_usable_utc_offset(serum_creatinine_result.collected_at):
+        raise CalculationError(
+            "Serum creatinine collection time must be timezone-aware."
+        )
+    if not _has_usable_utc_offset(calculated_at):
         raise CalculationError("Calculation time must be timezone-aware.")
 
     weight_used, weight_type_used = require_supplied_weight(
@@ -122,14 +149,17 @@ def calculate_cockcroft_gault(
         evaluation_date=evaluation_date,
     )
 
-    with localcontext() as context:
-        context.prec = 28
-        context.rounding = ROUND_HALF_EVEN
-        crcl = (
-            (Decimal("140") - Decimal(age_years)) * weight_used.value
-        ) / (Decimal("72") * serum_creatinine.value)
-        if patient.sex is Sex.FEMALE:
-            crcl *= Decimal("0.85")
+    try:
+        with localcontext() as context:
+            context.prec = 28
+            context.rounding = ROUND_HALF_EVEN
+            crcl = (
+                (Decimal("140") - Decimal(age_years)) * weight_used.value
+            ) / (Decimal("72") * serum_creatinine.value)
+            if patient.sex is Sex.FEMALE:
+                crcl *= Decimal("0.85")
+    except ArithmeticError as error:
+        raise CalculationError("Cockcroft-Gault calculation failed.") from error
 
     return RenalFunctionResult(
         patient_id=patient.patient_id,
