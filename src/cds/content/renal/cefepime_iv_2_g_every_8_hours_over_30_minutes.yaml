@@ -1,0 +1,216 @@
+# Prototype only — not for direct clinical use.
+# Draft clinical content for research, education, and software development with synthetic or properly de-identified data.
+# Software validation does not constitute clinical review or authorize patient-care use.
+schema_version: '1'
+content_id: renal_dose_cefepime_iv_2_g_every_8_hours_over_30_minutes
+content_version: 1.0.0-draft
+rule_id: cefepime_iv_2_g_every_8_hours_renal_rule
+medication:
+  id: cefepime
+  display: Cefepime
+regimen:
+  id: iv_2_g_every_8_hours_over_30_minutes
+  display: Cefepime 2 g IV every 8 hours over 30 minutes
+  indication_ids:
+  - moderate_severe_pneumonia
+  - pseudomonas_aeruginosa_moderate_severe_pneumonia
+  - empiric_febrile_neutropenia
+  - complicated_intra_abdominal_infection_with_metronidazole
+  - pseudomonas_aeruginosa_complicated_intra_abdominal_infection_with_metronidazole
+  route_id: iv
+  formulation_id: powder_for_solution
+  base_dose:
+    value: '2'
+    unit: g
+  frequency_interval:
+    value: '8'
+    unit: hours
+  infusion_duration:
+    value: '30'
+    unit: minutes
+supported_context:
+  minimum_age_years: 18
+  renal_method: cockcroft_gault
+  renal_unit: mL/min
+  renal_function_stable: true
+  renal_replacement_therapy: false
+  limitations:
+  - Prototype only — not for direct clinical use; use only with synthetic or properly de-identified cases.
+  - Limited to adults aged 18 years or older with explicitly stable renal function and unindexed Cockcroft–Gault
+    creatinine clearance in mL/min.
+  - Excludes intermittent hemodialysis, peritoneal dialysis, continuous renal replacement therapy, other renal replacement
+    therapy, and acute or rapidly changing kidney function.
+  - Requires exact indication, medication, route, formulation, dose, frequency interval, and 30-minute infusion-duration
+    identifiers; no aliases, inference, interpolation, extrapolation, or fallback.
+renal_domain:
+  lower:
+    value: '0'
+    inclusive: false
+  upper: null
+renal_bands:
+- id: below_11
+  lower:
+    value: '0'
+    inclusive: false
+  upper:
+    value: '11'
+    inclusive: false
+  outcome: recommendation
+  recommendation:
+    action: adjust_dose
+    dose:
+      value: '1'
+      unit: g
+    route_id: iv
+    frequency_interval:
+      value: '24'
+      unit: hours
+    infusion_duration:
+      value: '30'
+      unit: minutes
+    rationale: The selected prescribing-information maintenance table lists 1 g IV every 24 hours for this exact
+      base-regimen column when creatinine clearance is less than 11 mL/min.
+    monitoring:
+    - Monitor renal function during therapy and reassess the maintenance schedule if renal function changes.
+    - Monitor for cefepime-associated neurotoxicity, including altered consciousness, confusion, hallucinations,
+      stupor, coma, aphasia, myoclonus, seizures, or nonconvulsive status epilepticus; if neurotoxicity occurs,
+      discontinue cefepime and institute appropriate supportive measures.
+  no_recommendation_reason: null
+  source_ids:
+  - fda_dailymed_cefepime_for_injection_wgcc_spl_v17
+  limitations:
+  - The interval boundary is a provisional continuous interpretation of the source's integer-labeled renal band
+    and must be independently reviewed before approval.
+  - The recommendation preserves the dose unit displayed in the selected source and performs no hidden unit conversion.
+- id: crcl_11_to_below_30
+  lower:
+    value: '11'
+    inclusive: true
+  upper:
+    value: '30'
+    inclusive: false
+  outcome: recommendation
+  recommendation:
+    action: adjust_dose
+    dose:
+      value: '2'
+      unit: g
+    route_id: iv
+    frequency_interval:
+      value: '24'
+      unit: hours
+    infusion_duration:
+      value: '30'
+      unit: minutes
+    rationale: The selected prescribing-information maintenance table lists 2 g IV every 24 hours for this exact
+      base-regimen column in the source band labeled 11 to 29 mL/min.
+    monitoring:
+    - Monitor renal function during therapy and reassess the maintenance schedule if renal function changes.
+    - Monitor for cefepime-associated neurotoxicity, including altered consciousness, confusion, hallucinations,
+      stupor, coma, aphasia, myoclonus, seizures, or nonconvulsive status epilepticus; if neurotoxicity occurs,
+      discontinue cefepime and institute appropriate supportive measures.
+  no_recommendation_reason: null
+  source_ids:
+  - fda_dailymed_cefepime_for_injection_wgcc_spl_v17
+  limitations:
+  - The interval boundary is a provisional continuous interpretation of the source's integer-labeled renal band
+    and must be independently reviewed before approval.
+  - The recommendation preserves the dose unit displayed in the selected source and performs no hidden unit conversion.
+- id: crcl_30_to_60
+  lower:
+    value: '30'
+    inclusive: true
+  upper:
+    value: '60'
+    inclusive: true
+  outcome: recommendation
+  recommendation:
+    action: adjust_dose
+    dose:
+      value: '2'
+      unit: g
+    route_id: iv
+    frequency_interval:
+      value: '12'
+      unit: hours
+    infusion_duration:
+      value: '30'
+      unit: minutes
+    rationale: The selected prescribing-information maintenance table lists 2 g IV every 12 hours for this exact
+      base-regimen column when creatinine clearance is 30 to 60 mL/min.
+    monitoring:
+    - Monitor renal function during therapy and reassess the maintenance schedule if renal function changes.
+    - Monitor for cefepime-associated neurotoxicity, including altered consciousness, confusion, hallucinations,
+      stupor, coma, aphasia, myoclonus, seizures, or nonconvulsive status epilepticus; if neurotoxicity occurs,
+      discontinue cefepime and institute appropriate supportive measures.
+  no_recommendation_reason: null
+  source_ids:
+  - fda_dailymed_cefepime_for_injection_wgcc_spl_v17
+  limitations:
+  - The interval boundary is a provisional continuous interpretation of the source's integer-labeled renal band
+    and must be independently reviewed before approval.
+  - The recommendation preserves the dose unit displayed in the selected source and performs no hidden unit conversion.
+- id: above_60
+  lower:
+    value: '60'
+    inclusive: false
+  upper: null
+  outcome: recommendation
+  recommendation:
+    action: continue
+    dose:
+      value: '2'
+      unit: g
+    route_id: iv
+    frequency_interval:
+      value: '8'
+      unit: hours
+    infusion_duration:
+      value: '30'
+      unit: minutes
+    rationale: The selected prescribing-information maintenance table lists 2 g IV every 8 hours for this exact
+      base-regimen column when creatinine clearance is greater than 60 mL/min.
+    monitoring:
+    - Monitor renal function during therapy and reassess the maintenance schedule if renal function changes.
+    - Monitor for cefepime-associated neurotoxicity, including altered consciousness, confusion, hallucinations,
+      stupor, coma, aphasia, myoclonus, seizures, or nonconvulsive status epilepticus; if neurotoxicity occurs,
+      discontinue cefepime and institute appropriate supportive measures.
+  no_recommendation_reason: null
+  source_ids:
+  - fda_dailymed_cefepime_for_injection_wgcc_spl_v17
+  limitations:
+  - The interval boundary is a provisional continuous interpretation of the source's integer-labeled renal band
+    and must be independently reviewed before approval.
+  - The recommendation preserves the dose unit displayed in the selected source and performs no hidden unit conversion.
+sources:
+- id: fda_dailymed_cefepime_for_injection_wgcc_spl_v17
+  evidence_level: guideline
+  citation: WG Critical Care, LLC. Cefepime for Injection, USP, powder for solution [prescribing information]. DailyMed
+    set ID 5fd857e5-591f-44ca-80cf-fd903660b03c; SPL version 17; labeling revised 10/2022; DailyMed record updated
+    2026-06-23.
+  source_document: Cefepime for Injection, USP, powder for solution, intravenous or intramuscular use
+  source_version: DailyMed SPL version 17; labeling revised 10/2022; DailyMed record updated 2026-06-23
+  publication_date: '2026-06-23'
+  url: https://dailymed.nlm.nih.gov/dailymed/lookup.cfm?setid=5fd857e5-591f-44ca-80cf-fd903660b03c&version=17
+review:
+  status: draft
+  reviewed_content_version: null
+  reviewer: null
+  reviewer_role: null
+  reviewed_on: null
+  notes: Draft transcription from the selected DailyMed source. Independent review of source fidelity, continuous
+    renal-band boundaries, evidence-level mapping, source-unit preservation, 30-minute infusion representation,
+    monitoring text, exclusions, and prototype warning remains required.
+limitations:
+- Prototype only — not for direct clinical use; use only with synthetic or properly de-identified cases.
+- Draft content is not eligible for rule matching and has not received independent clinical-content review.
+- This document adjusts only the exact supplied maintenance regimen; it does not select initial therapy, indication,
+  loading dose, duration, or an alternative regimen.
+- The continuous Decimal intervals for the source's integer-labeled renal bands are a provisional interpretation
+  pending independent review.
+- The version 1 schema provisionally represents FDA-approved prescribing information with evidence_level guideline
+  pending review.
+- The source describes intravenous administration over approximately 30 minutes; exact matching to 30 minutes remains
+  pending review.
+- Pediatric, intramuscular, premixed or frozen-container, extended-infusion, continuous-infusion, unstable-renal-function,
+  and renal-replacement-therapy cases are unsupported.
