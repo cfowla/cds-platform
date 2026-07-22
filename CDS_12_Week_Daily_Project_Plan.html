@@ -5,114 +5,129 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>CDS Platform — 12-Week Daily Build Plan</title>
 <style>
-:root{--bg:#f4f6f8;--paper:#fff;--ink:#17202a;--muted:#5f6b76;--line:#d7dde3;--accent:#285f78;--success:#2f6b4f;--weekend:#fbf8ef}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif}header{background:linear-gradient(135deg,#173b4c,#285f78);color:#fff;padding:40px 20px}.wrap{max-width:1050px;margin:auto}h1{margin:0 0 8px;font-size:clamp(2rem,5vw,3.2rem);line-height:1.05}.sub{color:#e5f0f4;max-width:820px}.warning{margin-top:18px;padding:12px;border:1px solid #ffffff55;border-radius:10px;background:#0002}main{padding:22px 20px 60px}.dash{position:sticky;top:8px;z-index:3;display:flex;gap:14px;align-items:center;background:#fff;border:1px solid var(--line);border-radius:12px;padding:14px}.track{height:12px;background:#e5e9ed;border-radius:99px;overflow:hidden;flex:1}.bar{height:100%;width:0;background:var(--success)}button{border:1px solid var(--line);background:#fff;border-radius:8px;padding:8px 10px;cursor:pointer}.method{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:20px 0}.method div{background:#fff;border:1px solid var(--line);border-radius:10px;padding:14px}.method b{display:block;color:var(--accent)}section{margin-top:30px}.weekhead{border-bottom:2px solid var(--accent);padding-bottom:7px}.weekhead h2{margin:0}.goal{margin:4px 0 0;color:var(--muted)}.tasks{display:grid;gap:10px;margin-top:12px}.task{display:grid;grid-template-columns:auto 1fr auto;gap:12px;align-items:start;background:var(--paper);border:1px solid var(--line);border-left:5px solid var(--accent);border-radius:10px;padding:13px}.task.weekend{background:var(--weekend)}.task.done{opacity:.65}.task.done h3{text-decoration:line-through}.task input{width:24px;height:24px}.task h3{margin:0 0 4px;font-size:1.05rem}.date{font-size:.85rem;color:var(--muted)}.time{white-space:nowrap;color:var(--accent);font-weight:700;font-size:.82rem;background:#e7f0f4;border-radius:99px;padding:4px 8px}.note{margin-top:5px;color:#34414b;font-size:.93rem}@media(max-width:700px){.dash{position:static;flex-wrap:wrap}.method{grid-template-columns:1fr}.task{grid-template-columns:auto 1fr}.time{grid-column:2;justify-self:start}}@media print{body{background:#fff}.dash{display:none}section{break-before:page}.task{break-inside:avoid}}
+:root{--bg:#f4f6f8;--paper:#fff;--ink:#17202a;--muted:#5f6b76;--line:#d7dde3;--accent:#285f78;--success:#2f6b4f;--weekend:#fbf8ef}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif}header{background:linear-gradient(135deg,#173b4c,#285f78);color:#fff;padding:40px 20px}.wrap{max-width:1050px;margin:auto}h1{margin:0 0 8px;font-size:clamp(2rem,5vw,3.2rem);line-height:1.05}.sub{color:#e5f0f4;max-width:820px}.warning{margin-top:18px;padding:12px;border:1px solid #ffffff55;border-radius:10px;background:#0002}.reviewed{margin:10px 0 0;color:#d5e6ed;font-size:.9rem}main{padding:22px 20px 60px}.dash{position:sticky;top:8px;z-index:3;display:flex;gap:14px;align-items:center;background:#fff;border:1px solid var(--line);border-radius:12px;padding:14px}.track{height:12px;background:#e5e9ed;border-radius:99px;overflow:hidden;flex:1}.bar{height:100%;width:0;background:var(--success)}button{border:1px solid var(--line);background:#fff;border-radius:8px;padding:8px 10px;cursor:pointer}.method{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:20px 0 12px}.method div,.refs{background:#fff;border:1px solid var(--line);border-radius:10px;padding:14px}.method b{display:block;color:var(--accent)}.refs h2{margin:0 0 6px;font-size:1.1rem}.refs p{margin:0 0 8px;color:#34414b}.refs ul{columns:2;margin:8px 0 0;padding-left:22px}.refs a{color:var(--accent);text-decoration-thickness:1px;text-underline-offset:2px}section{margin-top:30px}.weekhead{border-bottom:2px solid var(--accent);padding-bottom:7px}.weekhead h2{margin:0}.goal{margin:4px 0 0;color:var(--muted)}.tasks{display:grid;gap:10px;margin-top:12px}.task{display:grid;grid-template-columns:auto 1fr auto;gap:12px;align-items:start;background:var(--paper);border:1px solid var(--line);border-left:5px solid var(--accent);border-radius:10px;padding:13px}.task.weekend{background:var(--weekend)}.task.done{opacity:.65}.task.done h3{text-decoration:line-through}.task input{width:24px;height:24px}.task h3{margin:0 0 4px;font-size:1.05rem}.date{font-size:.85rem;color:var(--muted)}.time{white-space:nowrap;color:var(--accent);font-weight:700;font-size:.82rem;background:#e7f0f4;border-radius:99px;padding:4px 8px}.note{margin-top:5px;color:#34414b;font-size:.93rem}@media(max-width:700px){.dash{position:static;flex-wrap:wrap}.method{grid-template-columns:1fr}.refs ul{columns:1}.task{grid-template-columns:auto 1fr}.time{grid-column:2;justify-self:start}}@media print{body{background:#fff}.dash{display:none}section{break-before:page}.task{break-inside:avoid}}
 </style>
 </head>
 <body>
-<header><div class="wrap"><h1>CDS Platform: 12-Week Daily Build Plan</h1><p class="sub">One focused task every day from July 20 through October 11, 2026, with a minimum commitment of 30 minutes per day.</p><div class="warning"><b>Prototype safety boundary:</b> Development and validation roadmap only. Do not use outputs for patient-care decisions until independently reviewed and validated.</div></div></header>
+<header><div class="wrap"><h1>CDS Platform: 12-Week Daily Build Plan</h1><p class="sub">One focused task every day from July 20 through October 11, 2026, with a minimum commitment of 30 minutes per day.</p><div class="warning"><b>Prototype safety boundary:</b> Development and validation roadmap only. Do not use outputs for patient-care decisions until independently reviewed and validated.</div><p class="reviewed">Repository references and task wording reviewed against the current contract on July 21, 2026.</p></div></header>
 <main><div class="wrap">
 <div class="dash"><div class="track"><div class="bar" id="bar"></div></div><b id="progress">0 / 84 complete</b><button id="today">Current task</button><button onclick="print()">Print</button><button id="reset">Reset</button></div>
-<div class="method"><div><b>5 minutes: orient</b>Open the prior note, run current tests, and state the single deliverable.</div><div><b>20 minutes: build</b>Make one small code, test, content, or documentation change.</div><div><b>5 minutes: close</b>Run the relevant test, checkpoint the work, and record the next exact action.</div></div>
+<div class="method"><div><b>5 minutes: orient</b>Read <code>AGENTS.md</code>, <code>CURRENT.md</code>, and the directly relevant implementation and test files. Open broader governing documents only when the task requires a scope, safety, clinical-content, or contract decision.</div><div><b>20 minutes: build</b>Complete one precise deliverable with the smallest coherent code, test, content, or documentation change. Preserve public imports, serialized contracts, and repository boundaries unless the task explicitly changes them.</div><div><b>5 minutes: close</b>Run targeted verification first and the full suite when merge-level verification is warranted. Replace <code>CURRENT.md</code> with the new state and one exact next action; keep implementation history in the pull request rather than checkpoint files.</div></div>
+<div class="refs">
+<h2>Repository references</h2>
+<p>Ordinary implementation work starts with the first two links plus the directly relevant code and test files. Use the broader references only when the task calls for them.</p>
+<ul>
+<li><a href="AGENTS.md">AGENTS.md</a> — source hierarchy, boundaries, and workflow</li>
+<li><a href="CURRENT.md">CURRENT.md</a> — active deliverable and next action</li>
+<li><a href="CDS_TASK_PROMPT_TEMPLATE.md">CDS_TASK_PROMPT_TEMPLATE.md</a> — fresh-task prompt scaffold</li>
+<li><a href="PROJECT_CHARTER.md">PROJECT_CHARTER.md</a> — governing safety and scope</li>
+<li><a href="FIRST_VERTICAL_SLICE.md">FIRST_VERTICAL_SLICE.md</a> — stable feature contract and three medications</li>
+<li><a href="ARCHITECTURE.md">ARCHITECTURE.md</a> — component and dependency boundaries</li>
+<li><a href="docs/DOMAIN_CONVENTIONS.md">docs/DOMAIN_CONVENTIONS.md</a> — domain and serialization conventions</li>
+<li><a href="docs/SAFETY_INVARIANTS.md">docs/SAFETY_INVARIANTS.md</a> — concise safety constraints</li>
+<li><a href="BACKLOG.md">BACKLOG.md</a> — unresolved decisions and deferred work</li>
+</ul>
+</div>
 <div id="app"></div>
 </div></main>
 <script>
 const weeks=[
 ["Foundation and scope control","Create a reproducible repository and define the first safe, narrow clinical slice.",[
-["Create the repository skeleton","Create the cds_platform directory tree and package boundaries."],
-["Write the project charter","Define intended user, first use case, non-goals, and safety constraints."],
-["Choose the first vertical slice","Limit the first feature to renal function plus 2–3 medication evaluations."],
-["Set up Python packaging","Add pyproject.toml, package metadata, Python version, and minimal dependencies."],
-["Set up the test runner","Configure pytest with package-import and calculator smoke tests."],
-["Add development commands","Document environment, installation, test, and future CLI commands."],
-["Weekly review: freeze the initial scope","Remove work that does not support the first renal-dosing slice."]]],
+["Create the repository skeleton","Create the architectural package boundaries under <code>src/cds/</code> and the unit, integration, and contract test directories under <code>tests/</code>."],
+["Write the project charter","Create <code>PROJECT_CHARTER.md</code> with the intended user, first use case, non-goals, safety constraints, and change-control authority."],
+["Choose the first vertical slice","Define adult Cockcroft–Gault creatinine clearance plus exactly three renal-dose evaluations: cefepime, piperacillin–tazobactam, and famotidine."],
+["Set up Python packaging","Add <code>pyproject.toml</code>, package metadata, Python 3.11+ support, and only dependencies with a documented purpose."],
+["Set up the test runner","Configure pytest with package-import and renal-calculator placeholder smoke tests."],
+["Add development commands","Document exact environment, editable-install, test, and future CLI commands in <code>README.md</code>."],
+["Weekly review: freeze the initial scope","Reconcile <code>PROJECT_CHARTER.md</code>, <code>FIRST_VERTICAL_SLICE.md</code>, and <code>BACKLOG.md</code>; remove work that does not support the first renal-dosing slice."]]],
 ["Domain-model implementation","Convert the model design into typed Python objects without clinical logic.",[
-["Create domain enums","Implement explicit enums, including UNKNOWN states."],
-["Create traceability support models","Implement Provenance, EvidenceItem, Assumption, and WarningNote."],
-["Create shared value objects","Implement ValueWithUnit, CodeableConcept, and TimeRange."],
-["Implement patient and encounter models","Add Patient and Encounter as stable truth objects."],
-["Implement medication and observation models","Add MedicationOrder, LabResult, and VitalSign with explicit units."],
-["Implement problem and allergy models","Add Problem and Allergy with explicit unknown reaction/severity handling."],
-["Weekly review: test model construction","Test complete and incomplete instances and mutable defaults."]]],
+["Create domain enums","Implement explicit enums in <code>src/cds/domain/enums.py</code>, including <code>UNKNOWN</code> states where uncertainty must be represented."],
+["Create traceability support models","Implement <code>Provenance</code>, <code>EvidenceItem</code>, <code>Assumption</code>, and <code>WarningNote</code> in <code>src/cds/domain/support.py</code>."],
+["Create shared value objects","Implement <code>ValueWithUnit</code>, <code>CodeableConcept</code>, and <code>TimeRange</code> in <code>src/cds/domain/value_objects.py</code>."],
+["Implement patient and encounter models","Add passive <code>Patient</code> and <code>Encounter</code> truth objects in <code>src/cds/domain/clinical.py</code>; keep derived calculations out."],
+["Implement medication and observation models","Add <code>MedicationOrder</code>, <code>LabResult</code>, and <code>VitalSign</code> in <code>src/cds/domain/clinical.py</code> with explicit units and <code>None</code> for missing numerics."],
+["Implement problem and allergy models","Add <code>Problem</code> and <code>Allergy</code> in <code>src/cds/domain/clinical.py</code> with text-only concepts and explicit unknown reaction or severity handling."],
+["Weekly review: consolidate domain tests","Use focused support, value-object, clinical, output, and cross-model invariant tests; preserve <code>cds.domain.models</code> compatibility exports and canonical serialized behavior."]]],
 ["Output models and serialization","Establish one auditable result shape before clinical calculations.",[
-["Implement renal and dose result models","Add RenalFunctionResult, Contraindication, and DoseRecommendation."],
-["Implement recommendation and alert models","Add CDSRecommendation and Alert with rule/order links."],
-["Implement the standard rule result","Add RuleResult with status, tri-state pass, recommendations, and alerts."],
-["Define serialization rules","Support dataclasses, enums, dates, datetimes, and Decimal."],
-["Define deserialization boundaries","Keep external dictionaries at mapper and DTO boundaries."],
-["Create golden JSON examples","Save complete and incomplete renal-evaluation outputs."],
-["Weekly review: contract tests","Protect key output field names and serialization behavior."]]],
+["Implement renal and dose result models","Add <code>RenalFunctionResult</code>, <code>Contraindication</code>, and <code>DoseRecommendation</code> in <code>src/cds/domain/outputs.py</code>."],
+["Implement recommendation and alert models","Add <code>CDSRecommendation</code> and <code>Alert</code> in <code>src/cds/domain/outputs.py</code> with rule, order, renal-result, and content-version links as applicable."],
+["Implement the standard rule result","Add <code>RuleResult</code> in <code>src/cds/domain/outputs.py</code> with explicit status, tri-state pass, recommendations, alerts, and evaluation time."],
+["Define canonical serialization rules","Use <code>src/cds/utils/serialization.py</code> for dataclasses, enums, dates, timezone-aware datetimes, <code>Decimal</code>, lists, and string-keyed mappings."],
+["Define deserialization boundaries","Keep external dictionaries and payload-specific parsing at mapper and DTO boundaries; domain models do not deserialize themselves."],
+["Create golden JSON examples","Save complete, incomplete, unsupported, and warning-bearing renal-evaluation outputs using the canonical serializer."],
+["Weekly review: contract tests","Protect focused-module imports, <code>cds.domain.models</code> compatibility exports, output field names, enum wire values, decimal strings, UTC datetimes, and failure on unsupported serialization inputs."]]],
 ["Validation safety layer","Separate structural validity from clinical sufficiency.",[
-["Define validation issue types","Create ValidationIssue and ValidationResult."],
-["Implement structural patient validation","Check impossible dates and nonpositive anthropometrics."],
-["Implement structural lab validation","Validate creatinine value, unit, status, and timestamps."],
-["Implement renal sufficiency validation","Require the inputs needed by the selected renal method."],
-["Implement medication-order sufficiency validation","Require medication identity and rule-specific order facts."],
-["Add typed exceptions","Implement ValidationError, ContentNotFound, and CalculationError."],
-["Weekly review: validation matrix","Test valid, missing, invalid, and boundary inputs."]]],
+["Define passive validation result models","Create <code>ValidationIssue</code> and <code>ValidationResult</code> in <code>src/cds/validation/models.py</code> with explicit status and severity values, safe incomplete defaults, and focused tests in <code>tests/unit/validation/test_models.py</code>."],
+["Implement structural patient validation","Check impossible dates, adult-scope facts, nonpositive anthropometrics, declared weight type, and required timezone behavior without deriving clinical values."],
+["Implement structural lab validation","Validate serum-creatinine presence, <code>mg/dL</code> unit support, status, collection time, numeric range, and timestamp consistency."],
+["Implement renal sufficiency validation","Require the exact Cockcroft–Gault inputs and explicit stability, sex-coefficient, unit, and supported-population facts defined by the first-slice contract."],
+["Implement medication-order sufficiency validation","Require exact supported medication and regimen identifiers plus rule-specific route, dose, frequency, indication, and infusion facts."],
+["Add typed exceptions","Implement and test <code>ValidationError</code>, <code>ContentNotFound</code>, and <code>CalculationError</code> without using exceptions for expected clinical gaps."],
+["Weekly review: validation matrix","Test structurally valid, missing, invalid, unsupported, ambiguous-unit, and boundary inputs; verify critical issues stop computation and matching."]]],
 ["Renal calculator","Build one pure, independently testable renal calculation service.",[
-["Write the renal-calculator specification","Document equation, inputs, rounding, age, sex, and unit policy."],
-["Implement age calculation","Test birthdays, leap years, and future dates."],
-["Implement weight selection policy","Return the selected weight plus assumptions and warnings."],
-["Implement the core calculation","Return a typed RenalFunctionResult with no I/O."],
-["Add formula unit tests","Use hand-calculated normal and impaired renal cases."],
-["Add edge-case behavior","Test invalid creatinine, extreme values, and missing inputs."],
-["Weekly review: independent verification","Independently recalculate and document golden cases."]]],
+["Write the renal-calculator specification","Resolve the applicable <code>BACKLOG.md</code> decisions for Decimal precision, unrounded storage, no default creatinine floor or cap, accepted units, sex handling, renal stability, and reproducibility metadata."],
+["Resolve age input and implement age handling","Define whether the calculator receives supplied age or derives it from evaluation date and birth date; test birthdays, leap years, future dates, and reproducibility."],
+["Implement supplied weight handling","Require a supplied kilogram value and explicit <code>WeightType</code>; do not derive ideal or adjusted weight or silently select a weight method in the first slice."],
+["Implement the core Cockcroft–Gault calculation","Return a typed unindexed <code>RenalFunctionResult</code> in <code>mL/min</code> with reproducible inputs, assumptions, warnings, provenance, and no I/O."],
+["Add formula unit tests","Use independently hand-calculated normal and impaired renal cases with unrounded expected values."],
+["Add fail-closed edge behavior","Test invalid or ambiguous creatinine, unsupported sex values, unstable renal function, renal replacement therapy, extreme inputs, and missing critical facts without producing a recommendation."],
+["Weekly review: independent verification","Independently recalculate golden cases, verify unrounded band inputs, and document the verification method and limitations."]]],
 ["Versioned clinical content","Move dosing guidance into validated YAML behind a repository boundary.",[
-["Design the renal-dose YAML schema","Define medication identity, renal bands, dosing, sources, dates, and reviewer."],
-["Create the first content fixture","Write one clearly labeled non-production YAML example."],
-["Implement content schema validation","Reject missing keys, invalid units, and overlapping bands."],
-["Implement the content repository interface","Return typed dosing content by medication identifier."],
-["Implement an in-memory repository","Support unit tests without file access."],
-["Implement a YAML repository","Load and validate YAML only in the repository layer."],
-["Weekly review: content failure tests","Test missing, duplicate, invalid, gapped, and overlapping content."]]],
-["Medication 1 renal dosing","Complete the first medication end to end.",[
-["Select and source medication 1","Record the authoritative source, version, applicability, and ambiguities."],
-["Encode medication 1 content","Add renal bands, recommendations, monitoring, citations, and review status."],
-["Implement the band predicate","Define inclusive and exclusive boundary semantics."],
-["Implement the medication 1 rule","Select a valid band and return a structured recommendation."],
-["Handle insufficient and out-of-scope cases","Return incomplete, warning, or not-applicable results safely."],
-["Write medication 1 golden cases","Cover normal, impaired, boundary, missing, and contraindication cases."],
-["Weekly review: end-to-end medication 1","Run validation through standard result in integration tests."]]],
-["Medications 2 and 3","Prove the design supports variation without duplicating the engine.",[
-["Select and source medication 2","Choose a meaningfully different renal-adjustment pattern."],
-["Encode and test medication 2 content","Add validated content and boundary tests."],
-["Add medication 2 rule coverage","Reuse the generic matcher where possible."],
-["Select and source medication 3","Choose another controlled variation such as avoid-below-threshold."],
-["Encode and test medication 3 content","Validate units, bands, provenance, and contraindications."],
-["Add medication 3 rule coverage","Use the same standard result pattern."],
-["Weekly review: duplication audit","Extract only truly shared helpers and remove copied logic."]]],
+["Design the renal-dose YAML schema","Define exact medication and regimen identifiers, renal bands, boundary inclusivity, dosing, supported context, sources, versions, reviewer metadata, and limitations for the three medications."],
+["Create the first cefepime content fixture","Write one clearly labeled non-production cefepime YAML example with explicit supported regimen context and review status."],
+["Implement content schema validation","Reject missing keys, invalid units, unsupported identifiers, gaps, overlaps, contradictions, unreachable bands, and absent source or review metadata."],
+["Implement the content repository interface","Return typed, versioned dosing content by exact medication and regimen identifier."],
+["Implement an in-memory repository","Support deterministic unit and rule tests without file access."],
+["Implement a YAML repository","Load, parse, and validate YAML only in the repository layer; services and rules receive typed content."],
+["Weekly review: content failure tests","Test missing, duplicate, invalid, gapped, overlapping, unsupported-regimen, unreviewed, and version-mismatch content."]]],
+["Cefepime renal dosing","Complete the first medication end to end.",[
+["Select and source cefepime content","Record the authoritative source and version, supported indications and regimens, exact identifiers, renal bands, ambiguities, and required reviewer metadata."],
+["Encode cefepime content","Add reviewed renal bands, supported dose and infusion variants, recommendations, monitoring, citations, content version, and limitations."],
+["Implement the band predicate","Define and test inclusive and exclusive boundary semantics using the unrounded creatinine-clearance value."],
+["Implement the cefepime rule","Match only exact supported cefepime identifiers and regimen context, then return a structured recommendation with rule and content versions."],
+["Handle insufficient and out-of-scope cefepime cases","Return incomplete, unsupported, warning, or not-applicable results safely without extrapolation or a dose recommendation."],
+["Write cefepime golden cases","Cover normal, impaired, exact-boundary, missing, unsupported-regimen, unstable-renal-function, and contraindication cases."],
+["Weekly review: end-to-end cefepime","Run structural and sufficiency validation through calculation, content loading, rule matching, and the standard result in integration tests."]]],
+["Piperacillin–tazobactam and famotidine","Prove the design supports meaningful regimen variation without duplicating the engine.",[
+["Select and source piperacillin–tazobactam content","Define exact identifiers, authoritative source and version, supported indications, standard and extended-infusion variants, renal bands, and reviewer metadata."],
+["Encode and test piperacillin–tazobactam content","Add validated versioned content with explicit dose, frequency, infusion-duration, boundary, provenance, and unsupported-variant tests."],
+["Add piperacillin–tazobactam rule coverage","Reuse the generic matcher where possible while requiring exact supported regimen context."],
+["Select and source famotidine content","Define exact identifiers, authoritative source and version, supported routes and regimens, renal thresholds, limitations, and reviewer metadata."],
+["Encode and test famotidine content","Add validated versioned content with explicit units, renal bands, provenance, and unsupported formulation or regimen cases."],
+["Add famotidine rule coverage","Use the same standard result and generic matching pattern without adding medication-specific engine behavior."],
+["Weekly review: duplication audit","Extract only demonstrated shared helpers, preserve explicit medication content differences, and remove copied logic without speculative abstraction."]]],
 ["Rule engine and application use case","Orchestrate the full flow without moving logic into interfaces.",[
-["Define the evaluation context","Create one typed context with only needed facts."],
-["Implement the minimal rule interface","Define a small evaluate(context) contract."],
-["Implement the rule registry","Map stable identifiers to rules deterministically."],
-["Implement the simple engine","Loop eligible rules and preserve rule identifiers."],
-["Create the renal-dose use case","Validate, calculate, load content, evaluate, and return result."],
-["Map exceptions to structured failures","Hide stack traces and distinguish clinical gaps from failures."],
-["Weekly review: architecture boundary test","Confirm the intended import and dependency direction."]]],
+["Define the evaluation context","Create one typed context containing only the validated facts needed by renal calculation and exact medication-regimen evaluation."],
+["Implement the minimal rule interface","Define a small <code>evaluate(context, content)</code> contract returning structured rule results."],
+["Implement the rule registry","Map stable medication and rule identifiers to rules deterministically and reject duplicate registration."],
+["Implement the simple engine","Loop eligible rules, preserve rule identifiers and content versions, and return explicit unmatched or unsupported outcomes."],
+["Create the renal-dose use case","Validate structure and sufficiency, load typed content, calculate unrounded creatinine clearance, evaluate rules, and assemble the standard result."],
+["Map exceptions to structured failures","Hide stack traces and distinguish expected clinical gaps or unsupported context from system failures."],
+["Weekly review: architecture boundary test","Confirm import direction and verify domain, services, rules, repositories, app, mappers, and interfaces retain their assigned responsibilities."]]],
 ["Input/output mapping and CLI","Create a usable local interface outside the domain layer.",[
-["Define the CLI request DTO","Specify the minimal JSON input shape."],
-["Implement request mapping","Map JSON to DTOs and typed domain objects."],
-["Implement response mapping","Emit stable JSON with ISO dates and structured warnings."],
-["Build the CLI command","Accept an input file and optional output path."],
-["Add human-readable CLI summary","Keep JSON canonical while offering concise text output."],
-["Add CLI error handling","Handle malformed input, unknown medication, and content failure."],
-["Weekly review: manual CLI walkthrough","Save reproducible commands and observed outputs."]]],
+["Define the CLI request DTO","Specify the minimal synthetic JSON input for age or evaluation date, sex, stable serum creatinine, supplied weight and type, exact medication and regimen facts, and evaluation time."],
+["Implement request mapping","Map JSON to DTOs and typed domain objects with explicit missing-data, timezone, identifier, and unit handling."],
+["Implement response mapping","Emit stable canonical JSON with ISO dates, UTC datetimes, decimal strings, structured validation issues, warnings, evidence, provenance, rule IDs, and content versions."],
+["Build the CLI command","Accept an input file and optional output path, invoke one application use case, and avoid clinical logic in the interface."],
+["Add human-readable CLI summary","Keep JSON canonical while offering concise status, renal result, recommendation, warnings, and evidence text."],
+["Add CLI error handling","Handle malformed input, unsupported medication or regimen, ambiguous units, content failure, and system failure without stack traces or invented recommendations."],
+["Weekly review: manual CLI walkthrough","Save reproducible synthetic commands and outputs for each supported medication plus incomplete and unsupported cases."]]],
 ["Integration, safety, and regression testing","Guard against silent clinical and contract drift.",[
-["Create the integration test matrix","List data completeness, medications, boundaries, and failure combinations."],
-["Add full-flow parameterized tests","Exercise all medications and renal boundaries."],
-["Add contract tests","Protect output fields, enums, decimal formatting, and provenance."],
-["Add content snapshot tests","Make clinical-content edits visible in review."],
-["Add property and invariant tests","Enforce one band, no overlap, and evidence on successful recommendations."],
-["Add logging policy","Exclude patient identifiers and sensitive payloads by default."],
-["Weekly review: run a safety failure drill","Corrupt content and input and verify fail-closed behavior."]]],
+["Create the integration test matrix","List data completeness, all three medications, regimen variants, renal boundaries, unsupported contexts, and system-failure combinations."],
+["Add full-flow parameterized tests","Exercise cefepime, piperacillin–tazobactam, and famotidine across renal bands, exact boundaries, incomplete data, and unsupported variants."],
+["Extend contract tests","Protect end-to-end output fields, enum values, decimal formatting, UTC datetime behavior, provenance, rule IDs, content versions, and compatibility imports beyond the existing domain tests."],
+["Add content snapshot tests","Make source, version, reviewer, supported-context, renal-band, and recommendation changes visible in review."],
+["Add property and invariant tests","Enforce one matched band, no overlap, no recommendation on critical validation failure, and required evidence and provenance on successful recommendations."],
+["Add logging policy","Exclude patient identifiers and sensitive payloads by default; test that failures and diagnostics do not disclose synthetic case details unnecessarily."],
+["Weekly review: run a safety failure drill","Corrupt content and input, trigger unsupported contexts and system errors, and verify fail-closed behavior with no recommendation or exposed stack trace."]]],
 ["Documentation and prototype release","Package the prototype and define the next controlled increment.",[
-["Write the architecture overview","Document modules, dependencies, data flow, and result shape."],
-["Write the clinical-content workflow","Document sourcing, review, versioning, supersession, and rollback."],
-["Write the validation and missing-data policy","Explain structural versus sufficiency validation and uncertainty."],
-["Create a model and API reference","Show required fields, units, and safe defaults."],
-["Create the prototype release checklist","Include verification, review status, limitations, PHI, and warnings."],
-["Tag the prototype milestone","Run tests, capture versions, update changelog, and tag the prototype."],
-["Final review and next 30-day backlog","Select only one next feature and break it into small tasks."]]]
+["Review the architecture overview","Reconcile <code>ARCHITECTURE.md</code> with the implemented modules, dependencies, processing flow, result shape, and any approved deviations without adding implementation history."],
+["Write the clinical-content workflow","Document source selection, extraction, review, versioning, approval status, supersession, rollback, and independent verification."],
+["Write the validation and missing-data policy","Extend the existing domain conventions and safety invariants with structural versus sufficiency validation, issue severity, result-state mapping, accepted units, and unsupported-context behavior."],
+["Create the model and interface reference","Document required versus optional fields, units, safe defaults, compatibility imports, canonical serialization, CLI request and response shapes, and current interface limitations."],
+["Create the prototype release checklist","Include full verification, independent calculation review, clinical-content review status, limitations, PHI controls, provenance, version capture, and prototype warnings."],
+["Tag the prototype milestone","Run all configured checks, capture code and content versions, update the changelog, and tag only after the release checklist is satisfied."],
+["Final review and next 30-day backlog","Reconcile <code>CURRENT.md</code> and <code>BACKLOG.md</code>, select only one approved next feature, and break it into small tasks without broadening the charter implicitly."]]]
 ];
 const start=new Date("2026-07-20T12:00:00"),key="cds-plan-progress-v1",state=JSON.parse(localStorage.getItem(key)||"{}");let day=0,html="";
 weeks.forEach((w,wi)=>{html+=`<section><div class="weekhead"><h2>Week ${wi+1}: ${w[0]}</h2><p class="goal">${w[1]}</p></div><div class="tasks">`;w[2].forEach(t=>{const d=new Date(start);d.setDate(start.getDate()+day);const id=`day-${day+1}`,weekend=d.getDay()==0||d.getDay()==6;html+=`<article class="task ${weekend?'weekend':''}" id="${id}"><input type="checkbox" data-id="${id}"><div><div class="date">Day ${day+1} · ${d.toLocaleDateString(undefined,{weekday:'long',year:'numeric',month:'long',day:'numeric'})}</div><h3>${t[0]}</h3><div class="note">${t[1]}</div></div><span class="time">30 min minimum</span></article>`;day++});html+="</div></section>"});document.getElementById("app").innerHTML=html;
