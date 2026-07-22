@@ -8,15 +8,12 @@ These decisions must be resolved before the adult Cockcroft–Gault renal-dosing
 
 ### Calculation and validation contract
 
-- **Partially resolved — Age input:** the stable feature contract permits an evaluation date or a supplied calculated age. Decide the exact input fields, mapper responsibility, and reproducibility metadata for age used by the calculation.
-- **Partially resolved — Sex handling:** the domain vocabulary includes `male`, `female`, `other`, and `unknown`. Decide which values the configured Cockcroft–Gault implementation accepts and how unsupported values fail closed without selecting a coefficient.
-- **Open — Arithmetic precision:** decide the `Decimal` calculation context and required precision for the stored, unrounded creatinine-clearance result.
-- **Partially resolved — Rounding boundary:** calculations and rule matching must use the unrounded value. Define the display-rounding rule and tests proving that renal-band matching does not use the rounded value.
-- **Open — Renal stability:** define how a synthetic test case attests that serum creatinine is sufficiently stable and whether absent stability information produces `incomplete` or `not_applicable`.
-- **Partially resolved — Serum-creatinine floors or caps:** the default is no floor or cap. Codify and test that behavior; any exception requires a reviewed source and explicit scope amendment.
-- **Partially resolved — Result-state mapping:** `ResultStatus` defines `success`, `success_with_warnings`, `incomplete`, `not_applicable`, and `failed`. Define the exact clinical and system conditions that map to each non-success state.
-- **Open — Minimum provenance:** define the required provenance fields for manually entered inputs, calculated renal results, matched rules, and final recommendations.
-- **Partially resolved — Units and conversion:** ambiguous units are rejected and units are never inferred silently. Define the accepted unit vocabulary and any explicitly supported conversion paths for the first slice.
+Resolved calculator decisions are governed by [`docs/RENAL_CALCULATOR_SPEC.md`](docs/RENAL_CALCULATOR_SPEC.md): Decimal precision and local context, supported sex coefficients and fail-closed unsupported sex handling, calculator-side unrounded storage and renal-band matching, no serum-creatinine floor or cap, renal-stability meanings, exact first-slice units with no conversion, and minimum provenance for calculated renal results.
+
+- **Deferred to Day 30 — Age input:** determine and implement the exact age-input API, evaluation-date behavior, birthday calculation, leap-year behavior, invalid-date handling, and age reproducibility tests.
+- **Deferred — Presentation formatting:** define any presentation-only scale or notation for a displayed renal value. Display formatting must remain outside the calculator and must not replace the underlying value used for rule matching.
+- **Partially resolved — Result-state mapping:** missing renal stability maps to `incomplete`, and explicitly unstable renal function maps to `not_applicable`. Define remaining application-level assembly rules for `success`, `success_with_warnings`, other incomplete or not-applicable conditions, and unexpected `failed` results.
+- **Partially resolved — Minimum provenance:** calculated renal-result provenance is defined. Define required provenance for manually entered inputs, matched rules, final recommendations, and the assembled top-level result.
 
 ### Renal content contract
 
