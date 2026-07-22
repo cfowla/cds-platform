@@ -4,7 +4,9 @@ This file is replaced after every task. It is not an append-only diary.
 
 ## Repository execution mode
 
-Use the repository checkout supplied by the execution environment. If no checkout is available, use the GitHub connector to materialize only the named files and concretely required imports in a bounded verification checkout.
+Use the repository checkout supplied by the execution environment. If no checkout is available,
+use the GitHub connector to materialize only the named files and concretely required imports in a
+bounded verification checkout.
 
 GitHub is the authoritative source and destination for repository files.
 
@@ -21,48 +23,80 @@ Use only the named files and task-specified commands. Do not install missing tes
 
 ## Roadmap position
 
-- Days 1–35 are complete.
-- **Day 35 — Independently verify golden renal cases and future band-boundary values** is complete.
-- Current sequential task: **Day 36 — Design the renal-dose YAML schema**.
+- Days 1–36 are complete.
+- **Day 36 — Design the renal-dose YAML schema** is complete.
+- Current sequential task: **Day 37 — Create the first cefepime content fixture**.
 
 ## Current state
 
-- Four synthetic golden Cockcroft–Gault cases were independently recalculated from exact integer ratios, then converted at the specification's 28-significant-digit `ROUND_HALF_EVEN` operation boundaries.
-- The verification record distinguishes the female calculation's required two-step Decimal evaluation from a one-step exact-fraction rounding; the implementation matches the normative `base_crcl` then `× 0.85` sequence.
-- A focused synthetic threshold triplet proves that immediately-below, exact, and immediately-above values remain distinct in stored form even though all three would display as `60.0` at one decimal place.
-- `docs/RENAL_CALCULATOR_VERIFICATION.md` records the method, exact fractions, fixed expected values, boundary evidence, and limitations.
-- `docs/RENAL_CALCULATOR_SPEC.md` links the verification record without changing the calculation contract.
-- No calculator logic, validation behavior, public import, domain model, result field, enum value, serialization behavior, clinical content, renal band, medication rule, recommendation, interface, or dependency changed.
+- `docs/RENAL_DOSE_CONTENT_SCHEMA.md` is the normative version 1 YAML content contract for one
+  exact medication-and-regimen pair at one content version.
+- The exact first-slice medication identifiers are `cefepime`, `piperacillin_tazobactam`, and
+  `famotidine`; regimen and related identifiers must be explicit, case-sensitive, and exact.
+- The schema defines closed mappings, quoted Decimal strings, explicit quantities and units,
+  supported-context fields, renal-domain and band structures, recommendation and
+  no-recommendation outcomes, source references, content versions, review states, reviewer
+  metadata, and limitations.
+- Renal bands use the stored unquantized Cockcroft–Gault value in `mL/min` and must form one
+  ordered, gap-free, non-overlapping partition of the declared renal domain with exactly one owner
+  of every shared boundary.
+- Medication-specific regimens, indications, formulations, doses, infusion strategies, renal
+  cutoffs, sources, reviewer identity, and limitations remain intentionally unresolved.
+- No clinical content fixture, YAML parser, dependency, typed content model, validator,
+  repository, matcher, rule, recommendation, public import, domain contract, serialization
+  behavior, or interface was added or changed.
 
 ## Verification
 
-- Independent exact-rational reference script — completed successfully: `7 independent reference values verified with specified operation boundaries`.
-- `python -m py_compile tests/unit/services/test_renal.py` — completed successfully.
-- `git diff --cached --check` in the bounded checkout — completed successfully with no whitespace errors.
-- Pytest execution was intentionally skipped because `pytest` is unavailable in the supplied execution environment.
+- `python -m py_compile` was not applicable because Day 36 changes documentation only.
+- A standard-library schema-contract marker check completed successfully:
+  `Day 36 schema contract markers verified: 9`.
+- `git diff --check` in the bounded checkout — completed successfully with no whitespace errors.
+- Pytest execution was intentionally skipped because `pytest` is unavailable in the supplied
+  execution environment and Day 36 adds no executable test target.
 - No focused-test, full-suite, or CI passing claim is made.
-- Deferred command: `PYTHONPATH=src python -m pytest tests/unit/services/test_renal.py -q`.
 
 ## Additional files inspected
 
-- None. The bounded Day 35 files were sufficient.
+- `PROJECT_CHARTER.md` — required because this task defines a clinical-content contract.
+- `FIRST_VERTICAL_SLICE.md` — required to preserve the frozen three-medication and fail-closed
+  feature scope.
+- `ARCHITECTURE.md` — required to keep YAML parsing in repositories and content separate from
+  services and rules.
+- `BACKLOG.md` — required to distinguish schema decisions resolved now from medication-specific
+  clinical decisions that remain open.
+- `docs/RENAL_CALCULATOR_SPEC.md` — required to define matching against the stored unquantized
+  Cockcroft–Gault value and exact `mL/min` unit.
+- `docs/DOMAIN_CONVENTIONS.md`, `src/cds/domain/outputs.py`, and `src/cds/domain/support.py` —
+  required to align Decimal, unit, recommendation, evidence, provenance, and review-facing field
+  semantics with implemented contracts.
+- `pyproject.toml` — inspected to confirm that no YAML dependency is currently declared and none
+  should be added during this design-only task.
 
 ## Active constraints
 
 - Preserve the prototype warning and use only synthetic or properly de-identified data.
-- Structural and renal task-sufficiency validation must complete before calculation.
-- Missing, invalid, unsupported, ambiguous, unstable, and out-of-scope clinical facts fail closed without a dosing recommendation.
-- The calculator remains pure and deterministic with explicit typed inputs, exact Decimal arithmetic, no I/O, no hidden clock, no unit conversion, and no mutable global state.
-- Do not change the process-wide Decimal context or presentation-round stored renal values.
-- Future renal-band matching must use the stored unrounded value; display formatting remains outside the calculator.
-- Clinical scope, supported medications and populations, renal method, safety behavior, clinical-content requirements, intended users, interfaces, public domain contracts, and serialization behavior remain unchanged.
+- Structural and task-sufficiency validation must complete before calculation or rule matching.
+- Missing, invalid, unsupported, ambiguous, unstable, and out-of-scope clinical facts fail closed
+  without a dosing recommendation.
+- Exact medication and regimen facts are matched without aliases, normalization, fuzzy matching,
+  interpolation, extrapolation, or fallback.
+- Content defects prevent a document from becoming usable and are not silently repaired.
+- Clinical decimal values and units remain explicit; renal-band matching uses the stored
+  unquantized value.
+- Draft or retired content is never eligible for rule matching.
+- Clinical scope, supported medications and populations, renal method, safety behavior, intended
+  users, interfaces, public domain contracts, and serialization behavior remain unchanged.
 
 ## Blockers
 
-- The focused test module still requires execution in an environment with the declared test dependencies installed.
-- Actual band-selection verification remains deferred until a renal-band predicate and versioned clinical content exist.
+- Medication-specific source selection, regimen variants, renal bands, and reviewer identity are
+  deliberately deferred to the scheduled clinical-content tasks.
+- Pytest remains unavailable in the supplied execution environment.
 
 ## Next exact action
 
-> Day 36 — define the renal-dose YAML schema with exact medication and regimen identifiers, explicit inclusive and exclusive renal-band boundaries, dosing fields, supported context, sources, versions, reviewer metadata, and limitations for the three frozen-scope medications.
-
+> Day 37 — create one clearly labeled non-production cefepime YAML fixture that conforms to
+> `docs/RENAL_DOSE_CONTENT_SCHEMA.md`, uses an exact draft regimen identifier, contains explicit
+> supported context and review status, and does not present unreviewed values as approved clinical
+> guidance.
