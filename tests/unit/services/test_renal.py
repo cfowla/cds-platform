@@ -1,11 +1,14 @@
 """Tests for renal-function calculation services."""
 
 from datetime import date
+from decimal import Decimal
 
 import pytest
 
+from cds.domain.enums import WeightType
 from cds.domain.exceptions import CalculationError
-from cds.services.renal import derive_age_years
+from cds.domain.value_objects import ValueWithUnit
+from cds.services.renal import derive_age_years, require_supplied_weight
 
 
 def test_evaluation_before_birthday_returns_prior_completed_age() -> None:
@@ -85,6 +88,88 @@ def test_caller_supplied_date_objects_remain_unchanged() -> None:
 
     assert birth_date == original_birth_date
     assert evaluation_date == original_evaluation_date
+
+
+@pytest.mark.parametrize(
+    ("supplied_value", "weight_type"),
+    [
+        (Decimal("72.40"), WeightType.ACTUAL),
+        (Decimal("61.25"), WeightType.IDEAL),
+        (Decimal("66.875"), WeightType.ADJUSTED),
+        (Decimal("54.321"), WeightType.OTHER),
+    ],
+)
+def test_supported_supplied_weight_is_preserved_without_derivation(
+    supplied_value: Decimal,
+    weight_type: WeightType,
+) -> None:
+    weight = ValueWithUnit(value=supplied_value, unit="kg")
+    original_value_tuple = supplied_value.as_tuple()
+
+    returned_weight, returned_type = require_supplied_weight(
+        weight=weight,
+        weight_type=weight_type,
+    )
+
+    assert returned_weight is not weight
+    assert returned_weight.value is supplied_value
+    assert returned_weight.value.as_tuple() == original_value_tuple
+    assert returned_weight.unit == "kg"
+    assert returned_type is weight_type
+    assert weight.value is supplied_value
+    assert weight.value.as_tuple() == original_value_tuple
+    assert weight.unit == "kg"
+
+
+def test_repeated_calls_return_equivalent_independently_allocated_weights() -> None:
+    weight = ValueWithUnit(value=Decimal("72.40"), unit="kg")
+
+    first = require_supplied_weight(weight=weight, weight_type=WeightType.ACTUAL)
+    second = require_supplied_weight(weight=weight, weight_type=WeightType.ACTUAL)
+
+    assert first == second
+    assert first[0] is not second[0]
+    assert first[0] is not weight
+    assert second[0] is not weight
+
+
+@pytest.mark.parametrize("value", [None, 72.4])
+def test_missing_or_non_decimal_weight_value_raises_calculation_error(
+    value: object,
+) -> None:
+    weight = ValueWithUnit(value=value, unit="kg")  # type: ignore[arg-type]
+
+    with pytest.raises(CalculationError):
+        require_supplied_weight(weight=weight, weight_type=WeightType.ACTUAL)
+
+
+@pytest.mark.parametrize("value", [Decimal("0"), Decimal("-0.01")])
+def test_non_positive_weight_value_raises_calculation_error(value: Decimal) -> None:
+    weight = ValueWithUnit(value=value, unit="kg")
+
+    with pytest.raises(CalculationError):
+        require_supplied_weight(weight=weight, weight_type=WeightType.ACTUAL)
+
+
+@pytest.mark.parametrize("unit", [None, "", "KG", " kg", "kg ", " kg ", "lb"])
+def test_non_exact_kilogram_unit_raises_calculation_error(unit: str | None) -> None:
+    weight = ValueWithUnit(value=Decimal("72.40"), unit=unit)
+
+    with pytest.raises(CalculationError):
+        require_supplied_weight(weight=weight, weight_type=WeightType.ACTUAL)
+
+
+@pytest.mark.parametrize("weight_type", [WeightType.UNKNOWN, None, "actual"])
+def test_unknown_missing_or_raw_string_weight_type_raises_calculation_error(
+    weight_type: object,
+) -> None:
+    weight = ValueWithUnit(value=Decimal("72.40"), unit="kg")
+
+    with pytest.raises(CalculationError):
+        require_supplied_weight(  # type: ignore[arg-type]
+            weight=weight,
+            weight_type=weight_type,
+        )
 
 
 @pytest.mark.skip(reason="Placeholder: Cockcroft-Gault calculator is not implemented yet")
