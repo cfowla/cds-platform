@@ -261,3 +261,10 @@ Day 29 does not implement a calculator, service module, age derivation, validati
 conversion, body-weight derivation, clinical content, renal bands, medication rules,
 recommendations, orchestration, mapper, repository, interface, dependency, or compatibility
 export. The existing skipped calculator placeholder remains skipped.
+
+## 14. Independent verification record
+
+[\`RENAL_CALCULATOR_VERIFICATION.md\`](RENAL_CALCULATOR_VERIFICATION.md) records the
+independent arithmetic method, fixed synthetic reference cases, unrounded future-boundary
+checks, and current limitations. That record is verification evidence and does not expand this
+normative calculation contract or define clinical renal bands.
