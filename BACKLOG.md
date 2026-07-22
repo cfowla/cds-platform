@@ -1,33 +1,40 @@
 # CDS Platform Backlog
 
-This file holds unresolved decisions and deferred work that must not expand the frozen initial renal-dosing scope. An item moves into implementation only after it is answered, documented in the governing scope, and paired with tests.
+This file records unresolved decisions and explicitly deferred work. It does not identify the active task or next action; see [`CURRENT.md`](CURRENT.md) for current execution state. Backlog items are not approved implementation scope until they are resolved and documented in the governing contract.
 
-## Open questions for the renal vertical slice
+## Decisions needed before current vertical slice
 
-### Domain and calculation contract
+These decisions must be resolved before the adult Cockcroft–Gault renal-dosing vertical slice can be considered complete.
 
-- Should the input contract accept an explicit integer age only, or also accept birth date plus evaluation date and calculate age at the mapping boundary?
-- What exact `Sex` values will the configured Cockcroft–Gault implementation accept, and how will unsupported or unknown values be represented without silently choosing a coefficient?
-- Will the first feature require the caller to supply the weight already selected for Cockcroft–Gault, or will a later separately tested policy calculate ideal or adjusted body weight from height and actual weight?
-- Should calculator arithmetic use `Decimal` throughout, and what precision is required for the unrounded stored creatinine-clearance result?
-- At what boundary should display rounding occur, and how will tests prove that rule matching uses the unrounded value?
-- How will a test case explicitly attest that serum creatinine is sufficiently stable, and should absent stability information be `incomplete` or `not_applicable`?
-- Are any serum-creatinine floors or caps permitted? The default answer is no unless a reviewed source and explicit scope amendment justify one.
+### Calculation and validation contract
 
-### Result and validation behavior
+- **Partially resolved — Age input:** the stable feature contract permits an evaluation date or a supplied calculated age. Decide the exact input fields, mapper responsibility, and reproducibility metadata for age used by the calculation.
+- **Partially resolved — Sex handling:** the domain vocabulary includes `male`, `female`, `other`, and `unknown`. Decide which values the configured Cockcroft–Gault implementation accepts and how unsupported values fail closed without selecting a coefficient.
+- **Open — Arithmetic precision:** decide the `Decimal` calculation context and required precision for the stored, unrounded creatinine-clearance result.
+- **Partially resolved — Rounding boundary:** calculations and rule matching must use the unrounded value. Define the display-rounding rule and tests proving that renal-band matching does not use the rounded value.
+- **Open — Renal stability:** define how a synthetic test case attests that serum creatinine is sufficiently stable and whether absent stability information produces `incomplete` or `not_applicable`.
+- **Partially resolved — Serum-creatinine floors or caps:** the default is no floor or cap. Codify and test that behavior; any exception requires a reviewed source and explicit scope amendment.
+- **Partially resolved — Result-state mapping:** `ResultStatus` defines `success`, `success_with_warnings`, `incomplete`, `not_applicable`, and `failed`. Define the exact clinical and system conditions that map to each non-success state.
+- **Open — Minimum provenance:** define the required provenance fields for manually entered inputs, calculated renal results, matched rules, and final recommendations.
+- **Partially resolved — Units and conversion:** ambiguous units are rejected and units are never inferred silently. Define the accepted unit vocabulary and any explicitly supported conversion paths for the first slice.
 
-- Which missing or unsupported conditions map to `incomplete` versus `not_applicable`, and which conditions represent the system state `failed`?
-- What minimum provenance fields are required on manually entered inputs, calculated renal results, matched rules, and final recommendations?
-- What canonical unit vocabulary and conversion policy will be accepted? Ambiguous units must remain rejected rather than inferred.
-- What serialized representation is required for enums, timestamps, decimal values, assumptions, warnings, evidence, and provenance?
+### Renal content contract
 
-### Renal content
+- **Open — Canonical identifiers:** define the exact medication and regimen identifiers for cefepime, piperacillin–tazobactam, and famotidine.
+- **Open — Governing evidence:** select the authoritative sources and versions for each medication's initial renal-adjustment content.
+- **Open — Supported variants:** define the supported indication, route, dose, frequency, infusion-duration, formulation, and regimen variants for each medication.
+- **Open — Renal boundaries:** define exact renal bands and inclusivity rules, plus content validation for gaps, overlaps, contradictions, and unreachable ranges.
+- **Open — Independent review:** identify the clinical-content reviewer and required reviewer metadata before a rule is treated as implemented.
 
-- What exact medication identifiers and regimen identifiers will be canonical for cefepime, piperacillin–tazobactam, and famotidine?
-- Which authoritative sources and versions will govern each medication’s initial renal-adjustment content?
-- Which indication, route, dose, frequency, and infusion-duration variants are supported for each medication?
-- What are the exact renal boundaries and inclusivity rules, and how will content validation detect gaps, overlaps, or unreachable ranges?
-- Who will perform the independent clinical-content review, and what reviewer metadata is required before a rule is treated as implemented?
+## Later decisions
+
+These decisions do not define the current task and must not be pulled into the first vertical slice opportunistically.
+
+- Whether a separately tested policy should calculate ideal or adjusted body weight from height and actual weight; the first slice expects the selected weight and `WeightType` to be supplied explicitly.
+- Whether later input mappers should derive age from birth date and evaluation date beyond the minimal first-slice contract.
+- Whether later workflows should support additional explicit unit conversions beyond the accepted first-slice units.
+- How clinical-content version migration, retention, and version selection should work after the initial reviewed content set.
+- Whether broader terminology services are needed after exact identifiers for the three supported medications and regimens are established.
 
 ## Deferred features
 
@@ -42,7 +49,3 @@ The following are explicitly outside the first vertical slice:
 - API, FHIR, EHR, pharmacy-system, or production integration;
 - interruptive alerts, autonomous actions, machine-learned recommendations, or generative clinical logic; and
 - deployment, regulatory readiness, or clinical validation.
-
-## Next exact action
-
-Implement `Sex`, `ResultStatus`, `RenalMethod`, and `WeightType` in `src/cds/domain/enums.py`, then replace `tests/unit/domain/test_enums.py` with value, string-serialization, and explicit unknown-state tests.
