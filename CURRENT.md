@@ -14,77 +14,77 @@ Prohibited unless explicitly requested:
 - repository cloning or filesystem searches for another checkout
 - GitHub Actions or CI investigation
 - workflow creation or modification
-- web search
-- PR creation, management, or merge
 - broad repository review
 - substitute functional test runners
+
+External source retrieval is permitted only when a bounded clinical-content source-selection task
+explicitly requires it. Use the named authoritative source and do not broaden into general web
+research.
 
 Use only the named files and task-specified commands. Do not install missing test dependencies.
 
 ## Roadmap position
 
-- Days 1–42 are complete.
-- **Day 42 — Weekly review: content failure tests** is complete.
-- Current sequential task: **Day 43 — Select and source cefepime content**.
+- Days 1–43 are complete.
+- **Day 43 — Select and source cefepime content** is complete.
+- Current sequential task: **Day 44 — Encode cefepime content**.
 
 ## Current state
 
 - `docs/RENAL_DOSE_CONTENT_SCHEMA.md` remains the normative version 1 YAML contract.
-- `src/cds/repositories/renal_content_schema.py` continues to validate YAML text or parsed mappings
-  without file I/O, normalization, repair, typed conversion, or eligibility decisions.
-- `src/cds/repositories/renal_content.py` continues to define immutable typed renal-dose content,
-  exact versioned keys, the runtime-checkable repository protocol, and the deterministic in-memory
-  implementation.
-- `src/cds/repositories/yaml_renal_content.py` continues to read explicitly supplied YAML files,
-  validate them before typed conversion, reject duplicate exact keys, and retrieve only exact
-  case-sensitive `(medication_id, regimen_id, content_version)` keys.
-- `tests/unit/repositories/test_renal_content_failure_matrix.py` now provides one focused Day 42
-  matrix across schema validation and both repository implementations.
-- The matrix covers missing schema keys and supplied files, malformed YAML, duplicate mapping keys,
-  invalid units, renal-band gaps and overlaps, duplicate exact repository keys, unsupported regimen
-  lookups, content-version mismatches, and reviewed-version metadata mismatches.
-- The matrix verifies that schema defects raise `ContentSchemaError`, absent files or exact keys raise
-  `ContentNotFound`, and duplicate exact keys raise `ValueError` rather than being overwritten.
-- Draft content remains explicitly represented and retrievable by repositories; no review-eligibility
-  filtering, rule matching, fallback, automatic version selection, or recommendation behavior was
-  added.
-- No production implementation, public import, clinical scope, serialized contract, content fixture,
-  or repository behavior changed.
+- `docs/CEFEPIME_CONTENT_SELECTION.md` now records the selected FDA-approved DailyMed source,
+  source version and dates, exact cefepime identifiers, four exact IV base regimens, supported
+  indication identifiers, the source renal-maintenance matrix, first-slice exclusions, unresolved
+  representation issues, and required independent-review attestations.
+- The selected source is the WG Critical Care cefepime-for-injection SPL with DailyMed set ID
+  `5fd857e5-591f-44ca-80cf-fd903660b03c`, SPL version `17`, DailyMed record update date
+  `2026-06-23`, and labeling revision stated as `10/2022`.
+- The initial content set is limited to exact IV powder-for-solution maintenance regimens of
+  `500 mg` every `12 hours`, `1 g` every `12 hours`, `2 g` every `12 hours`, and `2 g` every
+  `8 hours`, each administered over `30 minutes` and matched only to the recorded indication IDs.
+- Source renal bands remain recorded as greater than `60`, `30 to 60`, `11 to 29`, and less than
+  `11 mL/min`, with the complete four-column maintenance matrix transcribed into the selection
+  record.
+- The candidate continuous partition for unrounded Decimal matching is documented but is not yet
+  clinically approved.
+- The schema's lack of a regulatory-label evidence level is documented; `guideline` is only a
+  provisional mapping pending review or a separately scoped schema decision.
+- `BACKLOG.md` now marks cefepime source, identifiers, variants, and source bands as partially
+  resolved while preserving the remaining reviewer and representation decisions.
+- `src/cds/content/renal/cefepime_synthetic_fixture.yaml` remains unchanged, invented, draft, and
+  ineligible for rule matching.
+- No loadable cefepime clinical content, medication rule, matcher, recommendation behavior, public
+  import, serialized contract, or clinical scope changed.
 
 ## Verification
 
-- Focused collection completed successfully:
-  `PYTHONPATH=src python -m pytest tests/unit/repositories/test_renal_content_failure_matrix.py --collect-only -q`
-- Result: `19 tests collected in 0.04s`.
-- Focused command completed successfully:
-  `PYTHONPATH=src python -m pytest tests/unit/repositories/test_renal_content_failure_matrix.py -q`
-- Result: `19 passed in 0.17s`.
-- `python -m compileall -q src/cds/repositories tests/unit/repositories/test_renal_content_failure_matrix.py`
-  completed successfully.
+- Initial execution-context probe: `git rev-parse --show-toplevel` from `/mnt/data` failed because no
+  repository checkout was present; no filesystem search or clone was attempted.
+- Bounded documentation verification command completed successfully:
+  `python /tmp/cds-platform/verify_day43.py`.
+- Result: all required source fields, exact identifiers, four regimen records, four source renal
+  bands, draft-only review state, and unchanged-synthetic-fixture constraints passed.
+- No pytest command was required because this task changes source-selection documentation and
+  active-state records only; no executable behavior or test contract changed.
 - No full-suite, lint, type-check, CI, or GitHub Actions passing claim is made.
 
 ## Additional files inspected
 
-- `AGENTS.md` — required for repository workflow, bounded-checkout, architecture, verification, and
-  close rules.
-- `docs/SAFETY_INVARIANTS.md` — required to preserve fail-closed content behavior and repository
-  boundaries.
-- `docs/TASK_TEMPLATE.md` and `CDS_12_Week_Daily_Project_Plan.html` — required to formulate the bounded
-  Day 42 task and identify its exact roadmap deliverable.
-- `src/cds/repositories/renal_content_schema.py` and
-  `tests/unit/repositories/test_renal_content_schema.py` — required to identify existing schema
-  failures and the uncovered malformed-YAML review case.
-- `src/cds/repositories/renal_content.py` and
-  `tests/unit/repositories/test_renal_content.py` — required to preserve exact-key, duplicate-key,
-  version-selection, and review-state contracts for the in-memory repository.
-- `src/cds/repositories/yaml_renal_content.py` and
-  `tests/unit/repositories/test_yaml_renal_content.py` — required to preserve file-boundary,
-  schema-propagation, exact-key, and duplicate-key behavior for the YAML repository.
-- `src/cds/content/renal/cefepime_synthetic_fixture.yaml` — existing prototype-only draft fixture used
-  by the focused matrix; it was not changed.
-- `src/cds/domain/exceptions.py`, `src/cds/repositories/__init__.py`,
-  `src/cds/domain/__init__.py`, and `src/cds/__init__.py` — direct imports and ancestor package files
-  required by the bounded verification checkout; none were changed.
+- `AGENTS.md` — required for source hierarchy, clinical-content decisions, bounded-checkout rules,
+  and close procedure.
+- `docs/TASK_TEMPLATE.md` and `CDS_12_Week_Daily_Project_Plan.html` — required to formulate the
+  bounded Day 43 prompt and identify its exact deliverable.
+- `docs/SAFETY_INVARIANTS.md`, `PROJECT_CHARTER.md`, and `FIRST_VERTICAL_SLICE.md` — required because
+  this task selects clinical content and exact supported regimens within the frozen scope.
+- `BACKLOG.md` — required to resolve the existing cefepime source, identifier, variant, boundary,
+  and review decisions without expanding adjacent medication scope.
+- `docs/RENAL_DOSE_CONTENT_SCHEMA.md` — required to preserve the version 1 identifier, source,
+  renal-band, review, and exact-matching contract.
+- `src/cds/content/renal/cefepime_synthetic_fixture.yaml` — required to preserve its structural-only
+  status and confirm it was not converted into clinical guidance.
+- The selected DailyMed cefepime full prescribing information — required to verify source identity,
+  indications, adult base regimens, 30-minute IV administration, Cockcroft–Gault/steady-state
+  language, and the adult renal-maintenance matrix.
 
 ## Active constraints
 
@@ -92,28 +92,33 @@ Use only the named files and task-specified commands. Do not install missing tes
 - Structural and task-sufficiency validation must complete before calculation or rule matching.
 - Missing, invalid, unsupported, ambiguous, unstable, and out-of-scope clinical facts fail closed
   without a dosing recommendation.
-- Exact medication, regimen, and content-version keys are matched without aliases, normalization,
-  fuzzy matching, interpolation, extrapolation, fallback, or automatic version selection.
-- Duplicate exact repository keys are rejected rather than overwritten.
-- Content defects prevent a document from becoming usable and are not silently repaired.
-- Clinical decimal values and units remain explicit; renal-band matching will use the stored
+- Exact medication, regimen, indication, route, formulation, dose, frequency, infusion-duration,
+  and content-version keys are matched without aliases, normalization, fuzzy matching,
+  interpolation, extrapolation, fallback, or automatic version selection.
+- Clinical decimal values and units remain explicit; renal-band matching uses the stored
   unquantized value.
-- Draft or retired content is never eligible for rule matching, but repositories only preserve review
-  state and do not decide eligibility.
+- Pediatric, IM, unstable-renal-function, renal-replacement-therapy, extended-infusion, continuous-
+  infusion, and unlisted cefepime variants remain unsupported.
+- Draft or retired content is never eligible for rule matching. Software validation does not confer
+  clinical review status.
+- Do not invent reviewer identity, resolve source ambiguity silently, or treat source ranges as
+  authorization for the prototype to select an initial regimen.
 - Clinical scope, supported medications and populations, renal method, safety behavior, intended
   users, interfaces, public domain contracts, and serialization behavior remain unchanged.
 
 ## Blockers
 
-- Medication-specific authoritative source selection, final supported variants, reviewed renal
-  bands, and reviewer identity remain deliberately deferred to the next content tasks.
-- No content-eligibility policy, renal-band matcher, medication rule, or recommendation behavior has
-  been implemented.
-- The current synthetic cefepime YAML document remains draft, invented test content and is not
-  clinical guidance.
+- A named independent clinical-content reviewer has not been identified.
+- The reviewer must approve the continuous interpretation of the integer-labeled renal bands before
+  content is marked reviewed.
+- The reviewer must approve the provisional `guideline` mapping for FDA-approved prescribing
+  information or require a separately scoped evidence-level schema change.
+- Exact sourced monitoring and warning text has not yet been authored.
 
 ## Next exact action
 
-> Day 43 — select and source cefepime content by recording the authoritative source and version,
-> supported indications and regimens, exact identifiers, renal bands, ambiguities, and required
-> reviewer metadata without yet encoding unreviewed clinical recommendations as usable content.
+> Day 44 — encode the four exact cefepime documents defined in
+> `docs/CEFEPIME_CONTENT_SELECTION.md`, preserving source units, the complete renal-maintenance
+> matrix, explicit limitations, and `review.status: draft` until the recorded boundary,
+> evidence-level, and independent-review requirements are resolved; do not modify the synthetic
+> fixture into clinical content.
