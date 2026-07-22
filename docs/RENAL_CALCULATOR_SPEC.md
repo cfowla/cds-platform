@@ -146,17 +146,38 @@ Renal stability is an explicit caller-supplied clinical fact.
 
 Day 29 does not add renal-trend analysis or an acute-kidney-injury detector.
 
-## 9. Age boundary reserved for Day 30
+## 9. Age derivation contract
 
-Age is a required equation operand, but Day 29 does not implement or fully resolve age handling.
+`Patient.birth_date` plus an explicit caller-supplied `evaluation_date` is the only first-slice
+age-input API. The first-slice calculator does not accept an independently supplied integer age
+as an alternative input. No function may obtain the current date or time implicitly.
 
-- The calculator must never obtain the current date implicitly.
-- The age used must be reproducible from explicit caller-supplied information.
-- `RenalFunctionResult.age_years` records the exact integer age used by the equation.
-- Day 30 will determine and implement the exact age-input API, evaluation-date behavior, birthday
-  calculation, leap-year behavior, and invalid-date handling.
+The public pure helper is:
 
-No age calculation code or age tests are added during Day 29.
+```python
+derive_age_years(*, birth_date: date, evaluation_date: date) -> int
+```
+
+It returns completed calendar years:
+
+- on the day before a birthday, the new year of age has not been reached;
+- on the birthday, the new year of age has been reached; and
+- after the birthday, the incremented age remains in effect.
+
+For a February 29 birth, age increments on February 29 in a leap evaluation year. In a non-leap
+evaluation year, age does not increment on February 28 and increments on March 1. The adult
+structural-validation boundary uses the same convention.
+
+The expected workflow is to run structural validation and task-sufficiency validation before age
+derivation. A birth date after the evaluation date is ordinary invalid clinical input and is
+reported by structural validation through the `birth_date_after_evaluation` issue. As defensive
+enforcement of the validated-service boundary, `derive_age_years` raises the existing typed
+`CalculationError` if such a date reaches the service. The helper does not clamp the date, return
+zero, fabricate an age, or create a second user-facing validation mechanism.
+
+The returned integer is the exact age later stored in `RenalFunctionResult.age_years` and used by
+the Cockcroft–Gault equation. Identical explicit inputs must always produce the same result. Day 30
+implements age derivation only; the Cockcroft–Gault equation remains unimplemented.
 
 ## 10. Reproducibility metadata
 
