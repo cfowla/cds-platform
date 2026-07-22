@@ -1,8 +1,8 @@
-"""Typed renal-dose content and its exact-key repository boundary.
+"""Typed renal-dose content and exact-key repository implementations.
 
 The objects in this module represent already validated, versioned clinical content. They perform no
 file access, YAML parsing, schema validation, version selection, identifier normalization, or rule
-matching. Repository implementations must retrieve content by the exact case-sensitive
+matching. Repository implementations retrieve content by the exact case-sensitive
 ``(medication_id, regimen_id, content_version)`` key and raise ``ContentNotFound`` when that exact
 key is absent.
 """
@@ -12,7 +12,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from datetime import date
 from decimal import Decimal
-from typing import Literal, Protocol, TypeAlias, runtime_checkable
+from typing import Iterable, Literal, Protocol, TypeAlias, runtime_checkable
 
 from cds.domain.exceptions import ContentNotFound
 
@@ -42,6 +42,7 @@ __all__ = [
     "ContentRecommendationAction",
     "ContentReviewStatus",
     "ContentNotFound",
+    "InMemoryRenalDoseContentRepository",
     "RenalContentEndpoint",
     "RenalContentInterval",
     "RenalDoseBandContent",
@@ -217,3 +218,31 @@ class RenalDoseContentRepository(Protocol):
         """Return content for ``key`` or raise ``ContentNotFound`` when it is absent."""
 
         ...
+
+
+class InMemoryRenalDoseContentRepository:
+    """Deterministic exact-key repository backed only by supplied typed content.
+
+    Construction copies the supplied iterable into private storage and rejects duplicate exact keys.
+    The repository performs no validation, file access, identifier normalization, fallback, or
+    automatic version selection.
+    """
+
+    def __init__(self, contents: Iterable[RenalDoseContent] = ()) -> None:
+        stored: dict[RenalDoseContentKey, RenalDoseContent] = {}
+        for content in contents:
+            key = content.key
+            if key in stored:
+                raise ValueError(f"duplicate renal-dose content key {key!r}")
+            stored[key] = content
+        self._contents = stored
+
+    def get(self, key: RenalDoseContentKey) -> RenalDoseContent:
+        """Return content for the exact key or raise ``ContentNotFound`` without fallback."""
+
+        try:
+            return self._contents[key]
+        except KeyError:
+            raise ContentNotFound(
+                f"renal-dose content not found for exact key {key!r}"
+            ) from None
