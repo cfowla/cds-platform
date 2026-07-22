@@ -4,28 +4,25 @@ This file is replaced after every task. It is not an append-only diary.
 
 ## Completed
 
-- Day 18 canonical serialization complete.
+- CDS task prompt template deduplication complete.
 
-## Current deliverable
+## Current state
 
-- Implement passive `ValidationIssue` and `ValidationResult` models.
-- Keep validation rule execution and renal sufficiency logic out of these objects.
+- `docs/TASK_TEMPLATE.md` is the single canonical CDS task prompt template.
+- The duplicate root-level `CDS_TASK_PROMPT_TEMPLATE.md` has been removed.
 
 ## Relevant files
 
-- `src/cds/validation/models.py`
-- `tests/unit/validation/test_models.py`
-- `src/cds/domain/enums.py` or a dedicated validation enum module for validation severity
+- `docs/TASK_TEMPLATE.md`
 
 ## Baseline
 
-- Latest focused checkpoint: `35 passing tests`.
+- Documentation-only change; no clinical logic, package structure, or runtime behavior changed.
 
 ## Blockers
 
-- Select the validation status and severity vocabulary.
-- Decide whether validation severity should reuse domain `Severity` or use a dedicated validation enum.
+- None.
 
 ## Next exact action
 
-- Select explicit validation status and severity values, then implement the two passive models and focused tests with safe incomplete defaults; do not add renal sufficiency rules yet.
+- Implement passive `ValidationIssue` and `ValidationResult` models in `src/cds/validation/models.py` with focused tests in `tests/unit/validation/test_models.py`; do not add renal sufficiency rules.
