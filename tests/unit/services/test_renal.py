@@ -212,6 +212,62 @@ def _calculate_cockcroft_gault(*, sex: Sex):
     return result, patient, serum_creatinine, weight
 
 
+def test_normal_cockcroft_gault_case_matches_hand_calculated_value() -> None:
+    patient = Patient(
+        patient_id="synthetic-normal-patient",
+        birth_date=date(1986, 7, 22),
+        sex=Sex.MALE,
+    )
+    serum_creatinine = LabResult(
+        result_id="synthetic-normal-creatinine",
+        patient_id=patient.patient_id,
+        encounter_id="synthetic-normal-encounter",
+        value=ValueWithUnit(value=Decimal("0.9"), unit="mg/dL"),
+        collected_at=datetime(2026, 7, 22, 8, 0, tzinfo=timezone.utc),
+    )
+
+    result = calculate_cockcroft_gault(
+        patient=patient,
+        serum_creatinine_result=serum_creatinine,
+        weight=ValueWithUnit(value=Decimal("72.5"), unit="kg"),
+        weight_type=WeightType.ACTUAL,
+        evaluation_date=date(2026, 7, 22),
+        calculated_at=datetime(2026, 7, 22, 9, 0, tzinfo=timezone.utc),
+    )
+
+    assert result.value.value == Decimal("111.8827160493827160493827160")
+    assert result.value.unit == "mL/min"
+    assert result.age_years == 40
+
+
+def test_impaired_cockcroft_gault_case_matches_hand_calculated_value() -> None:
+    patient = Patient(
+        patient_id="synthetic-impaired-patient",
+        birth_date=date(1951, 7, 22),
+        sex=Sex.MALE,
+    )
+    serum_creatinine = LabResult(
+        result_id="synthetic-impaired-creatinine",
+        patient_id=patient.patient_id,
+        encounter_id="synthetic-impaired-encounter",
+        value=ValueWithUnit(value=Decimal("1.8"), unit="mg/dL"),
+        collected_at=datetime(2026, 7, 22, 8, 0, tzinfo=timezone.utc),
+    )
+
+    result = calculate_cockcroft_gault(
+        patient=patient,
+        serum_creatinine_result=serum_creatinine,
+        weight=ValueWithUnit(value=Decimal("63.4"), unit="kg"),
+        weight_type=WeightType.ACTUAL,
+        evaluation_date=date(2026, 7, 22),
+        calculated_at=datetime(2026, 7, 22, 9, 0, tzinfo=timezone.utc),
+    )
+
+    assert result.value.value == Decimal("31.79783950617283950617283951")
+    assert result.value.unit == "mL/min"
+    assert result.age_years == 75
+
+
 def test_male_calculation_returns_unquantized_typed_result_and_metadata() -> None:
     result, patient, serum_creatinine, weight = _calculate_cockcroft_gault(
         sex=Sex.MALE
