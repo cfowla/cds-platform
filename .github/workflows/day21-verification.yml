@@ -4,6 +4,9 @@ on:
   push:
     branches:
       - agent/day21-domain-serialization-contracts
+  pull_request:
+    branches:
+      - main
 
 permissions:
   contents: read
