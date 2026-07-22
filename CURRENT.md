@@ -25,52 +25,64 @@ Use only the named files and task-specified commands. Do not install missing tes
 
 ## Roadmap position
 
-- Days 1–45 are complete.
-- **Day 45 — Implement the band predicate** is complete.
-- Current sequential task: **Day 46 — Implement the cefepime rule**.
+- Days 1–46 are complete.
+- **Day 46 — Implement the cefepime rule** is complete.
+- Current sequential task: **Day 47 — Handle insufficient and out-of-scope cefepime cases**.
 
 ## Current state
 
 - `docs/RENAL_DOSE_CONTENT_SCHEMA.md` remains the normative version 1 YAML contract.
-- Four exact draft cefepime renal-dose documents remain under `src/cds/content/renal/` for the
-  source-selected 500 mg every 12 hours, 1 g every 12 hours, 2 g every 12 hours, and 2 g every
-  8 hours IV regimens, each administered over approximately 30 minutes.
-- The content partition remains greater than `0` and less than `11`, greater than or equal to `11`
-  and less than `30`, greater than or equal to `30` and less than or equal to `60`, and greater than
-  `60 mL/min`.
-- `src/cds/rules/predicates.py` now exposes one pure `renal_band_matches` predicate.
-- The predicate receives the stored unquantized `Decimal` renal value plus explicit typed lower and
-  upper `RenalContentEndpoint` objects; `None` means unbounded in that direction.
-- A lower endpoint matches only when the value is greater than the endpoint or exactly equal to an
-  inclusive endpoint. An upper endpoint matches only when the value is less than the endpoint or
-  exactly equal to an inclusive endpoint. Both comparisons must be satisfied.
-- The predicate performs no rounding, quantization, interpolation, extrapolation, unit conversion,
-  input validation, content loading, eligibility determination, band selection, recommendation
-  construction, or I/O.
-- Focused tests prove immediately-below, at, and immediately-above behavior at the `11`, `30`, and
-  `60 mL/min` boundaries, no match outside the declared greater-than-zero domain, unbounded endpoint
-  behavior, and preservation of high-precision Decimal distinctions.
-- No cefepime medication rule, eligibility filter, application workflow, public package import,
-  serialized output contract, automatic version selection, clinical scope, or content review state
-  changed.
-- All source-based cefepime documents remain `review.status: draft` and remain ineligible for clinical
-  rule matching until independent clinical-content review is completed.
+- Four exact source-based cefepime renal-dose documents remain under `src/cds/content/renal/` for the
+  500 mg every 12 hours, 1 g every 12 hours, 2 g every 12 hours, and 2 g every 8 hours IV base
+  regimens, each administered over approximately 30 minutes.
+- All four source-based documents remain `review.status: draft` and are ineligible for rule matching
+  until independent clinical-content review is completed.
+- `src/cds/rules/cefepime.py` now exposes one pure `evaluate_cefepime_rule` implementation with
+  implementation version `1.0.0`.
+- The rule receives an already typed `MedicationOrder`, `RenalFunctionResult`, exact regimen and
+  formulation identifiers, explicit renal-stability and renal-replacement-therapy facts, the exact
+  requested content version, one typed `RenalDoseContent` document, and a caller-supplied evaluation
+  time.
+- It performs no content loading, version selection, identifier or unit normalization, dose-unit
+  conversion, renal rounding, interpolation, extrapolation, fallback, I/O, or clock access.
+- Eligibility requires `review.status: reviewed`, `reviewed_content_version` equal to the immutable
+  document version, nonempty reviewer identity and role, and a review date. Draft and retired content
+  fail closed.
+- Medication, regimen, indication, route, formulation, base dose, dose unit, frequency interval,
+  infusion duration, adult age, Cockcroft–Gault method, unindexed `mL/min` renal result, renal
+  stability, renal-replacement-therapy status, patient identity, and requested content version must
+  match exactly.
+- The stored unrounded `Decimal` renal result is checked against the declared renal domain and every
+  band through `renal_band_matches`; exactly one band must match.
+- A successful match returns structured `RuleResult`, `CDSRecommendation`, and `DoseRecommendation`
+  objects retaining the order and rule links, content and implementation versions, exact source dose
+  value and unit, route, frequency, infusion duration, rationale, monitoring, evidence, provenance,
+  renal result, matched band identifier, and evaluation time.
+- Missing or nonexact context, ineligible review state, a version mismatch, values outside the renal
+  domain, incomplete recommendation content, unresolved evidence, and zero or multiple band matches
+  return no dosing recommendation.
+- An explicit `no_recommendation` band is represented as an applied negative result with no
+  `DoseRecommendation`; no nearest-band or substitute regimen is selected.
+- No application workflow, content repository lookup, public package import, serialized output
+  contract, clinical scope, content review state, or automatic version-selection policy changed.
 
 ## Verification
 
 - Initial execution-context probe: `git rev-parse --show-toplevel` from `/mnt/data` failed because no
   repository checkout was present; no filesystem search or clone was attempted.
-- A bounded checkout was materialized at `/tmp/cds-platform` with the focused predicate, tests, typed
-  renal-content dependency, required package files, and pytest configuration.
+- A bounded checkout was materialized at `/tmp/cds-platform` with the focused rule, tests, directly
+  imported domain and repository files, required package files, and pytest configuration.
 - Pytest was available: `pytest 9.0.2`; no test dependency was installed.
 - Focused collection command:
-  `PYTHONPATH=src python -m pytest tests/unit/rules/test_predicates.py --collect-only -q`.
-- Result: `14 tests collected in 0.02s`.
+  `PYTHONPATH=src python -m pytest tests/unit/rules/test_cefepime.py --collect-only -q`.
+- Result: `25 tests collected in 0.04s`.
 - Focused test command:
-  `PYTHONPATH=src python -m pytest tests/unit/rules/test_predicates.py -q`.
-- Result: `14 passed in 0.06s`.
-- `python -m compileall -q src/cds/rules/predicates.py tests/unit/rules/test_predicates.py`
+  `PYTHONPATH=src python -m pytest tests/unit/rules/test_cefepime.py -q`.
+- Result: `25 passed in 0.06s` after the final formatting-only edits.
+- `python -m compileall -q src/cds/rules/cefepime.py tests/unit/rules/test_cefepime.py`
   completed successfully.
+- Ruff was not installed (`python -m ruff --version` returned `No module named ruff`); it was not
+  installed or substituted.
 - No full-suite, lint, type-check, CI, or GitHub Actions passing claim is made.
 
 ## Additional files inspected
@@ -78,17 +90,29 @@ Use only the named files and task-specified commands. Do not install missing tes
 - `AGENTS.md` — required for source hierarchy, bounded-checkout rules, architectural boundaries,
   verification, and close procedure.
 - `docs/TASK_TEMPLATE.md` and `CDS_12_Week_Daily_Project_Plan.html` — required to formulate the bounded
-  Day 45 prompt and identify its exact deliverable.
-- `docs/SAFETY_INVARIANTS.md` — required to preserve fail-closed matching, exact boundary testing,
-  auditability, and pure deterministic rule behavior.
-- `docs/RENAL_DOSE_CONTENT_SCHEMA.md` — required for the normative endpoint semantics and prohibition
-  on rounding, interpolation, extrapolation, or nearest-band selection.
-- `src/cds/repositories/renal_content.py` — required because it defines the typed
-  `RenalContentEndpoint` consumed by the predicate.
-- `src/cds/domain/exceptions.py` — direct import required when collecting the typed renal-content
-  module in the bounded checkout.
-- `pyproject.toml` and required ancestor `__init__.py` files — required for focused pytest collection
-  and valid package imports.
+  Day 46 prompt and identify its exact deliverable.
+- `docs/SAFETY_INVARIANTS.md` — required to preserve fail-closed exact matching, auditability, and pure
+  deterministic rule behavior.
+- `docs/RENAL_DOSE_CONTENT_SCHEMA.md` — required for exact regimen dimensions, review eligibility,
+  immutable versions, band outcomes, evidence requirements, and prohibition on normalization,
+  rounding, interpolation, extrapolation, or nearest-band selection.
+- `src/cds/domain/clinical.py` — required because the rule consumes the existing passive
+  `MedicationOrder` contract.
+- `src/cds/domain/outputs.py` — required because the rule returns the existing standard renal,
+  recommendation, dose-recommendation, and rule-result models.
+- `src/cds/domain/enums.py`, `src/cds/domain/support.py`, and `src/cds/domain/value_objects.py` — direct
+  imports required for status, evidence, provenance, coded concepts, and explicit quantities.
+- `src/cds/repositories/renal_content.py` — required because it defines the typed content, exact
+  regimen dimensions, review metadata, bands, recommendations, and sources consumed by the rule.
+- `src/cds/rules/predicates.py` and `tests/unit/rules/test_predicates.py` — required to reuse and
+  preserve the Day 45 unrounded exact-boundary predicate contract.
+- `tests/unit/repositories/test_renal_content.py` — required for the established synthetic typed-content
+  fixture style and exact-key/review-state conventions.
+- `src/cds/content/renal/cefepime_iv_2_g_every_12_hours_over_30_minutes.yaml` — inspected through its
+  creation commit to confirm exact identifier dimensions, source-unit preservation, and draft review
+  state without changing clinical content.
+- `src/cds/domain/exceptions.py`, `pyproject.toml`, and required ancestor `__init__.py` files — direct
+  import and focused pytest configuration dependencies in the bounded checkout.
 
 ## Active constraints
 
@@ -115,18 +139,16 @@ Use only the named files and task-specified commands. Do not install missing tes
 
 - A named independent clinical-content reviewer has not been identified.
 - The reviewer must approve or replace the provisional continuous interpretation of the source's
-  integer-labeled renal bands before any document is marked reviewed.
+  integer-labeled renal bands before any source-based document is marked reviewed.
 - The reviewer must approve the provisional `guideline` evidence-level mapping for FDA-approved
   prescribing information or require a separately scoped schema change.
 - The reviewer must verify the exact source transcription, monitoring text, source-unit preservation,
   and representation of approximately 30-minute administration.
 - Until those requirements are complete, all four source-based cefepime documents remain draft and
-  must not be matched by a clinical rule.
+  cannot produce a successful recommendation through the rule.
 
 ## Next exact action
 
-> Day 46 — implement one pure cefepime rule that requires exact supported medication and regimen
-> context, reviewed typed content at the requested immutable version, and a single renal-band match
-> through `renal_band_matches`, then returns a structured recommendation retaining rule and content
-> versions; draft or retired content, missing context, unsupported variants, and zero or multiple
-> band matches must fail closed without a dose recommendation.
+> Day 47 — define and test explicit incomplete, unsupported, warning-bearing, and not-applicable
+> cefepime outcomes for missing or out-of-scope clinical context, preserving fail-closed behavior and
+> ensuring no such result contains a dose recommendation or extrapolates beyond reviewed content.
