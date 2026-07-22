@@ -1,4 +1,4 @@
-"""Focused contract tests for typed renal content and its repository interface."""
+"""Focused contract tests for typed renal content and repository implementations."""
 
 from __future__ import annotations
 
@@ -11,6 +11,7 @@ import pytest
 from cds.domain.exceptions import ContentNotFound
 from cds.repositories.renal_content import (
     ContentReviewStatus,
+    InMemoryRenalDoseContentRepository,
     RenalContentEndpoint,
     RenalContentInterval,
     RenalDoseBandContent,
@@ -27,8 +28,13 @@ from cds.repositories.renal_content import (
 )
 
 
-def _content(*, review_status: ContentReviewStatus = "draft") -> RenalDoseContent:
-    version = "0.1.0-draft"
+def _content(
+    *,
+    medication_id: str = "cefepime",
+    regimen_id: str = "synthetic_fixture_iv_regimen",
+    content_version: str = "0.1.0-draft",
+    review_status: ContentReviewStatus = "draft",
+) -> RenalDoseContent:
     review = RenalDoseReviewContent(
         status=review_status,
         reviewed_content_version=None,
@@ -39,12 +45,12 @@ def _content(*, review_status: ContentReviewStatus = "draft") -> RenalDoseConten
     )
     return RenalDoseContent(
         schema_version="1",
-        content_id="renal_dose_cefepime_synthetic_fixture_iv_regimen",
-        content_version=version,
-        rule_id="cefepime_synthetic_fixture_rule",
-        medication=RenalDoseMedicationContent(id="cefepime", display="Cefepime"),
+        content_id=f"renal_dose_{medication_id}_{regimen_id}",
+        content_version=content_version,
+        rule_id=f"{medication_id}_synthetic_fixture_rule",
+        medication=RenalDoseMedicationContent(id=medication_id, display="Synthetic medication"),
         regimen=RenalDoseRegimenContent(
-            id="synthetic_fixture_iv_regimen",
+            id=regimen_id,
             display="Synthetic fixture IV regimen — not clinical guidance",
             indication_ids=("synthetic_fixture_indication",),
             route_id="iv",
@@ -101,16 +107,6 @@ def _content(*, review_status: ContentReviewStatus = "draft") -> RenalDoseConten
     )
 
 
-class _ExactRepository:
-    def __init__(self, content: RenalDoseContent) -> None:
-        self._content = content
-
-    def get(self, key: RenalDoseContentKey) -> RenalDoseContent:
-        if key != self._content.key:
-            raise ContentNotFound(f"renal-dose content not found for exact key {key!r}")
-        return self._content
-
-
 def test_typed_content_preserves_exact_decimal_units_version_and_review_state() -> None:
     content = _content()
 
@@ -149,15 +145,15 @@ def test_repository_contract_requires_an_explicit_versioned_key() -> None:
     assert signature.parameters["key"].default is inspect.Parameter.empty
 
 
-def test_structural_implementation_satisfies_repository_protocol() -> None:
-    repository = _ExactRepository(_content())
+def test_in_memory_repository_satisfies_repository_protocol() -> None:
+    repository = InMemoryRenalDoseContentRepository([_content()])
 
     assert isinstance(repository, RenalDoseContentRepository)
 
 
-def test_repository_returns_only_the_exact_requested_document() -> None:
+def test_in_memory_repository_returns_only_the_exact_requested_document() -> None:
     content = _content()
-    repository: RenalDoseContentRepository = _ExactRepository(content)
+    repository: RenalDoseContentRepository = InMemoryRenalDoseContentRepository([content])
 
     assert repository.get(content.key) is content
 
@@ -185,10 +181,42 @@ def test_repository_returns_only_the_exact_requested_document() -> None:
 def test_absent_exact_key_raises_content_not_found_without_fallback(
     key: RenalDoseContentKey,
 ) -> None:
-    repository = _ExactRepository(_content())
+    repository = InMemoryRenalDoseContentRepository([_content()])
 
-    with pytest.raises(ContentNotFound):
+    with pytest.raises(ContentNotFound, match="exact key"):
         repository.get(key)
+
+
+def test_empty_in_memory_repository_raises_content_not_found() -> None:
+    key = _content().key
+    repository = InMemoryRenalDoseContentRepository()
+
+    with pytest.raises(ContentNotFound, match="exact key"):
+        repository.get(key)
+
+
+def test_in_memory_repository_rejects_duplicate_exact_keys() -> None:
+    first = _content(review_status="draft")
+    duplicate = _content(review_status="retired")
+
+    with pytest.raises(ValueError, match="duplicate renal-dose content key"):
+        InMemoryRenalDoseContentRepository([first, duplicate])
+
+
+def test_in_memory_repository_stores_multiple_explicit_versions_without_selecting_one() -> None:
+    draft = _content(content_version="0.1.0-draft")
+    reviewed = _content(content_version="1.0.0", review_status="reviewed")
+    repository = InMemoryRenalDoseContentRepository([draft, reviewed])
+
+    assert repository.get(draft.key) is draft
+    assert repository.get(reviewed.key) is reviewed
+
+
+def test_in_memory_repository_copies_a_one_shot_input_iterable() -> None:
+    content = _content()
+    repository = InMemoryRenalDoseContentRepository(item for item in [content])
+
+    assert repository.get(content.key) is content
 
 
 def test_review_state_is_represented_without_automatic_version_selection_or_eligibility() -> None:
