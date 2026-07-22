@@ -21,30 +21,32 @@ Use only the named files and task-specified commands. Do not install missing tes
 
 ## Roadmap position
 
-- Days 1–33 are complete.
-- **Day 33 — Add formula tests** is complete.
-- Current sequential task: **Day 34 — Add fail-closed edge tests**.
+- Days 1–34 are complete.
+- **Day 34 — Add fail-closed edge tests** is complete.
+- Current sequential task: **Day 35 — Independently verify golden renal cases and future band-boundary values**.
 
 ## Current state
 
-- `cds.services.renal.calculate_cockcroft_gault` remains unchanged as the public, keyword-only, pure, deterministic Cockcroft–Gault calculator.
-- `tests/unit/services/test_renal.py` now includes distinct synthetic normal and impaired male formula cases constructed from typed `Patient`, `LabResult`, and `ValueWithUnit` inputs.
-- The normal case derives age 40 and compares the unrounded result directly with `Decimal("111.8827160493827160493827160")` in exact unit `mL/min`.
-- The impaired case derives age 75 and compares the unrounded result directly with `Decimal("31.79783950617283950617283951")` in exact unit `mL/min`.
-- Both cases use actual kilogram weights, serum creatinine in exact unit `mg/dL`, explicit evaluation dates, timezone-aware timestamps, and synthetic identifiers.
-- Existing formula, typed-output, metadata, immutability, allocation, Decimal-context, age, and supplied-weight tests and assertions remain preserved.
-- Day 33 did not change production behavior or add fail-closed edge cases, renal-band matching, medication rules, recommendations, validation changes, dependencies, or clinical content.
+- Existing structural and renal-sufficiency tests confirm that missing serum creatinine remains distinct from measured zero; invalid and nonfinite values, non-exact units, unsupported sex, missing critical facts, unstable renal function, and renal replacement therapy fail closed with error-severity validation issues and no calculation or recommendation.
+- `tests/unit/services/test_renal.py` adds direct-boundary coverage for missing or malformed typed inputs, unsupported sex, invalid or nonfinite creatinine and weight values, non-exact units, unknown or malformed weight types, missing or malformed collection times, future birth dates, and naive calculation timestamps.
+- Defensive failure tests verify that `CalculationError` is raised before a `RenalFunctionResult` can be constructed.
+- Finite positive low and high serum-creatinine cases verify that the exact supplied Decimal is retained and used without a floor, cap, substitution, conversion, or presentation quantization.
+- `cds.services.renal` now rejects nonfinite Decimal inputs without leaking raw decimal exceptions, validates required dates and timezone-aware timestamps at the calculator boundary, and translates unexpected Decimal arithmetic failures to `CalculationError`.
+- The calculator remains pure and deterministic, retains the local 28-digit `ROUND_HALF_EVEN` context, and does not modify the process-wide Decimal context.
+- No validation issue codes, public imports, result fields, enum values, serialization behavior, provenance contracts, clinical content, medication rules, renal bands, recommendations, orchestration, or dependencies changed.
 
 ## Verification
 
 - `git diff --check` — completed successfully with no whitespace errors.
-- The focused pytest tests were intentionally not executed because `pytest` is unavailable in the supplied execution environment.
-- No Day 33 passing-test claim is made.
-- Run later with declared test dependencies: `PYTHONPATH=src python -m pytest tests/unit/services/test_renal.py -q`.
+- Pytest execution was intentionally skipped because `pytest` is unavailable in the supplied execution environment.
+- No focused-test, full-suite, or CI passing claim is made.
+- Deferred command: `PYTHONPATH=src python -m pytest tests/unit/validation/test_lab.py tests/unit/validation/test_renal.py tests/unit/services/test_renal.py -q`.
 
 ## Additional files inspected
 
-- `src/cds/__init__.py`, `src/cds/services/__init__.py`, and `tests/unit/services/__init__.py` — materialized only as required ancestor package markers for the bounded checkout; no additional contract analysis was required.
+- `src/cds/__init__.py`, `src/cds/services/__init__.py`, `src/cds/validation/__init__.py`, `tests/__init__.py`, `tests/unit/__init__.py`, `tests/unit/services/__init__.py`, and `tests/unit/validation/__init__.py` — required ancestor package markers for the bounded checkout.
+- `src/cds/domain/clinical.py`, `src/cds/domain/enums.py`, `src/cds/domain/exceptions.py`, `src/cds/domain/outputs.py`, `src/cds/domain/support.py`, `src/cds/domain/value_objects.py`, and `src/cds/validation/models.py` — inspected only to resolve domain types and public APIs imported by the focused service, validators, and tests.
+- `pyproject.toml` — materialized to preserve the bounded repository context; no dependency was installed.
 
 ## Active constraints
 
@@ -58,8 +60,8 @@ Use only the named files and task-specified commands. Do not install missing tes
 
 ## Blockers
 
-- The focused test module still requires execution in an environment with the declared test dependencies installed.
+- The focused test modules still require execution in an environment with the declared test dependencies installed.
 
 ## Next exact action
 
-> Day 34 — Add fail-closed edge tests for invalid or ambiguous creatinine, unsupported sex, unstable renal function, renal replacement therapy, extreme inputs, and missing critical facts without producing a recommendation.
+> Day 35 — independently recalculate the golden renal cases, verify unrounded values used at future band boundaries, and document the verification method and limitations.
