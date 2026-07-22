@@ -23,41 +23,45 @@ Use only the named files and task-specified commands. Do not install missing tes
 
 ## Roadmap position
 
-- Days 1–40 are complete.
-- **Day 40 — Implement an in-memory repository** is complete.
-- Current sequential task: **Day 41 — Implement a YAML repository**.
+- Days 1–41 are complete.
+- **Day 41 — Implement a YAML repository** is complete.
+- Current sequential task: **Day 42 — Weekly review: content failure tests**.
 
 ## Current state
 
 - `docs/RENAL_DOSE_CONTENT_SCHEMA.md` remains the normative version 1 YAML contract.
-- `src/cds/repositories/renal_content_schema.py` continues to validate YAML text or parsed mappings
-  without file I/O, normalization, repair, or typed conversion.
-- `src/cds/repositories/renal_content.py` defines immutable, typed renal-dose content objects for
-  exact quantities, intervals, medication and regimen facts, supported context, renal bands,
-  recommendations, evidence sources, review metadata, and the complete versioned document.
-- `RenalDoseContentKey` represents the exact case-sensitive
-  `(medication_id, regimen_id, content_version)` repository key. It performs no aliasing, trimming,
-  case folding, fallback, or version selection.
-- `RenalDoseContentRepository` remains the runtime-checkable exact-key repository protocol.
-- `InMemoryRenalDoseContentRepository` now copies supplied typed documents into private exact-key
-  storage, rejects every duplicate key with `ValueError`, and returns the original document object
-  only for the exact requested key.
-- Missing keys, including case, whitespace, regimen, medication, and version mismatches, raise the
-  existing `ContentNotFound` exception without fallback or automatic version selection.
-- The in-memory repository performs no file access, YAML parsing, schema validation, typed mapping,
-  clinical validation, review-eligibility filtering, rule matching, or mutation of supplied content.
-- No YAML repository, file-to-model mapper, version-selection policy, matcher, rule, recommendation
-  behavior, or package-level public re-export was added.
+- `src/cds/repositories/renal_content_schema.py` validates YAML text or parsed mappings without file
+  I/O, normalization, repair, or typed conversion.
+- `src/cds/repositories/renal_content.py` continues to define immutable typed renal-dose content,
+  exact versioned keys, the runtime-checkable repository protocol, and the deterministic in-memory
+  implementation.
+- `src/cds/repositories/yaml_renal_content.py` now defines
+  `YamlRenalDoseContentRepository` as the repository boundary for explicitly supplied YAML files.
+- YAML repository construction reads each supplied path once as UTF-8, parses it with the duplicate-
+  key-safe loader, requires complete version 1 schema validation, converts the validated mapping
+  explicitly into immutable typed content, and stores it by the exact case-sensitive
+  `(medication_id, regimen_id, content_version)` key.
+- Decimal strings become exact `Decimal` values, validated date strings become `date` values, lists
+  become tuples, null optional values remain `None`, and declared units and identifiers are preserved
+  without normalization.
+- Duplicate exact keys across supplied files raise `ValueError`; a missing supplied file and an
+  absent exact lookup key raise the existing `ContentNotFound`; schema defects continue to raise
+  `ContentSchemaError` before content becomes usable.
+- The YAML repository performs no directory discovery, globbing, aliasing, trimming, case folding,
+  fallback, automatic version selection, review-eligibility filtering, clinical validation, rule
+  matching, recommendation construction, or file access after construction.
+- No existing typed-content model, schema-validator behavior, package-level public re-export,
+  clinical scope, or serialized contract was changed.
 
 ## Verification
 
 - Focused collection completed successfully:
-  `PYTHONPATH=src python -m pytest tests/unit/repositories/test_renal_content.py --collect-only -q`
-- Result: `13 tests collected in 0.02s`.
+  `PYTHONPATH=src python -m pytest tests/unit/repositories/test_yaml_renal_content.py --collect-only -q`
+- Result: `11 tests collected in 0.04s`.
 - Focused command completed successfully:
-  `PYTHONPATH=src python -m pytest tests/unit/repositories/test_renal_content.py -q`
-- Result: `13 passed in 0.06s`.
-- `python -m compileall -q src/cds/repositories/renal_content.py tests/unit/repositories/test_renal_content.py`
+  `PYTHONPATH=src python -m pytest tests/unit/repositories/test_yaml_renal_content.py -q`
+- Result: `11 passed in 0.13s`.
+- `python -m compileall -q src/cds/repositories/yaml_renal_content.py tests/unit/repositories/test_yaml_renal_content.py`
   completed successfully.
 - Ruff was not installed in the bounded environment, so no lint passing claim is made.
 - No full-suite, type-check, CI, or GitHub Actions passing claim is made.
@@ -66,14 +70,18 @@ Use only the named files and task-specified commands. Do not install missing tes
 
 - `AGENTS.md` — required for repository workflow, bounded-checkout, architecture, verification, and
   close rules.
-- `docs/SAFETY_INVARIANTS.md` — required to preserve the exact-key repository boundary and fail-closed
-  content behavior.
-- `src/cds/domain/exceptions.py` — directly imported by the repository module and required to preserve
-  the existing `ContentNotFound` contract.
+- `docs/SAFETY_INVARIANTS.md` — required to preserve the repository content boundary and fail-closed
+  behavior.
+- `docs/TASK_TEMPLATE.md` and `CDS_12_Week_Daily_Project_Plan.html` — required to formulate the bounded
+  Day 41 task and identify its exact roadmap deliverable.
+- `src/cds/domain/exceptions.py` — directly imported by the repository modules and required to preserve
+  `ContentNotFound` and `ValidationError` contracts.
+- `src/cds/content/renal/cefepime_synthetic_fixture.yaml` — the existing synthetic version 1 fixture
+  used for repository integration tests; it was not changed.
 - `src/cds/repositories/__init__.py`, `src/cds/domain/__init__.py`, and `src/cds/__init__.py` — required
   ancestor package files for the bounded verification checkout; none were changed.
-- `pyproject.toml` — required to confirm the declared pytest configuration and development dependency;
-  it was not changed.
+- `pyproject.toml` — required to confirm Python, PyYAML, pytest, and Ruff configuration; it was not
+  changed.
 
 ## Active constraints
 
@@ -93,15 +101,16 @@ Use only the named files and task-specified commands. Do not install missing tes
 
 ## Blockers
 
-- The schema validator still returns a validated mapping because schema-to-model conversion belongs
-  to the YAML repository or a directly bounded mapper used by it.
-- No YAML-backed repository exists; runtime content retrieval currently requires callers or tests to
-  supply already typed `RenalDoseContent` documents.
 - Medication-specific authoritative source selection, final supported variants, reviewed renal
   bands, and reviewer identity remain deliberately deferred.
+- No content-eligibility policy, renal-band matcher, medication rule, or recommendation behavior has
+  been implemented.
+- The current synthetic cefepime YAML document remains draft, invented test content and is not
+  clinical guidance.
 
 ## Next exact action
 
-> Day 41 — implement a YAML-backed `RenalDoseContentRepository` that performs file access, YAML
-> parsing, version 1 schema validation, and explicit validated-mapping-to-typed-content conversion
-> only inside the repository boundary, while preserving exact-key lookup and fail-closed errors.
+> Day 42 — consolidate content failure tests across schema validation and both repository
+> implementations, covering missing files and keys, duplicate exact keys, malformed or invalid YAML,
+> gaps, overlaps, unsupported regimen identifiers, unreviewed content, and content-version mismatch
+> without adding rule matching or review-eligibility behavior.
