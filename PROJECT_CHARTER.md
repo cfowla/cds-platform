@@ -8,6 +8,12 @@
 
 Any interface or output produced by this project must preserve a clear version of this warning until the project has completed separate clinical validation, governance, security, regulatory, and deployment reviews. Completion of the prototype does not remove this restriction.
 
+## Document authority and use
+
+This charter is the governing source for project scope, safety constraints, and change control. Routine implementation tasks should use [`docs/SAFETY_INVARIANTS.md`](docs/SAFETY_INVARIANTS.md) as the concise working checklist, but that summary does not replace or override this charter.
+
+The full charter must be reread before any scope expansion, clinical-content change, or safety-policy change.
+
 ## Purpose
 
 The CDS Platform is a Python project for learning how to build clinical decision-support software with:
