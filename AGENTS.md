@@ -31,6 +31,67 @@ Do not preload the full project documentation or scan the repository by default.
 
 Open `PROJECT_CHARTER.md` and the full `FIRST_VERTICAL_SLICE.md` only when making a scope, safety, or clinical-content decision. Do not open them merely to orient routine implementation work.
 
+## Execution-context decision
+
+Determine the execution context once, at the start of the task:
+
+1. Run `git rev-parse --show-toplevel` from the current working directory.
+2. If it succeeds and identifies this repository, use that checkout.
+3. If it fails, do not search the filesystem for another checkout.
+4. Do not run `git clone`, `gh repo clone`, `curl`, or `wget`.
+5. When only the GitHub connector is available, create the bounded verification checkout described below.
+
+Do not run broad searches such as:
+
+- `find /`
+- `find /home`
+- `find /mnt`
+- recursive repository discovery outside the current working directory
+
+## Bounded verification checkout
+
+When no complete checkout is available, materialize a bounded checkout at:
+
+`/tmp/cds-platform`
+
+Preserve all repository-relative paths.
+
+Initially materialize only:
+
+1. Files explicitly listed under `Read first`.
+2. Focused test files explicitly named by the task.
+3. Ancestor `__init__.py` files required to create valid Python packages.
+4. `pyproject.toml` only when required for pytest configuration, package metadata, or declared test dependencies.
+
+Do not mirror entire directories or reconstruct the full repository.
+
+## Import-driven expansion
+
+Expand the bounded checkout only when required by focused test collection or execution.
+
+An additional repository file may be fetched only when one of these is true:
+
+1. A focused test directly imports it.
+2. A named implementation file directly imports it and test collection reaches that import.
+3. Pytest reports a concrete missing in-repository module, fixture, or resource.
+4. A focused failure identifies a directly relevant repository convention necessary to complete the task.
+
+For each additional file, record:
+
+- its repository-relative path;
+- the importing file or failing test; and
+- the exact import, fixture, resource reference, or error requiring it.
+
+Do not fetch a file because it is adjacent, similarly named, generally relevant, or potentially useful.
+
+Follow the import chain lazily, one concrete missing dependency at a time. Do not statically traverse every possible transitive import before running the focused tests.
+
+## Expansion limits
+
+Do not perform more than two dependency-expansion rounds without a concrete new error from the focused tests.
+
+If verification requires unavailable external infrastructure, an undeclared third-party dependency, or substantial repository reconstruction, stop and report the exact limitation instead of broadening scope speculatively.
+
 ## Scope and deliverables
 
 - Complete one explicit deliverable per task.
@@ -72,16 +133,41 @@ Detailed domain-model conventions are centralized in `docs/DOMAIN_CONVENTIONS.md
 - Prefer the standard library unless a dependency has a clear, documented purpose.
 - Keep functions and models explicit, typed, deterministic, and easy to inspect.
 - Avoid speculative abstractions for future features.
+- Do not reformat compliant files merely to produce a diff.
+- Do not perform opportunistic cleanup.
+- State every additionally inspected file and why it was needed.
 - Add or change tests with behavior changes.
 - Do not create task-history or checkpoint files unless explicitly requested.
 
 ## Verification workflow
 
+For a complete checkout:
+
 1. Run the narrowest relevant test file or test selection first.
 2. Fix targeted failures before expanding verification.
-3. Run the full test suite when the change is cross-cutting, changes a shared contract, or is being prepared for merge.
+3. Run the full test suite only when the change is cross-cutting, changes a shared contract, is being prepared for merge, or the task explicitly requires it.
 4. Run formatting, lint, type, compile, or contract checks that are already configured and relevant.
-5. Report commands and results accurately; do not claim CI or local checks that were not run.
+
+For a bounded checkout:
+
+1. Set `PYTHONPATH=src`.
+2. Run focused collection first:
+
+   ```bash
+   python -m pytest <focused-test-path> --collect-only -q
+   ```
+
+3. If collection reports a missing in-repository dependency, fetch only that dependency and its necessary ancestor `__init__.py` files.
+4. Retry collection.
+5. Run the focused tests:
+
+   ```bash
+   python -m pytest <focused-test-path> -q
+   ```
+
+6. Run broader tests only when the task explicitly requires them or the focused change affects a documented shared contract.
+
+Do not install or recreate the entire development environment unless a focused test proves it is necessary. Report commands and results accurately; do not claim CI or local checks that were not run.
 
 ## Close procedure
 
