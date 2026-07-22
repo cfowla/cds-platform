@@ -19,8 +19,8 @@ This file is replaced after every task. It is not an append-only diary.
 
 ## Verification baseline
 
-- `python -m pytest tests/contract/test_domain_serialization_contracts.py -q` — `32 passed in 0.07s`.
-- `python -m pytest -q` — `196 passed, 23 skipped in 0.35s`.
+- `python -m pytest tests/contract/test_domain_serialization_contracts.py -q` — `32 passed`.
+- `python -m pytest -q` — `196 passed, 23 skipped`.
 - The 23 skips are existing, explicitly identified placeholder tests for unimplemented components; no failures or warnings were reported.
 
 ## Active constraints
