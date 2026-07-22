@@ -23,6 +23,17 @@ Inspect an additional file only when it is necessary to resolve:
 
 Do not perform a broad repository review unless the task explicitly requires one.
 
+## Execution context
+
+- Use the repository checkout already supplied by the execution environment.
+- Probe the current working directory once with `git rev-parse --show-toplevel`.
+- Do not search the filesystem for another checkout and do not clone the repository.
+- If no checkout is available, use the GitHub connector to materialize a bounded verification checkout at `/tmp/cds-platform`.
+- Initially materialize only the `Read first` files, the focused tests, required ancestor `__init__.py` files, and `pyproject.toml` when needed.
+- Expand that checkout only for imports or resources concretely required by focused test collection or execution.
+- Preserve repository-relative paths and do not reconstruct the full repository.
+- GitHub remains authoritative for source retrieval and final repository changes; the bounded checkout exists only for implementation and focused verification.
+
 ## One deliverable
 
 Implement **`<one precise, coherent deliverable>`**.
