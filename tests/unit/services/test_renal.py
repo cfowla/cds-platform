@@ -9,6 +9,7 @@ import pytest
 from cds.domain.clinical import LabResult, Patient
 from cds.domain.enums import RenalMethod, Sex, WeightType
 from cds.domain.exceptions import CalculationError
+from cds.domain.outputs import RenalFunctionResult
 from cds.domain.value_objects import ValueWithUnit
 from cds.services.renal import (
     calculate_cockcroft_gault,
@@ -216,6 +217,7 @@ def test_male_calculation_returns_unquantized_typed_result_and_metadata() -> Non
         sex=Sex.MALE
     )
 
+    assert isinstance(result, RenalFunctionResult)
     assert result.value.value == Decimal("84.53785644051130776794493609")
     assert result.value.unit == "mL/min"
     assert result.method is RenalMethod.COCKCROFT_GAULT
