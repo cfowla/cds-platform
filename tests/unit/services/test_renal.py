@@ -516,6 +516,66 @@ def test_impaired_cockcroft_gault_case_matches_hand_calculated_value() -> None:
     assert result.age_years == 75
 
 
+@pytest.mark.parametrize(
+    ("serum_creatinine", "expected_value", "expected_relation"),
+    [
+        (
+            Decimal("0.99999"),
+            Decimal("60.00060000600006000060000600"),
+            1,
+        ),
+        (Decimal("1"), Decimal("60"), 0),
+        (
+            Decimal("1.00001"),
+            Decimal("59.99940000599994000059999400"),
+            -1,
+        ),
+    ],
+)
+def test_future_band_comparison_preserves_unrounded_value(
+    serum_creatinine: Decimal,
+    expected_value: Decimal,
+    expected_relation: int,
+) -> None:
+    """Keep synthetic threshold cases distinct before any future band match."""
+
+    patient = Patient(
+        patient_id="synthetic-threshold-patient",
+        birth_date=date(1958, 7, 22),
+        sex=Sex.MALE,
+    )
+    lab = LabResult(
+        result_id="synthetic-threshold-creatinine",
+        patient_id=patient.patient_id,
+        encounter_id="synthetic-threshold-encounter",
+        value=ValueWithUnit(value=serum_creatinine, unit="mg/dL"),
+        collected_at=datetime(2026, 7, 22, 8, 0, tzinfo=timezone.utc),
+    )
+
+    result = calculate_cockcroft_gault(
+        patient=patient,
+        serum_creatinine_result=lab,
+        weight=ValueWithUnit(value=Decimal("60"), unit="kg"),
+        weight_type=WeightType.ACTUAL,
+        evaluation_date=date(2026, 7, 22),
+        calculated_at=datetime(2026, 7, 22, 9, 0, tzinfo=timezone.utc),
+    )
+
+    stored_value = result.value.value
+    assert stored_value == expected_value
+    if expected_relation < 0:
+        assert stored_value < Decimal("60")
+    elif expected_relation > 0:
+        assert stored_value > Decimal("60")
+    else:
+        assert stored_value == Decimal("60")
+
+    with localcontext() as context:
+        context.prec = 28
+        context.rounding = ROUND_HALF_EVEN
+        assert stored_value.quantize(Decimal("0.1")) == Decimal("60.0")
+
+
 def test_male_calculation_returns_unquantized_typed_result_and_metadata() -> None:
     result, patient, serum_creatinine, weight = _calculate_cockcroft_gault(
         sex=Sex.MALE
