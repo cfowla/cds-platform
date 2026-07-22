@@ -39,18 +39,30 @@ The normative document shape, type rules, exact matching, renal-boundary semanti
 versions, review states, reviewer fields, sources, and validation invariants are governed by
 [`docs/RENAL_DOSE_CONTENT_SCHEMA.md`](docs/RENAL_DOSE_CONTENT_SCHEMA.md).
 
-- **Partially resolved — Canonical identifiers:** exact first-slice medication IDs and the syntax
-  and matching behavior for all content identifiers are defined. Define each medication-specific
-  regimen, indication, route, and formulation identifier during source selection.
-- **Open — Governing evidence:** select the authoritative sources and versions for each
-  medication's initial renal-adjustment content.
-- **Open — Supported variants:** define the supported indication, route, dose, frequency,
-  infusion-duration, formulation, and regimen variants for each medication.
-- **Partially resolved — Renal boundaries:** interval representation, inclusive/exclusive
-  comparison semantics, and rejection of gaps, overlaps, contradictions, and unreachable bands
-  are defined. Define the actual medication-specific renal bands from reviewed sources.
-- **Partially resolved — Independent review:** required review states and reviewer metadata are
-  defined. Identify the clinical-content reviewer before any document is marked `reviewed`.
+- **Partially resolved — Canonical identifiers:** exact first-slice medication IDs and identifier
+  syntax are defined. [`docs/CEFEPIME_CONTENT_SELECTION.md`](docs/CEFEPIME_CONTENT_SELECTION.md)
+  now defines the initial cefepime indication, route, formulation, regimen, content, rule, and
+  source identifiers. Piperacillin–tazobactam and famotidine identifiers remain open for their
+  scheduled source-selection tasks.
+- **Partially resolved — Governing evidence:** the initial cefepime source is the selected
+  FDA-approved DailyMed prescribing information recorded in
+  [`docs/CEFEPIME_CONTENT_SELECTION.md`](docs/CEFEPIME_CONTENT_SELECTION.md). Governing sources for
+  piperacillin–tazobactam and famotidine remain open.
+- **Partially resolved — Supported variants:** the initial cefepime set is limited to four exact IV
+  powder-for-solution maintenance regimens administered over 30 minutes and the explicitly listed
+  indication identifiers. IM, pediatric, renal-replacement-therapy, extended-infusion, continuous-
+  infusion, and other variants remain unsupported. Piperacillin–tazobactam and famotidine variants
+  remain open.
+- **Partially resolved — Renal boundaries:** the selected cefepime source bands and maintenance
+  matrix are recorded. Independent review must approve the continuous unrounded interpretation of
+  the source's integer-labeled `11 to 29` and `30 to 60` bands before content is marked reviewed.
+- **Open — Regulatory-label evidence level:** the version 1 schema lacks a `regulatory_label`
+  evidence level. The cefepime selection record proposes `guideline` as a documented provisional
+  mapping. Independent review must approve that mapping or a separately scoped schema change is
+  required before reviewed cefepime content is eligible for matching.
+- **Partially resolved — Independent review:** required review fields and cefepime-specific
+  attestations are defined. A named independent clinical-content reviewer remains required before
+  any cefepime document may be marked `reviewed`.
 
 ## Later decisions
 
