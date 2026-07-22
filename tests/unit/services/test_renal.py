@@ -6,6 +6,7 @@ from decimal import ROUND_DOWN, ROUND_HALF_EVEN, Decimal, getcontext, localconte
 
 import pytest
 
+import cds.services.renal as renal_service
 from cds.domain.clinical import LabResult, Patient
 from cds.domain.enums import RenalMethod, Sex, WeightType
 from cds.domain.exceptions import CalculationError
@@ -210,6 +211,253 @@ def _calculate_cockcroft_gault(*, sex: Sex):
         calculated_at=datetime(2026, 7, 22, 9, 0, tzinfo=timezone.utc),
     )
     return result, patient, serum_creatinine, weight
+
+
+def _valid_calculation_arguments() -> dict[str, object]:
+    patient, serum_creatinine, weight = _cockcroft_gault_inputs(sex=Sex.MALE)
+    return {
+        "patient": patient,
+        "serum_creatinine_result": serum_creatinine,
+        "weight": weight,
+        "weight_type": WeightType.ACTUAL,
+        "evaluation_date": date(2026, 7, 22),
+        "calculated_at": datetime(2026, 7, 22, 9, 0, tzinfo=timezone.utc),
+    }
+
+
+def _assert_calculation_error_without_result(
+    arguments: dict[str, object],
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    def fail_if_result_is_constructed(**_: object) -> RenalFunctionResult:
+        pytest.fail("A defensive failure must not construct a renal result.")
+
+    monkeypatch.setattr(
+        renal_service,
+        "RenalFunctionResult",
+        fail_if_result_is_constructed,
+    )
+    with pytest.raises(CalculationError):
+        calculate_cockcroft_gault(**arguments)  # type: ignore[arg-type]
+
+
+@pytest.mark.parametrize(
+    ("argument_name", "invalid_value"),
+    [
+        ("patient", None),
+        ("patient", object()),
+        ("serum_creatinine_result", None),
+        ("serum_creatinine_result", object()),
+        ("weight", None),
+        ("weight", object()),
+        ("evaluation_date", None),
+        ("evaluation_date", "2026-07-22"),
+        ("evaluation_date", datetime(2026, 7, 22, tzinfo=timezone.utc)),
+        ("calculated_at", None),
+        ("calculated_at", "2026-07-22T09:00:00Z"),
+        ("calculated_at", datetime(2026, 7, 22, 9, 0)),
+    ],
+)
+def test_missing_or_malformed_required_inputs_raise_calculation_error(
+    argument_name: str,
+    invalid_value: object,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    arguments = _valid_calculation_arguments()
+    arguments[argument_name] = invalid_value
+
+    _assert_calculation_error_without_result(arguments, monkeypatch)
+
+
+@pytest.mark.parametrize("birth_date", [None, "1980-07-23"])
+def test_missing_or_malformed_birth_date_raises_calculation_error(
+    birth_date: object,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    arguments = _valid_calculation_arguments()
+    patient = arguments["patient"]
+    assert isinstance(patient, Patient)
+    patient.birth_date = birth_date  # type: ignore[assignment]
+
+    _assert_calculation_error_without_result(arguments, monkeypatch)
+
+
+@pytest.mark.parametrize("sex", [Sex.UNKNOWN, Sex.OTHER, None, "male"])
+def test_unsupported_sex_raises_calculation_error(
+    sex: object,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    arguments = _valid_calculation_arguments()
+    patient = arguments["patient"]
+    assert isinstance(patient, Patient)
+    patient.sex = sex  # type: ignore[assignment]
+
+    _assert_calculation_error_without_result(arguments, monkeypatch)
+
+
+@pytest.mark.parametrize(
+    "value",
+    [
+        None,
+        1.13,
+        Decimal("NaN"),
+        Decimal("sNaN"),
+        Decimal("Infinity"),
+        Decimal("-Infinity"),
+        Decimal("0"),
+        Decimal("-0.01"),
+    ],
+)
+def test_invalid_serum_creatinine_raises_only_calculation_error(
+    value: object,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    arguments = _valid_calculation_arguments()
+    lab = arguments["serum_creatinine_result"]
+    assert isinstance(lab, LabResult)
+    lab.value.value = value  # type: ignore[assignment]
+
+    _assert_calculation_error_without_result(arguments, monkeypatch)
+
+
+@pytest.mark.parametrize(
+    "unit",
+    [None, "", " ", "MG/DL", " mg/dL ", "mg/L", "µmol/L"],
+)
+def test_non_exact_creatinine_unit_raises_calculation_error_without_conversion(
+    unit: str | None,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    arguments = _valid_calculation_arguments()
+    lab = arguments["serum_creatinine_result"]
+    assert isinstance(lab, LabResult)
+    lab.value.unit = unit
+
+    _assert_calculation_error_without_result(arguments, monkeypatch)
+    assert lab.value.value == Decimal("1.13")
+    assert lab.value.unit == unit
+
+
+@pytest.mark.parametrize("value", [None, object()])
+def test_missing_or_malformed_creatinine_quantity_raises_calculation_error(
+    value: object,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    arguments = _valid_calculation_arguments()
+    lab = arguments["serum_creatinine_result"]
+    assert isinstance(lab, LabResult)
+    lab.value = value  # type: ignore[assignment]
+
+    _assert_calculation_error_without_result(arguments, monkeypatch)
+
+
+@pytest.mark.parametrize(
+    "collected_at",
+    [None, date(2026, 7, 22), datetime(2026, 7, 22, 8, 30)],
+)
+def test_missing_or_malformed_collection_time_raises_calculation_error(
+    collected_at: object,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    arguments = _valid_calculation_arguments()
+    lab = arguments["serum_creatinine_result"]
+    assert isinstance(lab, LabResult)
+    lab.collected_at = collected_at  # type: ignore[assignment]
+
+    _assert_calculation_error_without_result(arguments, monkeypatch)
+
+
+@pytest.mark.parametrize(
+    "value",
+    [
+        None,
+        72.4,
+        Decimal("NaN"),
+        Decimal("sNaN"),
+        Decimal("Infinity"),
+        Decimal("-Infinity"),
+        Decimal("0"),
+        Decimal("-0.01"),
+    ],
+)
+def test_invalid_supplied_weight_raises_only_calculation_error(
+    value: object,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    arguments = _valid_calculation_arguments()
+    weight = arguments["weight"]
+    assert isinstance(weight, ValueWithUnit)
+    weight.value = value  # type: ignore[assignment]
+
+    _assert_calculation_error_without_result(arguments, monkeypatch)
+
+
+@pytest.mark.parametrize("unit", [None, "", " ", "KG", " kg ", "lb", "g"])
+def test_non_exact_weight_unit_raises_calculation_error_without_conversion(
+    unit: str | None,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    arguments = _valid_calculation_arguments()
+    weight = arguments["weight"]
+    assert isinstance(weight, ValueWithUnit)
+    weight.unit = unit
+
+    _assert_calculation_error_without_result(arguments, monkeypatch)
+    assert weight.value == Decimal("72.40")
+    assert weight.unit == unit
+
+
+@pytest.mark.parametrize("weight_type", [None, WeightType.UNKNOWN, "actual", object()])
+def test_unknown_or_malformed_weight_type_raises_calculation_error(
+    weight_type: object,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    arguments = _valid_calculation_arguments()
+    arguments["weight_type"] = weight_type
+
+    _assert_calculation_error_without_result(arguments, monkeypatch)
+
+
+def test_future_birth_date_raises_calculation_error_without_result(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    arguments = _valid_calculation_arguments()
+    patient = arguments["patient"]
+    assert isinstance(patient, Patient)
+    patient.birth_date = date(2026, 7, 23)
+
+    _assert_calculation_error_without_result(arguments, monkeypatch)
+
+
+@pytest.mark.parametrize(
+    "creatinine",
+    [Decimal("0.000001"), Decimal("1000000")],
+)
+def test_finite_positive_extreme_creatinine_is_used_exactly_as_supplied(
+    creatinine: Decimal,
+) -> None:
+    arguments = _valid_calculation_arguments()
+    patient = arguments["patient"]
+    lab = arguments["serum_creatinine_result"]
+    weight = arguments["weight"]
+    assert isinstance(patient, Patient)
+    assert isinstance(lab, LabResult)
+    assert isinstance(weight, ValueWithUnit)
+    lab.value.value = creatinine
+    original_context = getcontext().copy()
+
+    result = calculate_cockcroft_gault(**arguments)  # type: ignore[arg-type]
+
+    with localcontext() as context:
+        context.prec = 28
+        context.rounding = ROUND_HALF_EVEN
+        expected = (
+            (Decimal("140") - Decimal("45")) * weight.value
+        ) / (Decimal("72") * creatinine)
+    assert result.value.value == expected
+    assert result.serum_creatinine.value is creatinine
+    assert result.serum_creatinine.value.as_tuple() == creatinine.as_tuple()
+    assert getcontext() == original_context
 
 
 def test_normal_cockcroft_gault_case_matches_hand_calculated_value() -> None:
