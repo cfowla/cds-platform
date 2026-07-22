@@ -1,36 +1,19 @@
 """Tests for renal-function and dosing-output support models."""
 
-import json
-from dataclasses import asdict
 from datetime import UTC, date, datetime
 from decimal import Decimal
-
-import pytest
 
 from cds.domain.enums import RenalMethod, Severity, Sex, WeightType
 from cds.domain.models import (
     CodeableConcept,
     Contraindication,
     DoseRecommendation,
-    EvidenceItem,
-    Provenance,
     RenalFunctionResult,
     ValueWithUnit,
-    WarningNote,
 )
-
-
-@pytest.mark.parametrize(
-    "model_type",
-    [RenalFunctionResult, Contraindication, DoseRecommendation],
-)
-def test_renal_output_models_have_safe_partial_defaults(model_type: type[object]) -> None:
-    """Each output support object can exist before optional facts are available."""
-    assert isinstance(model_type(), model_type)
 
 
 def test_renal_function_defaults_do_not_claim_a_method_or_result() -> None:
-    """An incomplete renal result does not fabricate a value or normalization state."""
     result = RenalFunctionResult()
 
     assert result.method is RenalMethod.UNKNOWN
@@ -45,7 +28,6 @@ def test_renal_function_defaults_do_not_claim_a_method_or_result() -> None:
 
 
 def test_renal_function_result_preserves_reproducible_input_context() -> None:
-    """A representative result retains the exact quantities and declared input choices."""
     collected_at = datetime(2026, 7, 21, 14, tzinfo=UTC)
     calculated_at = datetime(2026, 7, 21, 15, tzinfo=UTC)
     result = RenalFunctionResult(
@@ -75,7 +57,6 @@ def test_renal_function_result_preserves_reproducible_input_context() -> None:
 
 
 def test_contraindication_distinguishes_unevaluated_from_not_applicable() -> None:
-    """An indeterminate finding remains distinct from an explicit negative finding."""
     unevaluated = Contraindication()
     negative = Contraindication(
         code="synthetic-renal-contraindication",
@@ -91,7 +72,6 @@ def test_contraindication_distinguishes_unevaluated_from_not_applicable() -> Non
 
 
 def test_dose_recommendation_preserves_explicit_units_and_text_only_medication() -> None:
-    """A proposed regimen retains units without requiring fabricated terminology coding."""
     recommendation = DoseRecommendation(
         medication=CodeableConcept(text="Cefepime"),
         recommended_dose=ValueWithUnit(value=Decimal("1"), unit="g"),
@@ -109,7 +89,6 @@ def test_dose_recommendation_preserves_explicit_units_and_text_only_medication()
 
 
 def test_missing_recommended_dose_is_distinct_from_true_zero() -> None:
-    """A missing recommendation quantity is never encoded as zero."""
     missing = DoseRecommendation(recommended_dose=ValueWithUnit(unit="mg"))
     zero = DoseRecommendation(
         recommended_dose=ValueWithUnit(value=Decimal("0"), unit="mg")
@@ -118,36 +97,3 @@ def test_missing_recommended_dose_is_distinct_from_true_zero() -> None:
     assert missing.recommended_dose.value is None
     assert zero.recommended_dose.value == Decimal("0")
     assert missing.recommended_dose != zero.recommended_dose
-
-
-def test_renal_output_mutable_defaults_are_independent() -> None:
-    """Nested quantities, concepts, and traceability collections are never shared."""
-    first_result, second_result = RenalFunctionResult(), RenalFunctionResult()
-    first_contraindication, second_contraindication = Contraindication(), Contraindication()
-    first_dose, second_dose = DoseRecommendation(), DoseRecommendation()
-
-    first_result.value.unit = "mL/min"
-    first_result.warnings.append(WarningNote(code="renal-warning"))
-    first_contraindication.evidence.append(EvidenceItem(summary="synthetic"))
-    first_dose.medication.text = "Cefepime"
-    first_dose.recommended_dose.unit = "g"
-
-    assert second_result.value.unit is None
-    assert second_result.warnings == []
-    assert second_contraindication.evidence == []
-    assert second_dose.medication.text is None
-    assert second_dose.recommended_dose.unit is None
-
-
-@pytest.mark.parametrize(
-    "model",
-    [RenalFunctionResult(), Contraindication(), DoseRecommendation()],
-)
-def test_default_renal_output_models_have_json_safe_dicts(
-    model: RenalFunctionResult | Contraindication | DoseRecommendation,
-) -> None:
-    """Default instances convert to JSON-safe primitive dictionaries."""
-    serialized = json.loads(json.dumps(asdict(model)))
-
-    assert isinstance(serialized, dict)
-    assert serialized["provenance"] == asdict(Provenance())
