@@ -22,29 +22,38 @@ Do not describe alternative execution strategies or missing infrastructure unles
 
 ## Roadmap position
 
-- **Day 21 — Weekly review: contract tests** is complete.
-- Days 1–22 are complete; Day 22 passive validation-result models were completed early.
-- Current sequential task: **Day 23 — Implement structural patient validation**.
+- Days 1–23 are complete.
+- **Day 23 — Implement structural patient validation** is complete.
+- Current sequential task: **Day 24 — Implement structural lab validation**.
 
 ## Current state
 
-- Focused contract tests protect representative public imports from `cds.domain.clinical`, `cds.domain.outputs`, `cds.domain.support`, `cds.domain.value_objects`, and `cds.domain.enums`.
-- Every compatibility export declared by `cds.domain.models.__all__` is identity-checked against its focused-module object.
-- Exact field names and ordering are protected for `RenalFunctionResult`, `Contraindication`, `DoseRecommendation`, `CDSRecommendation`, `Alert`, and `RuleResult`.
-- Complete member-to-wire-value mappings are protected for `Sex`, `ResultStatus`, `RenalMethod`, `Severity`, and `WeightType`.
-- Canonical serialization contracts protect Decimal precision and scale, UTC `Z` datetime normalization, nested declared field names, enum wire values, `None`/`False`/zero distinctions, deterministic mapping output, and explicit unsupported-input failures.
-- The renal-shaped serialization fixture uses fixed synthetic identifiers and preserves the non-production, not-for-direct-clinical-use warning.
+- `validate_patient_structure` is a pure, deterministic validator returning the existing passive `ValidationResult`.
+- Evaluation time must be explicitly supplied with a usable UTC offset; birth-date checks use the calendar date represented by that aware datetime.
+- Present birth dates are checked only for impossible future dates and the frozen adult boundary, accepting the exact 18th birthday.
+- Present weight and height values must be finite positive `Decimal` values with nonblank units; missing numerics remain `None` and distinct from zero.
+- A supplied actual-body-weight value requires an explicitly declared non-`UNKNOWN` `WeightType`; no weight type is inferred or selected.
+- Findings use stable codes, error severity, specific field paths, and deterministic ordering.
+- Validation does not mutate patient facts or traceability collections and does not derive age, BMI, ideal weight, adjusted weight, creatinine clearance, or another clinical value.
+- No compatibility export was added because the existing public API conventions did not require editing `src/cds/validation/__init__.py`.
 
 ## Verification baseline
 
-- `python -m pytest tests/contract/test_domain_serialization_contracts.py -q` — `32 passed`.
-- `python -m pytest -q` — `196 passed, 23 skipped`.
-- The 23 skips are existing, explicitly identified placeholder tests for unimplemented components; no failures or warnings were reported.
+- `python -m pytest tests/unit/validation/test_patient.py tests/unit/validation/test_models.py -q` — `45 passed in 0.10s`.
+- No errors, warnings, or unexpected output were reported in the successful focused run.
+- The full suite was not run because no shared or compatibility-export file changed and targeted testing exposed no broader regression.
+
+## Additional files inspected
+
+- `src/cds/domain/support.py` — required to resolve the traceability imports used by `Patient` and the non-mutation test.
+- `tests/unit/validation/test_models.py` — required by the specified focused verification command and to preserve passive validation-model behavior.
+- `pyproject.toml` — inspected after the first isolated local collection attempt could not resolve the `src` package path; its pytest `pythonpath` setting was then reproduced for the exact rerun.
 
 ## Active constraints
 
-- No production model, enum, serializer, golden JSON artifact, clinical content, dependency, or interface behavior was changed.
-- No deserialization behavior, renal sufficiency rule, or clinical assertion was added.
+- No domain model, enum, value object, passive validation model, serialization behavior, clinical content, dependency, or interface behavior was changed.
+- No renal sufficiency validation, age service, unit conversion, weight-selection policy, calculation, or rule-matching behavior was added.
+- Synthetic identifiers and values are used throughout focused tests; prototype-only and not-for-direct-clinical-use constraints remain unchanged.
 
 ## Blockers
 
@@ -52,4 +61,4 @@ Do not describe alternative execution strategies or missing infrastructure unles
 
 ## Next exact action
 
-> Implement Day 23 structural patient validation for impossible dates, adult-scope facts, nonpositive anthropometrics, declared weight type, and required timezone behavior without deriving clinical values.
+> Day 24 — Implement structural lab validation.
