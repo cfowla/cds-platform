@@ -4,20 +4,23 @@ This file is replaced after every task. It is not an append-only diary.
 
 ## Completed
 
-- CDS task prompt template deduplication complete.
+- Passive `ValidationIssue` and `ValidationResult` models implemented with focused unit tests.
 
 ## Current state
 
-- `docs/TASK_TEMPLATE.md` is the single canonical CDS task prompt template.
-- The duplicate root-level `CDS_TASK_PROMPT_TEMPLATE.md` has been removed.
+- `ValidationIssue` carries optional code, message, severity, and field-path context without performing validation.
+- `ValidationResult` carries an explicit `is_valid` state and an independent list of issues without deriving either value.
+- Unevaluated status remains `None`; unknown severity remains explicit as `"unknown"`.
 
 ## Relevant files
 
-- `docs/TASK_TEMPLATE.md`
+- `src/cds/validation/models.py`
+- `tests/unit/validation/test_models.py`
 
 ## Baseline
 
-- Documentation-only change; no clinical logic, package structure, or runtime behavior changed.
+- Targeted validation-model tests pass: `4 passed`.
+- No renal sufficiency rules, calculation logic, rule matching, dependencies, or clinical-scope changes were added.
 
 ## Blockers
 
@@ -25,4 +28,4 @@ This file is replaced after every task. It is not an append-only diary.
 
 ## Next exact action
 
-- Implement passive `ValidationIssue` and `ValidationResult` models in `src/cds/validation/models.py` with focused tests in `tests/unit/validation/test_models.py`; do not add renal sufficiency rules.
+- Implement one structural required-field validator that returns `ValidationResult`, with focused tests and no renal sufficiency rules.
