@@ -133,7 +133,7 @@ def validate_renal_dose_content(document: object) -> dict[str, Any]:
         _fail("$.schema_version", 'must be exactly "1"')
 
     content_id = _identifier(root["content_id"], "$.content_id")
-    _nonempty_string(root["content_version"], "$.content_version")
+    content_version = _nonempty_string(root["content_version"], "$.content_version")
     _identifier(root["rule_id"], "$.rule_id")
 
     medication_id = _validate_medication(root["medication"])
@@ -150,7 +150,7 @@ def validate_renal_dose_content(document: object) -> dict[str, Any]:
     if unresolved:
         _fail("$.renal_bands", f"contains unresolved source_ids: {', '.join(unresolved)}")
 
-    _validate_review(root["review"], root["content_version"])
+    _validate_review(root["review"], content_version)
     _string_list(root["limitations"], "$.limitations", minimum=1)
     return root
 
@@ -233,9 +233,7 @@ def _validate_bands(
     regimen: dict[str, Any],
 ) -> set[str]:
     bands = _list(value, "$.renal_bands", minimum=1)
-    parsed: list[
-        tuple[tuple[Decimal, bool] | None, tuple[Decimal, bool] | None]
-    ] = []
+    parsed: list[tuple[tuple[Decimal, bool] | None, tuple[Decimal, bool] | None]] = []
     band_ids: set[str] = set()
     source_references: set[str] = set()
 
@@ -337,7 +335,7 @@ def _validate_recommendation(value: object, path: str, regimen: dict[str, Any]) 
 
     requires_regimen = action in {"continue", "adjust_dose"}
     if requires_regimen:
-        dose = _quantity(recommendation["dose"], f"{path}.dose", unit_kind="dose", positive=True)
+        _quantity(recommendation["dose"], f"{path}.dose", unit_kind="dose", positive=True)
         route_id = _identifier(recommendation["route_id"], f"{path}.route_id")
         interval = _quantity(
             recommendation["frequency_interval"],
@@ -345,8 +343,6 @@ def _validate_recommendation(value: object, path: str, regimen: dict[str, Any]) 
             unit_kind="time",
             positive=True,
         )
-        if dose[1] != regimen["base_dose"]["unit"]:
-            _fail(f"{path}.dose.unit", "must use the exact base-dose unit")
         if route_id != regimen["route_id"]:
             _fail(f"{path}.route_id", "must match regimen.route_id exactly")
         if interval[1] != regimen["frequency_interval"]["unit"]:
