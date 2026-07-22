@@ -4,36 +4,34 @@ This file is replaced after every task. It is not an append-only diary.
 
 ## Roadmap position
 
-- **Day 20 — Create golden JSON examples** is complete.
-- Current sequential task: **Day 21 — Weekly review: contract tests**.
-- Days 1–20 are complete.
-- Day 22 passive validation-result models were completed early; that work does not skip Day 21.
+- **Day 21 — Weekly review: contract tests** is implemented on the active task branch.
+- Days 1–21 are complete pending repository-native verification and merge.
+- Day 22 passive validation-result models were completed early.
+- Next sequential task after merge: **Day 23 — Implement structural patient validation**.
 
 ## Current state
 
-- Four deterministic renal-evaluation golden JSON examples are committed for complete, incomplete, unsupported, and warning-bearing results.
-- Every example is reconstructed from typed domain objects with `RuleResult` at the top level.
-- Every committed artifact is generated through `cds.utils.serialization.dumps_json`.
-- Fixed UTC timestamps, synthetic identifiers, explicit units, Decimal strings, traceability metadata, and non-production clinical-use disclaimers are preserved.
-- Incomplete and unsupported examples remain fail-closed and contain no dosing recommendation.
-- Missing or unevaluated values remain `None`; explicit negative findings remain `False`.
-- Focused tests protect parsing, exact-byte regeneration, determinism, status distinctions, warning structure, synthetic data, and clinical-use disclaimers.
+- Focused contract tests protect representative public imports from `cds.domain.clinical`, `cds.domain.outputs`, `cds.domain.support`, `cds.domain.value_objects`, and `cds.domain.enums`.
+- Every compatibility export declared by `cds.domain.models.__all__` is identity-checked against its focused-module object.
+- Exact field names and ordering are protected for `RenalFunctionResult`, `Contraindication`, `DoseRecommendation`, `CDSRecommendation`, `Alert`, and `RuleResult`.
+- Complete member-to-wire-value mappings are protected for `Sex`, `ResultStatus`, `RenalMethod`, `Severity`, and `WeightType`.
+- Canonical serialization contracts protect Decimal precision and scale, UTC `Z` datetime normalization, nested declared field names, enum wire values, `None`/`False`/zero distinctions, deterministic mapping output, and explicit unsupported-input failures.
+- The renal-shaped serialization fixture uses fixed synthetic identifiers and preserves the non-production, not-for-direct-clinical-use warning.
 
-## Verification baseline
+## Verification status
 
-- `python -m pytest tests/unit/utils/test_golden_json_examples.py -q` — `15 passed in 0.07s`.
-- `python -m pytest -q` — `164 passed, 23 skipped in 0.35s`.
-- The 23 skips are existing, explicitly identified placeholder tests for unimplemented components; no failures or warnings were reported.
+- `python -m pytest tests/contract/test_domain_serialization_contracts.py -q` — `32 passed in 0.19s` in the exact focused source snapshot.
+- Repository-native targeted and full-suite verification are pending on the task branch.
 
 ## Active constraints
 
-- No production domain model, serializer, validation, calculation, rule, clinical-content, dependency, or interface was changed.
-- The examples are synthetic schema demonstrations and are not reviewed clinical guidance or for direct clinical use.
+- No production model, enum, serializer, golden JSON artifact, clinical content, dependency, or interface behavior was changed.
+- No deserialization behavior, renal sufficiency rule, or clinical assertion was added.
 
 ## Blockers
 
-- None.
+- Repository-native full-suite verification remains pending.
 
 ## Next exact action
 
-> Implement Day 21 contract tests protecting focused-module imports, cds.domain.models compatibility exports, output field names, enum wire values, decimal strings, UTC datetimes, and explicit failure for unsupported serialization inputs.
+> Implement Day 23 structural patient validation for impossible dates, adult-scope facts, nonpositive anthropometrics, declared weight type, and required timezone behavior without deriving clinical values.
