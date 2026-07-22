@@ -20,7 +20,8 @@ Together, the three medications expose boundary, regimen, and content-model requ
 
 ## Supported inputs
 
-- Evaluation date or a supplied calculated age.
+- Birth date plus an explicit caller-supplied evaluation date; age is derived as completed
+  calendar years and is not accepted as an independently supplied first-slice input.
 - Adult age of at least 18 years.
 - Sex value required by the configured Cockcroft–Gault implementation.
 - Stable serum creatinine in `mg/dL` with collection time.
