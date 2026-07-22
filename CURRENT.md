@@ -22,38 +22,41 @@ Do not describe alternative execution strategies or missing infrastructure unles
 
 ## Roadmap position
 
-- Days 1–23 are complete.
-- **Day 23 — Implement structural patient validation** is complete.
-- Current sequential task: **Day 24 — Implement structural lab validation**.
+- Days 1–24 are complete.
+- **Day 24 — Implement structural lab validation** is complete.
+- Current sequential task: **Day 25 — Implement renal sufficiency validation**.
 
 ## Current state
 
-- `validate_patient_structure` is a pure, deterministic validator returning the existing passive `ValidationResult`.
-- Evaluation time must be explicitly supplied with a usable UTC offset; birth-date checks use the calendar date represented by that aware datetime.
-- Present birth dates are checked only for impossible future dates and the frozen adult boundary, accepting the exact 18th birthday.
-- Present weight and height values must be finite positive `Decimal` values with nonblank units; missing numerics remain `None` and distinct from zero.
-- A supplied actual-body-weight value requires an explicitly declared non-`UNKNOWN` `WeightType`; no weight type is inferred or selected.
-- Findings use stable codes, error severity, specific field paths, and deterministic ordering.
-- Validation does not mutate patient facts or traceability collections and does not derive age, BMI, ideal weight, adjusted weight, creatinine clearance, or another clinical value.
-- No compatibility export was added because the existing public API conventions did not require editing `src/cds/validation/__init__.py`.
+- `validate_serum_creatinine_structure` is a pure, deterministic validator returning the existing passive `ValidationResult`.
+- Evaluation, collection, and supplied result timestamps require usable UTC offsets; aware timestamps are compared as instants, including equivalent instants expressed with different offsets.
+- Serum-creatinine values must be finite positive `Decimal` values; missing values remain `None` and are distinct from measured zero.
+- The only supported unit is the exact canonical string `mg/dL`; missing, ambiguous, differently cased, padded, or unsupported units are not normalized or converted.
+- The only supported statuses are the exact source strings `final` and `corrected`; no status enum or domain behavior was added.
+- Collection time is required, result time remains optional, and chronology findings are emitted only when the timestamps required for that comparison are usable.
+- Findings use error severity, stable codes, specific field paths, nonblank messages, and the required deterministic ordering.
+- Validation does not mutate the laboratory result, nested value objects, assumptions, warnings, evidence, or provenance and adds no renal calculations or derived clinical attributes.
+- No compatibility export was added because direct import from `cds.validation.lab` satisfies the task contract.
 
 ## Verification baseline
 
-- `python -m pytest tests/unit/validation/test_patient.py tests/unit/validation/test_models.py -q` — `45 passed in 0.10s`.
+- `python -m pytest tests/unit/validation/test_lab.py tests/unit/validation/test_models.py -q` — `54 passed in 0.07s`.
 - No errors, warnings, or unexpected output were reported in the successful focused run.
-- The full suite was not run because no shared or compatibility-export file changed and targeted testing exposed no broader regression.
+- The full suite was not run because no shared public contract, compatibility export, package structure, or shared implementation file changed.
 
 ## Additional files inspected
 
-- `src/cds/domain/support.py` — required to resolve the traceability imports used by `Patient` and the non-mutation test.
+- `src/cds/domain/enums.py` — required to resolve the import used by the authoritative `src/cds/domain/clinical.py` module in the local checkout.
+- `src/cds/domain/support.py` — required to resolve `LabResult` traceability imports and verify non-mutation of assumptions, warnings, evidence, and provenance.
+- `src/cds/domain/value_objects.py` — required to resolve `LabResult.value` and preserve the authoritative `ValueWithUnit` missing-data and unit representation.
 - `tests/unit/validation/test_models.py` — required by the specified focused verification command and to preserve passive validation-model behavior.
-- `pyproject.toml` — inspected after the first isolated local collection attempt could not resolve the `src` package path; its pytest `pythonpath` setting was then reproduced for the exact rerun.
+- `pyproject.toml` — required to reproduce the repository pytest `pythonpath` configuration and run the exact verification command without a substitute environment prefix.
 
 ## Active constraints
 
-- No domain model, enum, value object, passive validation model, serialization behavior, clinical content, dependency, or interface behavior was changed.
-- No renal sufficiency validation, age service, unit conversion, weight-selection policy, calculation, or rule-matching behavior was added.
-- Synthetic identifiers and values are used throughout focused tests; prototype-only and not-for-direct-clinical-use constraints remain unchanged.
+- Prototype-only and synthetic or properly de-identified data requirements remain unchanged.
+- No domain model, enum, passive validation model, serialization behavior, clinical content, dependency, interface, mapper, terminology, or compatibility-export behavior was changed.
+- No renal sufficiency validation, renal-stability assessment, unit conversion, terminology matching, creatinine-clearance calculation, or rule-matching behavior was added.
 
 ## Blockers
 
@@ -61,4 +64,4 @@ Do not describe alternative execution strategies or missing infrastructure unles
 
 ## Next exact action
 
-> Day 24 — Implement structural lab validation.
+> Day 25 — Implement renal sufficiency validation.
