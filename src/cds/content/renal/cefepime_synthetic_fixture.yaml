@@ -1,0 +1,115 @@
+# Prototype-only synthetic fixture — not for direct clinical use.
+# Every regimen identifier, clinical value, boundary, recommendation, and monitoring statement
+# in this file is invented solely to exercise the version 1 content shape. This document is draft,
+# is not eligible for rule matching, and must not be treated as cefepime dosing guidance.
+schema_version: "1"
+content_id: "renal_dose_cefepime_synthetic_fixture_iv_regimen"
+content_version: "0.1.0-draft"
+rule_id: "cefepime_synthetic_fixture_rule"
+medication:
+  id: "cefepime"
+  display: "Cefepime"
+regimen:
+  id: "synthetic_fixture_iv_regimen"
+  display: "Synthetic fixture IV regimen — not clinical guidance"
+  indication_ids:
+    - "synthetic_fixture_indication"
+  route_id: "iv"
+  formulation_id: "injectable"
+  base_dose:
+    value: "1"
+    unit: "mg"
+  frequency_interval:
+    value: "1"
+    unit: "hours"
+  infusion_duration:
+    value: "1"
+    unit: "minutes"
+supported_context:
+  minimum_age_years: 18
+  renal_method: "cockcroft_gault"
+  renal_unit: "mL/min"
+  renal_function_stable: true
+  renal_replacement_therapy: false
+  limitations:
+    - "Synthetic software fixture only; the regimen and values are not approved clinical content."
+    - "Excludes unstable renal function, renal replacement therapy, and patients younger than 18 years."
+renal_domain:
+  lower:
+    value: "0"
+    inclusive: false
+  upper: null
+renal_bands:
+  - id: "synthetic_fixture_lower_band"
+    lower:
+      value: "0"
+      inclusive: false
+    upper:
+      value: "50"
+      inclusive: false
+    outcome: "recommendation"
+    recommendation:
+      action: "adjust_dose"
+      dose:
+        value: "1"
+        unit: "mg"
+      route_id: "iv"
+      frequency_interval:
+        value: "2"
+        unit: "hours"
+      infusion_duration:
+        value: "1"
+        unit: "minutes"
+      rationale: "Synthetic branch used only to exercise the schema shape; not a clinical dosing rationale."
+      monitoring:
+        - "Synthetic monitoring text for schema testing only."
+    no_recommendation_reason: null
+    source_ids:
+      - "synthetic_fixture_source"
+    limitations:
+      - "Boundary and recommendation values are intentionally synthetic."
+  - id: "synthetic_fixture_upper_band"
+    lower:
+      value: "50"
+      inclusive: true
+    upper: null
+    outcome: "recommendation"
+    recommendation:
+      action: "continue"
+      dose:
+        value: "1"
+        unit: "mg"
+      route_id: "iv"
+      frequency_interval:
+        value: "1"
+        unit: "hours"
+      infusion_duration:
+        value: "1"
+        unit: "minutes"
+      rationale: "Synthetic branch used only to exercise the schema shape; not a clinical dosing rationale."
+      monitoring:
+        - "Synthetic monitoring text for schema testing only."
+    no_recommendation_reason: null
+    source_ids:
+      - "synthetic_fixture_source"
+    limitations:
+      - "Boundary and recommendation values are intentionally synthetic."
+sources:
+  - id: "synthetic_fixture_source"
+    evidence_level: "expert_opinion"
+    citation: "Synthetic software fixture; no clinical authority or patient-care applicability."
+    source_document: "CDS Platform Day 37 synthetic fixture specification"
+    source_version: "1"
+    publication_date: null
+    url: null
+review:
+  status: "draft"
+  reviewed_content_version: null
+  reviewer: null
+  reviewer_role: null
+  reviewed_on: null
+  notes: "Draft synthetic fixture for structural development only; not eligible for rule matching."
+limitations:
+  - "Prototype only — not for direct clinical use."
+  - "All identifiers, values, boundaries, recommendations, and monitoring text are synthetic and must be replaced after authoritative source selection and independent review."
+  - "Draft content is ineligible for rule matching."
