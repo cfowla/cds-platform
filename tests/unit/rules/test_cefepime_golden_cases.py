@@ -28,12 +28,11 @@ from cds.repositories.renal_content import (
 from cds.rules.cefepime import evaluate_cefepime_rule
 from cds.utils.serialization import dumps_json
 
-GOLDEN_PATH = (
+GOLDEN_DIR = (
     Path(__file__).resolve().parents[3]
     / "examples"
     / "golden"
     / "cefepime_rule"
-    / "cases.json"
 )
 CASE_NAMES = (
     "normal",
@@ -263,9 +262,9 @@ def build_cases() -> dict[str, RuleResult]:
 
 
 def test_cefepime_golden_cases_byte_match_canonical_regeneration() -> None:
-    generated = dumps_json(build_cases()).encode("utf-8")
-
-    assert GOLDEN_PATH.read_bytes() == generated
+    for name, result in build_cases().items():
+        generated = dumps_json(result).encode("utf-8")
+        assert (GOLDEN_DIR / f"{name}.json").read_bytes() == generated
 
 
 def test_cefepime_golden_case_regeneration_is_deterministic() -> None:
@@ -273,7 +272,10 @@ def test_cefepime_golden_case_regeneration_is_deterministic() -> None:
 
 
 def test_cefepime_golden_cases_cover_required_outcomes() -> None:
-    payloads = json.loads(GOLDEN_PATH.read_text())
+    payloads = {
+        name: json.loads((GOLDEN_DIR / f"{name}.json").read_text())
+        for name in CASE_NAMES
+    }
 
     assert tuple(sorted(payloads)) == tuple(sorted(CASE_NAMES))
     assert payloads["normal"]["supporting_data"]["renal_band_id"] == "normal_above_60"
@@ -302,7 +304,10 @@ def test_cefepime_golden_cases_cover_required_outcomes() -> None:
 
 
 def test_cefepime_golden_cases_are_synthetic_and_fail_closed() -> None:
-    payloads = json.loads(GOLDEN_PATH.read_text())
+    payloads = {
+        name: json.loads((GOLDEN_DIR / f"{name}.json").read_text())
+        for name in CASE_NAMES
+    }
 
     for name, payload in payloads.items():
         assert name in CASE_NAMES
