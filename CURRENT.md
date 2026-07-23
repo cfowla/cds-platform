@@ -25,65 +25,64 @@ Use only the named files and task-specified commands. Do not install missing tes
 
 ## Roadmap position
 
-- Days 1–57 are complete.
-- **Day 57 — Define the evaluation context** is complete.
-- The next sequential task is **Day 58 — Implement the minimal rule interface**.
+- Days 1–58 are complete.
+- **Day 58 — Implement the minimal rule interface** is complete.
+- The next sequential task is **Day 59 — Implement the rule registry**.
 
 ## Current state
 
-- `src/cds/app/context.py` defines the frozen, keyword-only `RenalDoseEvaluationContext` application
-  carrier.
-- The context contains only validated facts required by the existing Cockcroft–Gault calculator and
-  exact medication-regimen rule evaluation: patient, serum-creatinine result, supplied weight and
-  type, medication order, exact regimen and formulation identifiers, renal stability and renal
-  replacement therapy facts, requested content version, evaluation date, and evaluation timestamp.
-- The context performs no validation, normalization, inference, content loading, calculation, rule
-  matching, serialization, logging, mutation, or I/O.
-- Exact values and typed domain objects are preserved for later orchestration; optional formulation
-  absence remains explicit as `None`.
+- `src/cds/rules/interface.py` defines the runtime-checkable `RenalDoseRule` structural protocol.
+- The contract exposes only `evaluate(context, content) -> RuleResult` using the validated
+  `RenalDoseEvaluationContext` and one supplied typed `RenalDoseContent` document.
+- The interface performs no validation, content selection or loading, renal calculation, identifier
+  normalization, orchestration, mutation, logging, serialization, interface behavior, or I/O.
+- Rule implementations remain responsible for returning structured `RuleResult` values and must be
+  pure and deterministic.
 
 ## Verification
 
-- No repository checkout was supplied to this connector-backed execution, so no local command was
-  run and no filesystem search or clone was attempted.
-- The implementation and focused tests were reviewed directly against the current renal calculator,
-  renal sufficiency validator, medication-order sufficiency validator, and exact renal-dose matcher
-  signatures.
+- The execution environment did not supply a repository checkout; the single required
+  `git rev-parse --show-toplevel` probe reported that `/mnt/data` is not inside a Git repository.
+- No filesystem search, clone, dependency installation, substitute runner, CI, or GitHub Actions
+  investigation was attempted.
+- The new interface and focused tests were reviewed directly against the current application context,
+  typed renal content, and `RuleResult` definitions.
 - The intended focused command is:
-  `python -m pytest tests/unit/app/test_context.py`
-- If `pytest` is unavailable in a supplied checkout environment, skip that command without installing
-  it and report the limitation.
+  `python -m pytest tests/unit/rules/test_interface.py`
+- Because no checkout was available, the command was not run. If `pytest` is unavailable in a future
+  supplied checkout, skip it without installing it and report the limitation.
 - No full-suite, Ruff, type-check, CI, or GitHub Actions passing claim is made.
 
 ## Files changed
 
-- `src/cds/app/context.py` — added the passive typed renal-dose evaluation context.
-- `tests/unit/app/test_context.py` — added focused field-boundary, preservation, immutability, and
-  explicit-absence tests.
+- `src/cds/rules/interface.py` — added the minimal typed renal-dose rule protocol.
+- `tests/unit/rules/test_interface.py` — added focused public-surface, signature, type, and structural
+  compatibility tests.
 - `CURRENT.md` — replaced with the current state and next action.
 
 ## Additional files inspected
 
 - `docs/TASK_TEMPLATE.md` and `CDS_12_Week_Daily_Project_Plan.html` — bounded-task structure and the
-  exact Day 57 deliverable.
-- `docs/SAFETY_INVARIANTS.md` — validation-before-computation, fail-closed, explicit-context, purity,
-  and auditability constraints.
-- `CURRENT.md` — authoritative active task and completion context.
-- `src/cds/services/renal.py` — exact validated inputs required by Cockcroft–Gault calculation.
-- `src/cds/rules/exact_renal_dose.py` — exact facts consumed by medication-regimen evaluation.
-- `src/cds/validation/renal.py` and `src/cds/validation/medication.py` — confirmed which facts must be
-  validated before constructing the context.
-- `src/cds/domain/clinical.py` — current typed patient, laboratory, and medication-order models.
-- `tests/unit/validation/test_renal.py` — focused test conventions and synthetic-data pattern.
+  exact Day 58 deliverable.
+- `docs/SAFETY_INVARIANTS.md` — validation-before-matching, fail-closed, purity, content-boundary, and
+  auditability constraints.
+- `CURRENT.md` — authoritative roadmap position and active task.
+- `src/cds/app/context.py` — exact validated context type required by the interface.
+- `src/cds/domain/outputs.py` — structured `RuleResult` return type.
+- `src/cds/repositories/renal_content.py` — typed content boundary named by the interface.
+- `src/cds/rules/exact_renal_dose.py` and `src/cds/rules/cefepime.py` — current pure rule-evaluation
+  conventions and boundaries.
+- `src/cds/rules/__init__.py` — confirmed no existing public compatibility export needed modification.
+- `tests/unit/app/test_context.py` — focused test conventions and synthetic-data pattern.
 
 ## Active constraints
 
 - Preserve the prototype warning and use only synthetic or properly de-identified data.
-- Validate structure and task sufficiency before constructing the evaluation context.
+- Validate structure and task sufficiency before constructing or evaluating the context.
 - Missing, invalid, unsupported, ambiguous, unstable, and out-of-scope facts fail closed before
   calculation or matching and produce no dosing recommendation.
-- Do not add validation, calculation, content selection, repository access, rule matching, mapping,
-  serialization, or interface behavior to the context.
+- The rule interface must not select or load content, calculate renal function, normalize identifiers,
+  infer context, orchestrate workflows, mutate inputs, serialize results, log payloads, or perform I/O.
 - Match exact medication, indication, route, formulation, dose, frequency, renal method, renal unit,
   indexing state, stability, renal replacement therapy, and content version without aliases,
   normalization, conversion, inference, interpolation, extrapolation, fallback, or automatic version
@@ -96,9 +95,10 @@ Use only the named files and task-specified commands. Do not install missing tes
 
 - A named independent clinical-content reviewer has not been identified.
 - Clinical-content source interpretations and review eligibility remain separate from this software
-  context task.
+  interface task.
 
 ## Next exact action
 
-> Day 58 — define a minimal rule interface with an `evaluate(context, content)` contract that returns
-> structured `RuleResult` values without adding registry, engine, content-loading, or interface logic.
+> Day 59 — implement a deterministic rule registry that maps stable medication and rule identifiers to
+> `RenalDoseRule` implementations and rejects duplicate registration without adding engine,
+> content-loading, calculation, or interface behavior.
