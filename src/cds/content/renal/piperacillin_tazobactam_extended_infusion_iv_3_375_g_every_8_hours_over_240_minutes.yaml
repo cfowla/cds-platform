@@ -1,0 +1,180 @@
+# Prototype only — not for direct clinical use.
+# Draft clinical content for research, education, and software development with synthetic or properly de-identified data.
+# Software validation does not constitute clinical review or authorize patient-care use.
+schema_version: '1'
+content_id: renal_dose_piperacillin_tazobactam_extended_infusion_iv_3_375_g_every_8_hours_over_240_minutes
+content_version: 1.0.0-draft
+rule_id: piperacillin_tazobactam_extended_infusion_iv_3_375_g_every_8_hours_renal_rule
+medication:
+  id: piperacillin_tazobactam
+  display: Piperacillin–tazobactam
+regimen:
+  id: extended_infusion_iv_3_375_g_every_8_hours_over_240_minutes
+  display: Piperacillin–tazobactam 3.375 g IV every 8 hours over 240 minutes
+  indication_ids:
+  - hospitalized_serious_gram_negative_infection
+  route_id: iv
+  formulation_id: null
+  base_dose:
+    value: '3.375'
+    unit: g
+  frequency_interval:
+    value: '8'
+    unit: hours
+  infusion_duration:
+    value: '240'
+    unit: minutes
+supported_context:
+  minimum_age_years: 18
+  renal_method: cockcroft_gault
+  renal_unit: mL/min
+  renal_function_stable: true
+  renal_replacement_therapy: false
+  limitations:
+  - Prototype only — not for direct clinical use; use only with synthetic or properly de-identified cases.
+  - Limited to adults aged 18 years or older with explicitly stable renal function and unindexed Cockcroft-Gault
+    creatinine clearance in mL/min.
+  - Excludes intermittent hemodialysis, peritoneal dialysis, continuous renal replacement therapy, other
+    renal replacement therapy, and acute or rapidly changing kidney function.
+  - Requires exact source-context indication, medication, route, formulation when applicable, total-product
+    dose, frequency interval, and infusion duration; no aliases, inference, unit conversion, interpolation,
+    extrapolation, or fallback.
+renal_domain:
+  lower:
+    value: '0'
+    inclusive: false
+  upper: null
+renal_bands:
+- id: at_or_below_20
+  lower:
+    value: '0'
+    inclusive: false
+  upper:
+    value: '20'
+    inclusive: true
+  outcome: recommendation
+  recommendation:
+    action: adjust_dose
+    dose:
+      value: '3.375'
+      unit: g
+    route_id: iv
+    frequency_interval:
+      value: '12'
+      unit: hours
+    infusion_duration:
+      value: '240'
+      unit: minutes
+    rationale: The selected population-PK and Monte Carlo analysis supports extending the exact 3.375
+      g over 4 hours regimen from every 8 hours to every 12 hours when Cockcroft-Gault creatinine clearance
+      is 20 mL/min or less.
+    monitoring:
+    - Reassess the explicitly supplied Cockcroft-Gault creatinine clearance if renal function changes;
+      the modeled extended-infusion interval changes only at creatinine clearance of 20 mL/min or less.
+    - Closely monitor patients with renal impairment or seizure disorders for neuromuscular excitability
+      or seizures, because higher doses and renal impairment increase the risk of central nervous system
+      adverse reactions.
+    - Periodically assess hematopoietic function during prolonged therapy, especially when treatment continues
+      for 21 days or longer.
+    - Consider the product sodium load and periodically assess electrolytes in patients with low potassium
+      reserves or other risk factors for hypokalemia.
+  no_recommendation_reason: null
+  source_ids:
+  - patel_2010_piperacillin_tazobactam_extended_infusion_renal_adjustment
+  limitations:
+  - Patel et al. is the governing dosing source for this off-label extended-infusion band; the DailyMed
+    source is included only for separately identified safety-monitoring statements.
+  - The continuous interval representation and less-than-or-equal-to 20 mL/min adjustment threshold remain
+    provisional pending independent review.
+  - The modeled result must not be extrapolated to other doses, intervals, infusion durations, organisms,
+    MIC values, or clinical settings.
+- id: above_20
+  lower:
+    value: '20'
+    inclusive: false
+  upper: null
+  outcome: recommendation
+  recommendation:
+    action: continue
+    dose:
+      value: '3.375'
+      unit: g
+    route_id: iv
+    frequency_interval:
+      value: '8'
+      unit: hours
+    infusion_duration:
+      value: '240'
+      unit: minutes
+    rationale: The selected population-PK and Monte Carlo analysis retains the exact parent 3.375 g IV
+      every 8 hours over 4 hours regimen above the proposed 20 mL/min renal-adjustment threshold.
+    monitoring:
+    - Reassess the explicitly supplied Cockcroft-Gault creatinine clearance if renal function changes;
+      the modeled extended-infusion interval changes only at creatinine clearance of 20 mL/min or less.
+    - Closely monitor patients with renal impairment or seizure disorders for neuromuscular excitability
+      or seizures, because higher doses and renal impairment increase the risk of central nervous system
+      adverse reactions.
+    - Periodically assess hematopoietic function during prolonged therapy, especially when treatment continues
+      for 21 days or longer.
+    - Consider the product sodium load and periodically assess electrolytes in patients with low potassium
+      reserves or other risk factors for hypokalemia.
+  no_recommendation_reason: null
+  source_ids:
+  - patel_2010_piperacillin_tazobactam_extended_infusion_renal_adjustment
+  limitations:
+  - Patel et al. is the governing dosing source for this off-label extended-infusion band; the DailyMed
+    source is included only for separately identified safety-monitoring statements.
+  - The continuous interval representation and less-than-or-equal-to 20 mL/min adjustment threshold remain
+    provisional pending independent review.
+  - The modeled result must not be extrapolated to other doses, intervals, infusion durations, organisms,
+    MIC values, or clinical settings.
+sources:
+- id: patel_2010_piperacillin_tazobactam_extended_infusion_renal_adjustment
+  evidence_level: primary_literature
+  citation: Patel N, Scheetz MH, Drusano GL, Lodise TP. Identification of optimal renal dosage adjustments
+    for traditional and extended-infusion piperacillin-tazobactam dosing regimens in hospitalized patients.
+    Antimicrob Agents Chemother. 2010;54(1):460-465. doi:10.1128/AAC.00296-09.
+  source_document: Identification of optimal renal dosage adjustments for traditional and extended-infusion
+    piperacillin-tazobactam dosing regimens in hospitalized patients
+  source_version: Antimicrobial Agents and Chemotherapy 54(1):460-465; e-published 2009-10-26; DOI 10.1128/AAC.00296-09
+  publication_date: '2009-10-26'
+  url: https://doi.org/10.1128/AAC.00296-09
+- id: fda_dailymed_piperacillin_tazobactam_wgcc_spl_v14
+  evidence_level: guideline
+  citation: WG Critical Care, LLC. Piperacillin and Tazobactam for Injection, USP, pharmacy bulk package
+    bottles [prescribing information]. DailyMed set ID 17a400ae-cbaa-4d07-95f4-c6917dfc0585; SPL version
+    14; labeling revised 11/2025; DailyMed record updated 2026-06-24; version 14 published 2026-07-03.
+  source_document: Piperacillin and Tazobactam for Injection, USP, pharmacy bulk package bottles, for
+    intravenous use
+  source_version: DailyMed SPL version 14; labeling revised 11/2025; DailyMed record updated 2026-06-24;
+    version 14 published 2026-07-03
+  publication_date: '2026-06-24'
+  url: https://dailymed.nlm.nih.gov/dailymed/lookup.cfm?setid=17a400ae-cbaa-4d07-95f4-c6917dfc0585&version=14
+review:
+  status: draft
+  reviewed_content_version: null
+  reviewer: null
+  reviewer_role: null
+  reviewed_on: null
+  notes: Draft transcription from Patel et al. with the selected DailyMed label included only for separately
+    identified safety monitoring. Independent review of the off-label modeling source, source context,
+    nullable formulation, continuous unrounded renal partition, total-product dose units, evidence-level
+    mappings, monitoring text, limitations, and prototype warnings remains required.
+limitations:
+- Prototype only — not for direct clinical use; use only with synthetic or properly de-identified cases.
+- Draft content is not eligible for rule matching and has not received independent clinical-content review.
+- This off-label extended-infusion document evaluates only the exact supplied maintenance regimen and
+  source context; it does not select antimicrobial therapy, infer an organism or MIC, interpret susceptibility,
+  determine duration, or recommend an alternative agent.
+- The dosing source is a population pharmacokinetic model and 9,999-subject Monte Carlo simulation, not
+  FDA labeling, a randomized clinical-outcomes trial, or clinical validation.
+- The model evaluated 50% fT greater than MIC; probability of target attainment varied by MIC and was
+  suboptimal at 32 mg/L for every evaluated regimen. This schema has no MIC field and must not generate
+  MIC-specific decisions.
+- The continuous greater-than-zero through 20 mL/min interval, the positive lower renal-domain boundary,
+  the hospitalized_serious_gram_negative_infection identifier, and formulation_id null are provisional
+  representations pending independent review.
+- The selected DailyMed source is included only for product safety monitoring; it does not support or
+  approve the extended-infusion dose, interval, or 240-minute infusion strategy.
+- Pediatric, unstable-renal-function, dialysis, other renal-replacement-therapy, continuous infusion,
+  4.5 g extended infusion, unlisted intervals, and infusion durations other than 240 minutes are unsupported.
