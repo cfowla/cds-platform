@@ -1,0 +1,150 @@
+# Prototype only — not for direct clinical use.
+# Draft clinical content for research, education, and software development with synthetic or properly de-identified data.
+# Software validation does not constitute clinical review or authorize patient-care use.
+schema_version: '1'
+content_id: renal_dose_famotidine_oral_film_coated_tablet_20_mg_every_12_hours
+content_version: 1.0.0-draft
+rule_id: famotidine_oral_film_coated_tablet_20_mg_every_12_hours_renal_rule
+medication:
+  id: famotidine
+  display: Famotidine
+regimen:
+  id: oral_film_coated_tablet_20_mg_every_12_hours
+  display: Famotidine 20 mg oral film-coated tablet every 12 hours
+  indication_ids:
+  - adult_symptomatic_nonerosive_gerd
+  route_id: po
+  formulation_id: film_coated_tablet
+  base_dose:
+    value: '20'
+    unit: mg
+  frequency_interval:
+    value: '12'
+    unit: hours
+  infusion_duration: null
+supported_context:
+  minimum_age_years: 18
+  renal_method: cockcroft_gault
+  renal_unit: mL/min
+  renal_function_stable: true
+  renal_replacement_therapy: false
+  limitations:
+  - Prototype only — not for direct clinical use; use only with synthetic or properly de-identified cases.
+  - Limited to adults aged 18 years or older with explicitly stable renal function and unindexed Cockcroft-Gault creatinine clearance in mL/min.
+  - Limited to the exact caller-supplied adult symptomatic nonerosive GERD source context and the exact oral film-coated-tablet 20 mg every 12 hours parent regimen.
+  - Excludes pediatric use, patients weighing less than 40 kg, pregnancy or lactation, unstable renal function, dialysis, other renal replacement therapy, oral suspension, intravenous products, 10 mg formulations, other indications, and unlisted regimens.
+  - Requires exact medication, indication, route, formulation, dose, frequency, renal method, renal unit, renal stability, renal-replacement-therapy state, and content version; no aliases, inference, conversion, interpolation, extrapolation, or fallback.
+renal_domain:
+  lower:
+    value: '0'
+    inclusive: false
+  upper: null
+renal_bands:
+- id: below_30
+  lower:
+    value: '0'
+    inclusive: false
+  upper:
+    value: '30'
+    inclusive: false
+  outcome: recommendation
+  recommendation:
+    action: adjust_dose
+    dose:
+      value: '20'
+      unit: mg
+    route_id: po
+    frequency_interval:
+      value: '48'
+      unit: hours
+    infusion_duration: null
+    rationale: The selected prescribing-information renal table lists a maximum famotidine dose of 20 mg every 48 hours for symptomatic nonerosive GERD when creatinine clearance is less than 30 mL/min.
+    monitoring:
+    - Monitor renal function and reassess the maintenance interval if renal function changes; this draft applies only when renal function is explicitly stable.
+    - Monitor for central nervous system adverse reactions in patients with moderate or severe renal impairment, consistent with the selected label warning.
+    - Consider the selected label limitation that prolonged QT intervals have been reported in patients with moderate or severe renal impairment.
+  no_recommendation_reason: null
+  source_ids:
+  - fda_dailymed_famotidine_sportpharm_spl_v1
+  limitations:
+  - The label describes recommended maximum dosages; this content evaluates only the exact supplied maintenance regimen and does not select therapy or establish clinical need.
+  - The alternate 10 mg once-daily option uses an unsupported formulation and must not be inferred, substituted, split, or emitted.
+- id: crcl_30_to_below_60
+  lower:
+    value: '30'
+    inclusive: true
+  upper:
+    value: '60'
+    inclusive: false
+  outcome: recommendation
+  recommendation:
+    action: adjust_dose
+    dose:
+      value: '20'
+      unit: mg
+    route_id: po
+    frequency_interval:
+      value: '24'
+      unit: hours
+    infusion_duration: null
+    rationale: The selected prescribing-information renal table lists a maximum famotidine dose of 20 mg every 24 hours for symptomatic nonerosive GERD when creatinine clearance is 30 to less than 60 mL/min in this provisional continuous interpretation.
+    monitoring:
+    - Monitor renal function and reassess the maintenance interval if renal function changes; this draft applies only when renal function is explicitly stable.
+    - Monitor for central nervous system adverse reactions in patients with moderate or severe renal impairment, consistent with the selected label warning.
+    - Consider the selected label limitation that prolonged QT intervals have been reported in patients with moderate or severe renal impairment.
+  no_recommendation_reason: null
+  source_ids:
+  - fda_dailymed_famotidine_sportpharm_spl_v1
+  limitations:
+  - Exactly 60 mL/min is excluded from this band and assigned to the no-adjustment band based on label section 8.6; that interpretation requires independent review.
+  - The label describes recommended maximum dosages; this content evaluates only the exact supplied maintenance regimen and does not select therapy or establish clinical need.
+- id: at_or_above_60
+  lower:
+    value: '60'
+    inclusive: true
+  upper: null
+  outcome: recommendation
+  recommendation:
+    action: continue
+    dose:
+      value: '20'
+      unit: mg
+    route_id: po
+    frequency_interval:
+      value: '12'
+      unit: hours
+    infusion_duration: null
+    rationale: The selected prescribing information retains the exact supplied famotidine 20 mg every 12 hours regimen when creatinine clearance is at least 60 mL/min.
+    monitoring:
+    - Monitor renal function and reassess the maintenance interval if renal function changes; this draft applies only when renal function is explicitly stable.
+    - Monitor for central nervous system adverse reactions if renal function declines into moderate or severe impairment.
+    - Consider the selected label limitation that prolonged QT intervals have been reported in patients with moderate or severe renal impairment.
+  no_recommendation_reason: null
+  source_ids:
+  - fda_dailymed_famotidine_sportpharm_spl_v1
+  limitations:
+  - Exactly 60 mL/min is provisionally assigned to this band based on label section 8.6 despite the compact renal-table heading; independent review is required.
+sources:
+- id: fda_dailymed_famotidine_sportpharm_spl_v1
+  evidence_level: guideline
+  citation: Sportpharm LLC. Famotidine tablets, film coated, 20 mg and 40 mg, for oral use [prescribing information]. DailyMed set ID 4421ceb7-a114-436c-871a-7bc5444f8154; SPL version 1; labeling revised 06/2026; DailyMed record updated 2026-06-26.
+  source_document: Famotidine tablets, film coated, 20 mg and 40 mg, for oral use
+  source_version: DailyMed SPL version 1; labeling revised 06/2026; DailyMed record updated 2026-06-26
+  publication_date: '2026-06-26'
+  url: https://dailymed.nlm.nih.gov/dailymed/lookup.cfm?setid=4421ceb7-a114-436c-871a-7bc5444f8154&version=1
+review:
+  status: draft
+  reviewed_content_version: null
+  reviewer: null
+  reviewer_role: null
+  reviewed_on: null
+  notes: Draft transcription from the selected repackaged FDA-approved label. Independent review of source acceptability and fidelity, exact 30 and 60 mL/min boundaries, maximum-dose representation, oral film-coated-tablet formulation, provisional guideline evidence mapping, monitoring text, exclusions, and prototype warnings remains required.
+limitations:
+- Prototype only — not for direct clinical use; use only with synthetic or properly de-identified cases.
+- Draft content is not eligible for rule matching and has not received independent clinical-content review.
+- The governing DailyMed record is a repackaged FDA-approved label; independent review must accept it or replace it through a separately versioned source decision.
+- This document evaluates only the exact supplied 20 mg oral film-coated-tablet every 12 hours maintenance regimen for the exact adult symptomatic nonerosive GERD source context; it does not diagnose GERD, select famotidine, determine duration, or establish need.
+- The renal table describes recommended maximum dosages; the prototype must not imply initial-dose selection or emit an unsupported alternate formulation.
+- The continuous Decimal partition and ownership of exactly 60 mL/min are provisional clinical-content interpretations pending independent review.
+- The version 1 schema provisionally represents FDA-approved prescribing information with evidence_level guideline pending review.
+- Oral suspension, intravenous products, 10 mg formulations, other tablet regimens, other indications, pediatric use, unstable renal function, dialysis, and other renal replacement therapy are unsupported.
