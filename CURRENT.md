@@ -25,66 +25,60 @@ Use only the named files and task-specified commands. Do not install missing tes
 
 ## Roadmap position
 
-- Days 1–54 are complete.
-- **Day 54 — Encode and test famotidine content** is complete.
-- The next sequential task is **Day 55 — Add famotidine rule coverage**.
+- Days 1–55 are complete.
+- **Day 55 — Add famotidine rule coverage** is complete.
+- The next sequential task is **Day 56 — Weekly review: duplication audit**.
 
 ## Current state
 
-- One exact source-based famotidine renal-dose document now exists at
-  `src/cds/content/renal/famotidine_oral_film_coated_tablet_20_mg_every_12_hours.yaml` with immutable
-  content version `1.0.0-draft`.
-- The document encodes only oral film-coated tablets, exact indication
-  `adult_symptomatic_nonerosive_gerd`, and the supplied parent regimen `20 mg` every `12 hours`.
-- The complete positive unrounded Cockcroft–Gault partition is greater than `0` to less than `30`,
-  `30` to less than `60`, and greater than or equal to `60 mL/min`.
-- The corresponding source-based outcomes are `20 mg` every `48`, `24`, and `12 hours`; exactly
-  `60 mL/min` is provisionally assigned to the no-adjustment band based on label section 8.6.
-- Dose values remain explicit in `mg`, frequency intervals in `hours`, and infusion duration is
-  explicitly `null` for the oral regimen.
-- The selected Sportpharm DailyMed set ID, SPL version, update date, stated label revision, repackaged
-  label status, citation, source URL, rationale, monitoring, limitations, and provenance are retained.
-- The document remains `review.status: draft` with null reviewer fields and is ineligible for rule
-  matching until independent clinical-content review is completed.
-- Focused tests lock the repository to the single selected document, verify exact identifiers and
-  units, renal matrices and endpoint ownership, source provenance, draft state, explicit exclusions,
-  and unsupported oral suspension, intravenous, 10 mg, and alternate tablet regimens.
-- No famotidine rule, matcher, repository eligibility behavior, schema, public import, serialization
-  contract, dependency, interface, medication scope, or population changed.
+- `src/cds/rules/famotidine.py` now exposes a medication-specific famotidine rule wrapper around the
+  existing pure generic exact-regimen matcher.
+- The wrapper requires exact medication, regimen, indication, oral route, film-coated-tablet
+  formulation, `20 mg` dose, `12 hours` frequency, explicit null infusion duration, renal method,
+  renal unit, unindexed result, stable non-RRT context, requested content version, and independently
+  reviewed eligible content.
+- The implementation adds only famotidine-specific identifiers, display labels, warning-code prefix,
+  recommendation title, provenance source name, and implementation version; it adds no
+  medication-specific engine behavior.
+- Missing facts remain incomplete. Non-famotidine orders are not applicable. Unsupported regimen,
+  formulation, stability, RRT, or other exact-context mismatches fail closed with no recommendation.
+- Focused synthetic tests cover unrounded values immediately below and exactly at the `30` and `60
+  mL/min` boundaries, structured recommendations, draft-content rejection, unsupported contexts,
+  non-famotidine orders, and missing formulation.
+- The source-based famotidine YAML remains draft and therefore remains ineligible for matching.
+  Software verification does not confer clinical review status.
 
 ## Verification
 
 - Initial execution-context probe: `git rev-parse --show-toplevel` from `/mnt/data` failed because no
   repository checkout was present; no filesystem search or clone was attempted.
-- A bounded verification checkout was materialized at `/tmp/cds-platform` with only the new content
-  document and focused Day 54 test.
-- Focused execution completed successfully:
-  `python -m pytest tests/unit/repositories/test_famotidine_content.py -q`.
-- Result: `10 passed in 0.21s`.
-- No dependency was installed.
-- The full suite was not run because no complete checkout was available and Day 54 does not change a
-  shared implementation contract.
+- `pytest 9.0.2` is installed in the execution environment.
+- The focused pytest command could not be executed because the environment did not supply a checkout
+  and the complete import closure was not locally available. No dependency was installed and no
+  broad repository reconstruction was performed.
+- The created rule and test files were reviewed against the existing
+  `src/cds/rules/exact_renal_dose.py` contract and the established piperacillin-tazobactam wrapper and
+  focused-test conventions.
 - No full-suite, Ruff, type-check, CI, or GitHub Actions passing claim is made.
 
 ## Files changed
 
-- `src/cds/content/renal/famotidine_oral_film_coated_tablet_20_mg_every_12_hours.yaml` — created.
-- `tests/unit/repositories/test_famotidine_content.py` — created.
-- `BACKLOG.md` — updated.
+- `src/cds/rules/famotidine.py` — created.
+- `tests/unit/rules/test_famotidine.py` — created.
 - `CURRENT.md` — replaced with the current state and next action.
 
 ## Additional files inspected
 
 - `docs/TASK_TEMPLATE.md` and `CDS_12_Week_Daily_Project_Plan.html` — bounded-task structure and the
-  exact Day 54 deliverable.
-- `docs/SAFETY_INVARIANTS.md` — fail-closed matching, explicit units and context, versioned content,
-  purity, and auditability constraints.
-- `CURRENT.md` and `BACKLOG.md` — active task, exact next action, and unresolved famotidine review and
-  representation decisions.
-- `docs/FAMOTIDINE_CONTENT_SELECTION.md` — authoritative selected source, identifiers, exact regimen,
-  renal matrix, exclusions, limitations, and review requirements.
-- `docs/PIPERACILLIN_TAZOBACTAM_CONTENT_SELECTION.md`, one Day 51 source-based YAML document, and its
-  focused content tests — directly relevant source-linked draft-content and test conventions.
+  exact Day 55 deliverable.
+- `docs/SAFETY_INVARIANTS.md` — exact-context, fail-closed, purity, versioning, and auditability
+  constraints.
+- `CURRENT.md` — authoritative active task and exact acceptance context.
+- `src/cds/rules/exact_renal_dose.py`, `src/cds/rules/piperacillin_tazobactam.py`, and
+  `tests/unit/rules/test_piperacillin_tazobactam.py` — shared matcher contract and demonstrated wrapper
+  and test conventions.
+- `src/cds/rules/predicates.py` and the famotidine YAML content document — unrounded boundary semantics
+  and exact famotidine identifiers, context, bands, and draft eligibility state.
 
 ## Active constraints
 
@@ -111,8 +105,7 @@ Use only the named files and task-specified commands. Do not install missing tes
 
 ## Next exact action
 
-> Day 55 — add famotidine rule coverage by reusing the existing generic exact-regimen matcher where
-> possible, requiring exact medication, source-context indication, oral route, film-coated-tablet
-> formulation, `20 mg` dose, `12 hours` frequency, null infusion duration, renal method, renal unit,
-> stable non-RRT context, and reviewed content; preserve explicit unsupported outcomes and do not add
-> medication-specific engine behavior.
+> Day 56 — audit cefepime, piperacillin-tazobactam, and famotidine rule implementations for only
+> demonstrated duplication; preserve explicit medication content differences, remove copied logic
+> where the generic exact-regimen matcher already covers it, and do not introduce speculative
+> abstractions.
