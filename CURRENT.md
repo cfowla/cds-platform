@@ -25,69 +25,66 @@ Use only the named files and task-specified commands. Do not install missing tes
 
 ## Roadmap position
 
-- Days 1–53 are complete.
-- **Day 53 — Select and source famotidine content** is complete.
-- The next sequential task is **Day 54 — Encode and test famotidine content**.
+- Days 1–54 are complete.
+- **Day 54 — Encode and test famotidine content** is complete.
+- The next sequential task is **Day 55 — Add famotidine rule coverage**.
 
 ## Current state
 
-- `docs/FAMOTIDINE_CONTENT_SELECTION.md` records one exact, documentation-only famotidine source
-  decision for the first renal-dose slice.
-- The selected governing source is the FDA-approved DailyMed famotidine tablet label with set ID
-  `4421ceb7-a114-436c-871a-7bc5444f8154`, SPL version `1`, record update date `2026-06-26`, and stated
-  revision `06/2026`.
-- The source record is explicitly identified as a repackaged label. Independent review must confirm
-  its acceptability or replace it through a separately versioned source decision.
-- Initial scope is limited to adults, stable renal function, unindexed Cockcroft–Gault in `mL/min`,
-  no renal replacement therapy, oral film-coated tablets, exact indication
+- One exact source-based famotidine renal-dose document now exists at
+  `src/cds/content/renal/famotidine_oral_film_coated_tablet_20_mg_every_12_hours.yaml` with immutable
+  content version `1.0.0-draft`.
+- The document encodes only oral film-coated tablets, exact indication
   `adult_symptomatic_nonerosive_gerd`, and the supplied parent regimen `20 mg` every `12 hours`.
-- Candidate renal outcomes are `20 mg` every `12 hours` at creatinine clearance greater than or equal
-  to `60 mL/min`, `20 mg` every `24 hours` from `30` to less than `60 mL/min`, and `20 mg` every
-  `48 hours` below `30 mL/min`.
-- Exactly `60 mL/min` is provisionally assigned to the no-adjustment band based on label section 8.6;
-  independent review must approve that interpretation because the renal table uses the compact
-  heading `30 to 60 mL/minute`.
-- Alternate `10 mg` dosing, oral suspension, intravenous products, other indications, other parent
-  regimens, pediatric use, unstable renal function, and renal replacement therapy remain unsupported.
-- The future famotidine document must remain `draft` until source, boundary, maximum-dose,
-  formulation, evidence-level, and safety-limit representations are independently reviewed.
-- No YAML, rule, repository, service, domain model, public import, serialization contract, or clinical
-  scope beyond the frozen famotidine medication was changed.
+- The complete positive unrounded Cockcroft–Gault partition is greater than `0` to less than `30`,
+  `30` to less than `60`, and greater than or equal to `60 mL/min`.
+- The corresponding source-based outcomes are `20 mg` every `48`, `24`, and `12 hours`; exactly
+  `60 mL/min` is provisionally assigned to the no-adjustment band based on label section 8.6.
+- Dose values remain explicit in `mg`, frequency intervals in `hours`, and infusion duration is
+  explicitly `null` for the oral regimen.
+- The selected Sportpharm DailyMed set ID, SPL version, update date, stated label revision, repackaged
+  label status, citation, source URL, rationale, monitoring, limitations, and provenance are retained.
+- The document remains `review.status: draft` with null reviewer fields and is ineligible for rule
+  matching until independent clinical-content review is completed.
+- Focused tests lock the repository to the single selected document, verify exact identifiers and
+  units, renal matrices and endpoint ownership, source provenance, draft state, explicit exclusions,
+  and unsupported oral suspension, intravenous, 10 mg, and alternate tablet regimens.
+- No famotidine rule, matcher, repository eligibility behavior, schema, public import, serialization
+  contract, dependency, interface, medication scope, or population changed.
 
 ## Verification
 
-- No repository checkout was available through this connector-only execution path; no filesystem
-  search or clone was attempted.
-- The Day 53 roadmap entry, task template, active state, safety invariants, first vertical-slice
-  contract, analogous piperacillin–tazobactam selection record, backlog, and selected DailyMed label
-  were inspected.
-- Documentation was checked for the prototype warning, exact source identity and version, exact
-  identifiers, explicit units, complete candidate renal partition, fail-closed exclusions, draft
-  review metadata, reviewer attestations, and a bounded Day 54 handoff.
-- `pytest` was not invoked because this task changes documentation only and no focused executable test
-  applies. No dependency was installed.
+- Initial execution-context probe: `git rev-parse --show-toplevel` from `/mnt/data` failed because no
+  repository checkout was present; no filesystem search or clone was attempted.
+- A bounded verification checkout was materialized at `/tmp/cds-platform` with only the new content
+  document and focused Day 54 test.
+- Focused execution completed successfully:
+  `python -m pytest tests/unit/repositories/test_famotidine_content.py -q`.
+- Result: `10 passed in 0.21s`.
+- No dependency was installed.
+- The full suite was not run because no complete checkout was available and Day 54 does not change a
+  shared implementation contract.
 - No full-suite, Ruff, type-check, CI, or GitHub Actions passing claim is made.
 
 ## Files changed
 
-- `docs/FAMOTIDINE_CONTENT_SELECTION.md` — created.
-- `BACKLOG.md` — updated with the selected famotidine source, identifiers, scope, boundaries, and open
-  review decisions.
+- `src/cds/content/renal/famotidine_oral_film_coated_tablet_20_mg_every_12_hours.yaml` — created.
+- `tests/unit/repositories/test_famotidine_content.py` — created.
+- `BACKLOG.md` — updated.
 - `CURRENT.md` — replaced with the current state and next action.
 
 ## Additional files inspected
 
-- `docs/TASK_TEMPLATE.md` — bounded-task structure, verification, and close procedure.
-- `CDS_12_Week_Daily_Project_Plan.html` — exact Day 53 deliverable and Day 54 boundary.
+- `docs/TASK_TEMPLATE.md` and `CDS_12_Week_Daily_Project_Plan.html` — bounded-task structure and the
+  exact Day 54 deliverable.
 - `docs/SAFETY_INVARIANTS.md` — fail-closed matching, explicit units and context, versioned content,
   purity, and auditability constraints.
-- `FIRST_VERTICAL_SLICE.md` — frozen three-medication scope, supported inputs, exclusions, and output
-  contract.
-- `docs/PIPERACILLIN_TAZOBACTAM_CONTENT_SELECTION.md` — directly relevant source-selection and
-  independent-review convention.
-- The selected DailyMed famotidine tablet label — source identity, adult indication and parent dose,
-  renal dosage table, alternate-formulation note, renal threshold statement, CNS warning, and QT
-  limitation.
+- `CURRENT.md` and `BACKLOG.md` — active task, exact next action, and unresolved famotidine review and
+  representation decisions.
+- `docs/FAMOTIDINE_CONTENT_SELECTION.md` — authoritative selected source, identifiers, exact regimen,
+  renal matrix, exclusions, limitations, and review requirements.
+- `docs/PIPERACILLIN_TAZOBACTAM_CONTENT_SELECTION.md`, one Day 51 source-based YAML document, and its
+  focused content tests — directly relevant source-linked draft-content and test conventions.
 
 ## Active constraints
 
@@ -102,18 +99,20 @@ Use only the named files and task-specified commands. Do not install missing tes
 - Preserve unrounded Decimal renal values and explicit interval ownership.
 - Draft or retired content is never eligible for rule matching. Software verification does not confer
   clinical review status.
-- The selected label describes maximum renal dosages; future content must not imply therapy selection
+- The selected label describes maximum renal dosages; the prototype must not imply therapy selection
   or invent an alternate formulation.
 
 ## Blockers
 
 - A named independent clinical-content reviewer has not been identified.
 - The repackaged-label source choice, exactly-`60 mL/min` boundary interpretation, provisional
-  `guideline` evidence mapping, and maximum-dose representation require independent review.
+  `guideline` evidence mapping, maximum-dose representation, formulation representation, source
+  transcription, monitoring text, and exclusions require independent review.
 
 ## Next exact action
 
-> Day 54 — encode and test one draft famotidine renal-dose YAML document for the exact oral
-> film-coated-tablet `20 mg` every `12 hours` symptomatic-nonerosive-GERD parent regimen, preserving
-> the selected source, complete unrounded renal partition, explicit exclusions, and draft review
-> status without implementing a rule.
+> Day 55 — add famotidine rule coverage by reusing the existing generic exact-regimen matcher where
+> possible, requiring exact medication, source-context indication, oral route, film-coated-tablet
+> formulation, `20 mg` dose, `12 hours` frequency, null infusion duration, renal method, renal unit,
+> stable non-RRT context, and reviewed content; preserve explicit unsupported outcomes and do not add
+> medication-specific engine behavior.
