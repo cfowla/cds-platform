@@ -41,28 +41,42 @@ versions, review states, reviewer fields, sources, and validation invariants are
 
 - **Partially resolved — Canonical identifiers:** exact first-slice medication IDs and identifier
   syntax are defined. [`docs/CEFEPIME_CONTENT_SELECTION.md`](docs/CEFEPIME_CONTENT_SELECTION.md)
-  now defines the initial cefepime indication, route, formulation, regimen, content, rule, and
-  source identifiers. Piperacillin–tazobactam and famotidine identifiers remain open for their
-  scheduled source-selection tasks.
-- **Partially resolved — Governing evidence:** the initial cefepime source is the selected
-  FDA-approved DailyMed prescribing information recorded in
-  [`docs/CEFEPIME_CONTENT_SELECTION.md`](docs/CEFEPIME_CONTENT_SELECTION.md). Governing sources for
-  piperacillin–tazobactam and famotidine remain open.
-- **Partially resolved — Supported variants:** the initial cefepime set is limited to four exact IV
-  powder-for-solution maintenance regimens administered over 30 minutes and the explicitly listed
-  indication identifiers. IM, pediatric, renal-replacement-therapy, extended-infusion, continuous-
-  infusion, and other variants remain unsupported. Piperacillin–tazobactam and famotidine variants
-  remain open.
+  defines the initial cefepime identifiers.
+  [`docs/PIPERACILLIN_TAZOBACTAM_CONTENT_SELECTION.md`](docs/PIPERACILLIN_TAZOBACTAM_CONTENT_SELECTION.md)
+  now defines the initial piperacillin–tazobactam source-context indication, route, formulation,
+  standard-infusion, extended-infusion, regimen, content, rule, and source identifiers. Famotidine
+  identifiers remain open for its scheduled source-selection task.
+- **Partially resolved — Governing evidence:** the initial cefepime FDA-approved DailyMed source is
+  recorded in [`docs/CEFEPIME_CONTENT_SELECTION.md`](docs/CEFEPIME_CONTENT_SELECTION.md).
+  Piperacillin–tazobactam standard infusion now uses the selected WG Critical Care DailyMed SPL, and
+  its single extended-infusion variant uses the Patel et al. primary PK/PD publication recorded in
+  [`docs/PIPERACILLIN_TAZOBACTAM_CONTENT_SELECTION.md`](docs/PIPERACILLIN_TAZOBACTAM_CONTENT_SELECTION.md).
+  The governing famotidine source remains open.
+- **Partially resolved — Supported variants:** the initial cefepime set remains limited to four exact
+  IV powder-for-solution maintenance regimens over 30 minutes. The initial
+  piperacillin–tazobactam set is limited to two exact FDA-labeled standard-infusion regimens and one
+  exact primary-literature extended-infusion regimen. Pediatric, unstable-renal-function,
+  renal-replacement-therapy, continuous-infusion, unlisted dose, unlisted frequency, and unlisted
+  infusion variants remain unsupported. Famotidine variants remain open.
 - **Partially resolved — Renal boundaries:** the selected cefepime source bands and maintenance
-  matrix are recorded. Independent review must approve the continuous unrounded interpretation of
-  the source's integer-labeled `11 to 29` and `30 to 60` bands before content is marked reviewed.
+  matrix are recorded. The piperacillin–tazobactam standard label matrices and the extended-infusion
+  less-than-or-equal-to `20 mL/min` adjustment threshold are now recorded. Independent review must
+  approve every continuous unrounded interval representation before content is marked reviewed.
 - **Open — Regulatory-label evidence level:** the version 1 schema lacks a `regulatory_label`
-  evidence level. The cefepime selection record proposes `guideline` as a documented provisional
-  mapping. Independent review must approve that mapping or a separately scoped schema change is
-  required before reviewed cefepime content is eligible for matching.
-- **Partially resolved — Independent review:** required review fields and cefepime-specific
-  attestations are defined. A named independent clinical-content reviewer remains required before
-  any cefepime document may be marked `reviewed`.
+  evidence level. The cefepime and piperacillin–tazobactam selection records provisionally map
+  FDA-approved prescribing information to `guideline`. Independent review must approve that mapping
+  or a separately scoped schema change is required before reviewed label-derived content is eligible
+  for matching.
+- **Partially resolved — Extended-infusion representation:** the piperacillin–tazobactam selection
+  record provisionally represents the Patel publication with
+  `hospitalized_serious_gram_negative_infection`, `formulation_id: null`, and a continuous
+  less-than-or-equal-to `20 mL/min` adjustment band. Independent review must approve or replace those
+  representations and confirm that the off-label modeling source is acceptable for the frozen
+  prototype.
+- **Partially resolved — Independent review:** required review fields and medication-specific
+  attestations are defined for cefepime and piperacillin–tazobactam. A named independent
+  clinical-content reviewer remains required before any source-based document may be marked
+  `reviewed`.
 
 ## Later decisions
 
