@@ -196,6 +196,10 @@ def _evaluate(
     )
 
 
+def _assert_no_dose_recommendation(result) -> None:
+    assert result.recommendations == []
+
+
 def test_exact_reviewed_context_returns_structured_recommendation_and_versions() -> None:
     result = _evaluate()
 
@@ -208,6 +212,7 @@ def test_exact_reviewed_context_returns_structured_recommendation_and_versions()
         result.supporting_data["rule_implementation_version"]
         == CEFEPIME_RULE_IMPLEMENTATION_VERSION
     )
+    assert result.supporting_data["outcome_category"] == "recommendation"
     assert result.supporting_data["renal_band_id"] == "at_or_above_30"
     assert result.evaluated_at == EVALUATED_AT
     assert len(result.recommendations) == 1
@@ -242,28 +247,108 @@ def test_rule_preserves_source_dose_unit_without_hidden_conversion() -> None:
         "indication",
         "route",
         "formulation",
-        "dose_value",
-        "dose_unit",
+        "dose",
         "frequency",
         "infusion",
         "age",
         "renal_method",
+        "renal_value",
         "renal_unit",
         "indexed",
         "unstable",
         "rrt",
         "version",
-        "patient",
     ],
 )
-def test_missing_or_nonexact_required_context_fails_closed(case: str) -> None:
+def test_missing_required_context_is_explicitly_incomplete(case: str) -> None:
     order = _order()
     renal = _renal()
     kwargs: dict[str, object] = {}
 
     if case == "medication":
-        order = replace(order, medication=CodeableConcept(code="Cefepime"))
+        order = replace(order, medication=CodeableConcept(code=None))
     elif case == "regimen":
+        kwargs["regimen_id"] = None
+    elif case == "indication":
+        order = replace(order, indication=CodeableConcept(code=None))
+    elif case == "route":
+        order = replace(order, route=CodeableConcept(code=None))
+    elif case == "formulation":
+        kwargs["formulation_id"] = None
+    elif case == "dose":
+        order = replace(order, dose=ValueWithUnit(value=None, unit="g"))
+    elif case == "frequency":
+        order = replace(order, frequency_interval=ValueWithUnit(value=None, unit="hours"))
+    elif case == "infusion":
+        order = replace(order, infusion_duration=ValueWithUnit(value=None, unit="minutes"))
+    elif case == "age":
+        renal = replace(renal, age_years=None)
+    elif case == "renal_method":
+        renal = replace(renal, method=RenalMethod.UNKNOWN)
+    elif case == "renal_value":
+        renal = replace(renal, value=ValueWithUnit(value=None, unit="mL/min"))
+    elif case == "renal_unit":
+        renal = replace(renal, value=ValueWithUnit(value=Decimal("30"), unit=None))
+    elif case == "indexed":
+        renal = replace(renal, normalized_to_bsa=None)
+    elif case == "unstable":
+        kwargs["renal_function_stable"] = None
+    elif case == "rrt":
+        kwargs["renal_replacement_therapy"] = None
+    elif case == "version":
+        kwargs["requested_content_version"] = None
+
+    result = _evaluate(order=order, renal=renal, **kwargs)  # type: ignore[arg-type]
+
+    assert result.status is ResultStatus.INCOMPLETE
+    assert result.supporting_data["outcome_category"] == "incomplete"
+    assert result.applied is False
+    assert result.passed is None
+    assert result.warnings == []
+    _assert_no_dose_recommendation(result)
+
+
+def test_non_cefepime_medication_is_explicitly_not_applicable() -> None:
+    order = replace(_order(), medication=CodeableConcept(code="Cefepime"))
+
+    result = _evaluate(order=order)
+
+    assert result.status is ResultStatus.NOT_APPLICABLE
+    assert result.supporting_data["outcome_category"] == "not_applicable"
+    assert result.applied is False
+    assert result.passed is None
+    assert result.warnings == []
+    _assert_no_dose_recommendation(result)
+
+
+@pytest.mark.parametrize(
+    ("case", "warning_code"),
+    [
+        ("regimen", "unsupported_cefepime_regimen"),
+        ("indication", "unsupported_cefepime_indication"),
+        ("route", "unsupported_cefepime_route"),
+        ("formulation", "unsupported_cefepime_formulation"),
+        ("dose_value", "unsupported_cefepime_dose"),
+        ("dose_unit", "unsupported_cefepime_dose"),
+        ("frequency", "unsupported_cefepime_frequency"),
+        ("infusion", "unsupported_cefepime_infusion"),
+        ("age", "unsupported_cefepime_population"),
+        ("renal_method", "unsupported_cefepime_renal_method"),
+        ("renal_unit", "unsupported_cefepime_renal_unit"),
+        ("indexed", "unsupported_indexed_renal_result"),
+        ("unstable", "unsupported_unstable_renal_function"),
+        ("rrt", "unsupported_renal_replacement_therapy"),
+    ],
+)
+def test_unsupported_cefepime_context_is_warning_bearing_and_fails_closed(
+    case: str,
+    warning_code: str,
+) -> None:
+    order = _order()
+    renal = _renal()
+    kwargs: dict[str, object] = {}
+
+    if case == "regimen":
         kwargs["regimen_id"] = "synthetic_iv_2_g_q12h_over_30_minutes "
     elif case == "indication":
         order = replace(order, indication=CodeableConcept(code="unsupported_indication"))
@@ -276,32 +361,60 @@ def test_missing_or_nonexact_required_context_fails_closed(case: str) -> None:
     elif case == "dose_unit":
         order = replace(order, dose=ValueWithUnit(value=Decimal("2"), unit="G"))
     elif case == "frequency":
-        order = replace(order, frequency_interval=ValueWithUnit(value=Decimal("12"), unit="Hours"))
+        order = replace(
+            order,
+            frequency_interval=ValueWithUnit(value=Decimal("12"), unit="Hours"),
+        )
     elif case == "infusion":
-        order = replace(order, infusion_duration=ValueWithUnit(value=Decimal("0.5"), unit="hours"))
+        order = replace(
+            order,
+            infusion_duration=ValueWithUnit(value=Decimal("0.5"), unit="hours"),
+        )
     elif case == "age":
-        renal = replace(renal, age_years=None)
+        renal = replace(renal, age_years=17)
     elif case == "renal_method":
         renal = replace(renal, method=RenalMethod.CKD_EPI)
     elif case == "renal_unit":
-        renal = replace(renal, value=ValueWithUnit(value=Decimal("30"), unit="mL/min/1.73m2"))
+        renal = replace(
+            renal,
+            value=ValueWithUnit(value=Decimal("30"), unit="mL/min/1.73m2"),
+        )
     elif case == "indexed":
         renal = replace(renal, normalized_to_bsa=True)
     elif case == "unstable":
         kwargs["renal_function_stable"] = False
     elif case == "rrt":
         kwargs["renal_replacement_therapy"] = True
-    elif case == "version":
-        kwargs["requested_content_version"] = "latest"
-    elif case == "patient":
-        renal = replace(renal, patient_id="different-patient")
 
     result = _evaluate(order=order, renal=renal, **kwargs)  # type: ignore[arg-type]
 
-    assert result.status is ResultStatus.INCOMPLETE
+    assert result.status is ResultStatus.NOT_APPLICABLE
+    assert result.supporting_data["outcome_category"] == "unsupported"
     assert result.applied is False
     assert result.passed is None
-    assert result.recommendations == []
+    assert [warning.code for warning in result.warnings] == [warning_code]
+    assert result.warnings[0].severity == "warning"
+    _assert_no_dose_recommendation(result)
+
+
+def test_patient_identity_mismatch_remains_incomplete() -> None:
+    result = _evaluate(renal=replace(_renal(), patient_id="different-patient"))
+
+    assert result.status is ResultStatus.INCOMPLETE
+    assert result.supporting_data["outcome_category"] == "incomplete"
+    assert result.applied is False
+    assert result.passed is None
+    _assert_no_dose_recommendation(result)
+
+
+def test_requested_version_mismatch_remains_incomplete() -> None:
+    result = _evaluate(requested_content_version="latest")
+
+    assert result.status is ResultStatus.INCOMPLETE
+    assert result.supporting_data["outcome_category"] == "incomplete"
+    assert result.applied is False
+    assert result.passed is None
+    _assert_no_dose_recommendation(result)
 
 
 @pytest.mark.parametrize("review_status", ["draft", "retired"])
@@ -309,24 +422,30 @@ def test_draft_or_retired_content_is_never_eligible(review_status: ContentReview
     result = _evaluate(content=_content(review_status=review_status))
 
     assert result.status is ResultStatus.INCOMPLETE
+    assert result.supporting_data["outcome_category"] == "incomplete"
     assert result.applied is False
-    assert result.recommendations == []
+    _assert_no_dose_recommendation(result)
 
 
 def test_reviewed_content_version_must_equal_the_immutable_document_version() -> None:
     result = _evaluate(content=_content(reviewed_content_version="0.9.0"))
 
     assert result.status is ResultStatus.INCOMPLETE
+    assert result.supporting_data["outcome_category"] == "incomplete"
     assert result.applied is False
-    assert result.recommendations == []
+    _assert_no_dose_recommendation(result)
 
 
-def test_zero_matching_bands_fails_closed_without_a_dose_recommendation() -> None:
+def test_renal_value_outside_reviewed_domain_is_unsupported_without_extrapolation() -> None:
     result = _evaluate(renal=_renal("0"))
 
-    assert result.status is ResultStatus.INCOMPLETE
+    assert result.status is ResultStatus.NOT_APPLICABLE
+    assert result.supporting_data["outcome_category"] == "unsupported"
     assert result.applied is False
-    assert result.recommendations == []
+    assert result.passed is None
+    assert result.warnings[0].code == "unsupported_cefepime_renal_domain"
+    assert "no extrapolation" in (result.summary or "")
+    _assert_no_dose_recommendation(result)
 
 
 def test_multiple_matching_bands_fails_closed_without_selecting_one() -> None:
@@ -360,12 +479,13 @@ def test_multiple_matching_bands_fails_closed_without_selecting_one() -> None:
     result = _evaluate(content=_content(bands=overlapping_bands), renal=_renal("45"))
 
     assert result.status is ResultStatus.INCOMPLETE
+    assert result.supporting_data["outcome_category"] == "incomplete"
     assert result.applied is False
-    assert result.recommendations == []
+    _assert_no_dose_recommendation(result)
     assert "zero or multiple" in (result.summary or "")
 
 
-def test_explicit_no_recommendation_band_contains_no_dose_recommendation() -> None:
+def test_explicit_no_recommendation_band_is_applied_not_applicable() -> None:
     no_recommendation_band = RenalDoseBandContent(
         id="no_recommendation",
         lower=RenalContentEndpoint(value=Decimal("0"), inclusive=False),
@@ -379,8 +499,11 @@ def test_explicit_no_recommendation_band_contains_no_dose_recommendation() -> No
 
     result = _evaluate(content=_content(bands=(no_recommendation_band,)), renal=_renal("10"))
 
-    assert result.status is ResultStatus.INCOMPLETE
+    assert result.status is ResultStatus.NOT_APPLICABLE
+    assert result.supporting_data["outcome_category"] == "not_applicable"
     assert result.applied is True
     assert result.passed is False
-    assert result.recommendations == []
+    assert result.supporting_data["renal_band_id"] == "no_recommendation"
+    assert result.warnings[0].code == "cefepime_no_recommendation_band"
+    _assert_no_dose_recommendation(result)
     assert result.summary == "Synthetic no-recommendation outcome."
