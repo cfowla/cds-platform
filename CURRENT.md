@@ -25,70 +25,77 @@ Use only the named files and task-specified commands. Do not install missing tes
 
 ## Roadmap position
 
-- Days 1–49 are complete.
-- **Day 49 — Weekly review: end-to-end cefepime** was completed out of sequence before Day 48.
-- Day 49 was reverified after completion of the Day 48 golden-case matrix.
-- The next sequential task is **Day 50 — Select and source piperacillin–tazobactam content**.
+- Days 1–50 are complete.
+- **Day 50 — Select and source piperacillin–tazobactam content** is complete.
+- The next sequential task is **Day 51 — Encode and test piperacillin–tazobactam content**.
 
 ## Current state
 
-- `tests/unit/rules/test_cefepime_golden_cases.py` and the seven committed snapshots under
-  `examples/golden/cefepime_rule/` cover normal, impaired, exact-boundary, missing,
-  unsupported-regimen, unstable-renal-function, and synthetic contraindication outcomes.
-- `tests/integration/test_cefepime_end_to_end.py` composes structural and sufficiency validation,
-  pure Cockcroft–Gault calculation, YAML content loading, exact cefepime rule matching, draft-content
-  ineligibility, and canonical serialization.
-- Combined verification exposed that an exact calculated value numerically equal to `50` could retain
-  the Decimal representation `5E+1`, causing the Day 49 wire-value assertions to receive `"5E+1"`
-  instead of `"50"`.
-- `calculate_cockcroft_gault()` now converts the already calculated Decimal through fixed-point text
-  and back to Decimal before storing it. This changes representation only; it does not round,
-  quantize, cap, floor, or otherwise change the numeric value used for renal-band matching.
-- The end-to-end result now emits `"50"` consistently in both `supporting_data.renal_value` and the
-  canonical serialized renal quantity.
-- No clinical content, renal formula, precision context, supported population, regimen, rule
-  eligibility behavior, public field, dependency, interface, or review status changed.
-- Four source-based cefepime documents remain `review.status: draft`; software verification has not
-  made them clinically eligible.
+- `docs/PIPERACILLIN_TAZOBACTAM_CONTENT_SELECTION.md` now records one current FDA-approved DailyMed
+  source for standard 30-minute infusion and one primary PK/PD publication for one
+  extended-infusion variant.
+- The selected standard source is the WG Critical Care piperacillin–tazobactam pharmacy-bulk-package
+  SPL with DailyMed set ID `17a400ae-cbaa-4d07-95f4-c6917dfc0585`, SPL version `14`, record update
+  date `2026-06-24`, version publication date `2026-07-03`, and labeling revision `11/2025`.
+- The selected extended-infusion source is Patel et al., Antimicrobial Agents and Chemotherapy
+  2010;54(1):460-465, DOI `10.1128/AAC.00296-09`, electronically published `2009-10-26`.
+- The initial content set is limited to three exact supplied maintenance regimens:
+  `3.375 g` IV every `6 hours` over `30 minutes`, `4.5 g` IV every `6 hours` over `30 minutes`, and
+  `3.375 g` IV every `8 hours` over `240 minutes`.
+- The standard-label non-dialysis matrices are recorded at greater than `40`, `20 to 40`, and less
+  than `20 mL/min`. The extended-infusion candidate retains the parent regimen above `20 mL/min`
+  and changes the interval to every `12 hours` at less than or equal to `20 mL/min`.
+- Exact medication, route, formulation, source-context indication, regimen, content, rule, and
+  source identifiers are documented. Total combined product dose remains explicit in `g`.
+- The standard-label `guideline` evidence-level mapping, composite nosocomial-pneumonia source
+  context, extended-infusion indication context, nullable formulation, off-label modeling source,
+  and continuous unrounded interval representations remain provisional pending independent review.
+- `BACKLOG.md` now marks piperacillin–tazobactam source, identifiers, selected variants, and source
+  renal matrices as partially resolved while retaining the exact review blockers.
+- No YAML content, rule, matcher, validation behavior, recommendation behavior, public import,
+  serialized contract, medication scope, population, interface, or dependency changed.
 
 ## Verification
 
-- The execution environment did not provide a repository checkout.
-- A network clone was attempted only because combined verification and publication were explicitly
-  requested; it failed because the environment could not resolve `github.com`.
-- A bounded verification checkout was reconstructed from the authoritative default-branch test files
-  and their concretely required imports. No dependency was installed.
-- Available tools: Python `3.13.5`, pytest `9.0.2`, and PyYAML `6.0.3`.
-- The initial combined run collected six Day 48 and Day 49 tests: five passed and the successful Day 49
-  integration case failed because `Decimal('5E+1')` serialized as `"5E+1"` rather than `"50"`.
-- After the representation-only calculator correction, the following focused command completed with
-  **15 passed**:
-
-  `python -m pytest tests/unit/utils/test_serialization.py tests/unit/rules/test_cefepime_golden_cases.py tests/integration/test_cefepime_end_to_end.py`
-
-- The passing set includes nine canonical serialization tests, four Day 48 golden-case tests, and two
-  Day 49 end-to-end integration tests.
-- The full repository suite was not run because no full checkout was available and no workflow or CI
-  execution was created or used.
-- No full-suite, Ruff, type-check, CI, or GitHub Actions passing claim is made.
+- Initial execution-context probe: `git rev-parse --show-toplevel` from `/mnt/data` failed because no
+  repository checkout was present; no filesystem search or clone was attempted.
+- A bounded documentation checkout was materialized at `/tmp/cds-platform` using only the task
+  documents and generated replacements.
+- Focused standard-library verification command completed successfully:
+  `python /tmp/cds-platform/verify_day50.py`.
+- The verification checked the prototype warning, both selected source identities and versions,
+  three exact regimen records, standard and extended renal matrices, exact draft review metadata,
+  explicit exclusions, backlog references, and the Day 51 next action.
+- No pytest command was required because this task changes source-selection documentation and active
+  state only; no executable behavior or test contract changed.
+- No dependency was installed. No full-suite, lint, type-check, CI, or GitHub Actions passing claim
+  is made.
 
 ## Files changed
 
-- `src/cds/services/renal.py`
-- `CURRENT.md`
+- `docs/PIPERACILLIN_TAZOBACTAM_CONTENT_SELECTION.md` — created.
+- `BACKLOG.md` — updated.
+- `CURRENT.md` — replaced with the current state and next action.
 
 ## Additional files inspected
 
-- `CDS_12_Week_Daily_Project_Plan.html` — exact Day 48 and Day 49 deliverables.
-- `tests/unit/rules/test_cefepime_golden_cases.py` and the Day 48 commits — required outcome matrix and
-  deterministic snapshot conventions.
-- `tests/integration/test_cefepime_end_to_end.py` — Day 49 validation-through-serialization contract.
-- `tests/unit/utils/test_serialization.py` and `src/cds/utils/serialization.py` — Decimal precision,
-  scale, and canonical wire-value behavior.
-- `src/cds/rules/cefepime.py` — renal supporting-data representation and exact band matching.
-- `src/cds/services/renal.py` — source of the exponent-form Decimal representation.
-- The domain, validation, repository, predicate, and synthetic YAML imports directly required by the
-  focused tests — bounded reconstruction and execution only.
+- `AGENTS.md` — repository source hierarchy, bounded-checkout rules, clinical-content decisions, and
+  close procedure.
+- `docs/TASK_TEMPLATE.md` and `CDS_12_Week_Daily_Project_Plan.html` — task-template structure and the
+  exact Day 50 deliverable.
+- `docs/SAFETY_INVARIANTS.md`, `PROJECT_CHARTER.md`, and `FIRST_VERTICAL_SLICE.md` — required because
+  Day 50 selects medication-specific clinical content inside the frozen scope.
+- `BACKLOG.md` — existing unresolved piperacillin–tazobactam source, identifier, variant, boundary,
+  and review decisions.
+- `docs/RENAL_DOSE_CONTENT_SCHEMA.md` — exact identifier syntax, one-document-per-regimen contract,
+  renal-boundary semantics, source fields, evidence levels, and review metadata.
+- `docs/CEFEPIME_CONTENT_SELECTION.md` — directly relevant source-selection and review-record
+  convention established by Day 43.
+- The selected WG Critical Care DailyMed piperacillin–tazobactam SPL version 14 — exact product,
+  label dates, adult indications, standard regimens, 30-minute administration, renal matrix, and
+  warnings.
+- Patel et al. 2010, DOI `10.1128/AAC.00296-09` — exact extended-infusion regimen, Cockcroft–Gault
+  method, candidate renal adjustment threshold, PK/PD target, and modeling limitations.
 
 ## Active constraints
 
@@ -96,32 +103,38 @@ Use only the named files and task-specified commands. Do not install missing tes
 - Structural and task-sufficiency validation must complete before calculation or rule matching.
 - Missing, invalid, unsupported, ambiguous, unstable, and out-of-scope clinical facts fail closed
   without a dosing recommendation.
-- Exact medication, regimen, indication, route, formulation, dose, frequency, infusion-duration,
-  renal-unit, renal-method, and content-version keys are matched without aliases, normalization,
-  fuzzy matching, interpolation, extrapolation, fallback, or automatic version selection.
+- Exact medication, regimen, source-context indication, route, formulation, total-product dose,
+  frequency, infusion duration, renal unit, renal method, and content-version keys are matched
+  without aliases, normalization, fuzzy matching, hidden component conversion, interpolation,
+  extrapolation, fallback, or automatic version selection.
+- Standard and extended infusion remain separate exact variants with separate governing sources.
+- The prototype does not select therapy, infer an indication or organism, interpret MICs, verify a
+  companion aminoglycoside, select duration, or extrapolate to unlisted infusion strategies.
 - Clinical decimal values and units remain explicit; renal-band matching uses the stored unrounded
   value.
-- No hidden `mg`/`g` conversion or equivalence comparison is authorized.
-- Draft or retired content is never eligible for rule matching. Software validation does not confer
-  clinical review status.
-- Synthetic test-only review metadata must remain confined to transient test objects and must not be
-  represented as actual clinical review.
-- Do not invent a real reviewer identity, resolve source ambiguity silently, or treat source ranges
-  as authorization for the prototype to select an initial regimen.
+- Draft or retired content is never eligible for rule matching. Software verification does not
+  confer clinical review status.
+- Do not invent reviewer identity, resolve source ambiguity silently, or treat source ranges or
+  modeling results as authorization for the prototype to select an initial regimen.
 
 ## Blockers
 
 - A named independent clinical-content reviewer has not been identified.
-- The reviewer must approve or replace the provisional continuous interpretation of the cefepime
-  source's integer-labeled renal bands before any source-based document is marked reviewed.
-- The reviewer must approve the provisional `guideline` evidence-level mapping for FDA-approved
-  prescribing information or require a separately scoped schema change.
-- Until review is complete, all four source-based cefepime documents remain draft and cannot produce
-  a successful recommendation through the rule.
+- The reviewer must approve or replace the standard-label continuous boundary representation, the
+  positive renal-domain lower bound, the composite nosocomial-pneumonia source-context identifier,
+  and the provisional `guideline` evidence-level mapping.
+- The reviewer must approve or replace the extended-infusion source-context indication,
+  `formulation_id: null`, less-than-or-equal-to `20 mL/min` continuous partition, and use of the
+  off-label PK/PD modeling publication for the frozen prototype.
+- Exact source-based monitoring, warning, rationale, limitation, and immutable content-version text
+  has not yet been authored.
+- Until review is complete, all future source-based piperacillin–tazobactam documents must remain
+  draft and cannot produce a successful recommendation through a rule.
 
 ## Next exact action
 
-> Day 50 — select and source piperacillin–tazobactam content by documenting exact medication and
-> regimen identifiers, the authoritative source and version, supported indications, standard and
-> extended-infusion variants, renal bands, ambiguities, limitations, and required reviewer metadata
-> without encoding content or implementing rule behavior.
+> Day 51 — encode and test the three exact piperacillin–tazobactam documents defined in
+> `docs/PIPERACILLIN_TAZOBACTAM_CONTENT_SELECTION.md`, preserving separate standard-label and
+> extended-infusion sources, total combined-product dose units, complete non-dialysis renal
+> partitions, exact source-context indications, explicit limitations, and `review.status: draft`;
+> do not add another regimen or implement medication-specific engine behavior.
