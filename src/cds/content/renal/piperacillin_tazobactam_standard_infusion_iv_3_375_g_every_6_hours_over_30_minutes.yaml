@@ -1,0 +1,207 @@
+# Prototype only — not for direct clinical use.
+# Draft clinical content for research, education, and software development with synthetic or properly de-identified data.
+# Software validation does not constitute clinical review or authorize patient-care use.
+schema_version: '1'
+content_id: renal_dose_piperacillin_tazobactam_standard_infusion_iv_3_375_g_every_6_hours_over_30_minutes
+content_version: 1.0.0-draft
+rule_id: piperacillin_tazobactam_standard_infusion_iv_3_375_g_every_6_hours_renal_rule
+medication:
+  id: piperacillin_tazobactam
+  display: Piperacillin–tazobactam
+regimen:
+  id: standard_infusion_iv_3_375_g_every_6_hours_over_30_minutes
+  display: Piperacillin–tazobactam 3.375 g IV every 6 hours over 30 minutes
+  indication_ids:
+  - adult_intra_abdominal_infection
+  - adult_skin_and_skin_structure_infection
+  - adult_female_pelvic_infection
+  - adult_moderate_community_acquired_pneumonia
+  route_id: iv
+  formulation_id: powder_for_solution
+  base_dose:
+    value: '3.375'
+    unit: g
+  frequency_interval:
+    value: '6'
+    unit: hours
+  infusion_duration:
+    value: '30'
+    unit: minutes
+supported_context:
+  minimum_age_years: 18
+  renal_method: cockcroft_gault
+  renal_unit: mL/min
+  renal_function_stable: true
+  renal_replacement_therapy: false
+  limitations:
+  - Prototype only — not for direct clinical use; use only with synthetic or properly de-identified cases.
+  - Limited to adults aged 18 years or older with explicitly stable renal function and unindexed Cockcroft-Gault
+    creatinine clearance in mL/min.
+  - Excludes intermittent hemodialysis, peritoneal dialysis, continuous renal replacement therapy, other
+    renal replacement therapy, and acute or rapidly changing kidney function.
+  - Requires exact source-context indication, medication, route, formulation when applicable, total-product
+    dose, frequency interval, and infusion duration; no aliases, inference, unit conversion, interpolation,
+    extrapolation, or fallback.
+renal_domain:
+  lower:
+    value: '0'
+    inclusive: false
+  upper: null
+renal_bands:
+- id: below_20
+  lower:
+    value: '0'
+    inclusive: false
+  upper:
+    value: '20'
+    inclusive: false
+  outcome: recommendation
+  recommendation:
+    action: adjust_dose
+    dose:
+      value: '2.25'
+      unit: g
+    route_id: iv
+    frequency_interval:
+      value: '8'
+      unit: hours
+    infusion_duration:
+      value: '30'
+      unit: minutes
+    rationale: The selected prescribing-information renal table lists 2.25 g IV every 8 hours for all
+      listed adult indications other than nosocomial pneumonia when creatinine clearance is less than
+      20 mL/min.
+    monitoring:
+    - Monitor renal function during treatment and reassess this maintenance schedule if renal function
+      changes; the selected label requires renal dose reduction at creatinine clearance of 40 mL/min or
+      less.
+    - Closely monitor patients with renal impairment or seizure disorders for neuromuscular excitability
+      or seizures, because higher doses and renal impairment increase the risk of central nervous system
+      adverse reactions.
+    - Periodically assess hematopoietic function during prolonged therapy, especially when treatment continues
+      for 21 days or longer.
+    - Consider the product sodium load and periodically assess electrolytes in patients with low potassium
+      reserves or other risk factors for hypokalemia.
+  no_recommendation_reason: null
+  source_ids:
+  - fda_dailymed_piperacillin_tazobactam_wgcc_spl_v14
+  limitations:
+  - The continuous interval is a provisional representation of the selected label renal categories and
+    must be independently reviewed before approval.
+  - Dose values are total grams of combined piperacillin–tazobactam product and must not be reinterpreted
+    as piperacillin-component dose.
+- id: crcl_20_to_40
+  lower:
+    value: '20'
+    inclusive: true
+  upper:
+    value: '40'
+    inclusive: true
+  outcome: recommendation
+  recommendation:
+    action: adjust_dose
+    dose:
+      value: '2.25'
+      unit: g
+    route_id: iv
+    frequency_interval:
+      value: '6'
+      unit: hours
+    infusion_duration:
+      value: '30'
+      unit: minutes
+    rationale: The selected prescribing-information renal table lists 2.25 g IV every 6 hours for all
+      listed adult indications other than nosocomial pneumonia when creatinine clearance is 20 to 40 mL/min.
+    monitoring:
+    - Monitor renal function during treatment and reassess this maintenance schedule if renal function
+      changes; the selected label requires renal dose reduction at creatinine clearance of 40 mL/min or
+      less.
+    - Closely monitor patients with renal impairment or seizure disorders for neuromuscular excitability
+      or seizures, because higher doses and renal impairment increase the risk of central nervous system
+      adverse reactions.
+    - Periodically assess hematopoietic function during prolonged therapy, especially when treatment continues
+      for 21 days or longer.
+    - Consider the product sodium load and periodically assess electrolytes in patients with low potassium
+      reserves or other risk factors for hypokalemia.
+  no_recommendation_reason: null
+  source_ids:
+  - fda_dailymed_piperacillin_tazobactam_wgcc_spl_v14
+  limitations:
+  - The continuous interval is a provisional representation of the selected label renal categories and
+    must be independently reviewed before approval.
+  - Dose values are total grams of combined piperacillin–tazobactam product and must not be reinterpreted
+    as piperacillin-component dose.
+- id: above_40
+  lower:
+    value: '40'
+    inclusive: false
+  upper: null
+  outcome: recommendation
+  recommendation:
+    action: continue
+    dose:
+      value: '3.375'
+      unit: g
+    route_id: iv
+    frequency_interval:
+      value: '6'
+      unit: hours
+    infusion_duration:
+      value: '30'
+      unit: minutes
+    rationale: The selected prescribing-information renal table retains the exact supplied 3.375 g IV
+      every 6 hours over 30 minutes regimen when creatinine clearance is greater than 40 mL/min.
+    monitoring:
+    - Monitor renal function during treatment and reassess this maintenance schedule if renal function
+      changes; the selected label requires renal dose reduction at creatinine clearance of 40 mL/min or
+      less.
+    - Closely monitor patients with renal impairment or seizure disorders for neuromuscular excitability
+      or seizures, because higher doses and renal impairment increase the risk of central nervous system
+      adverse reactions.
+    - Periodically assess hematopoietic function during prolonged therapy, especially when treatment continues
+      for 21 days or longer.
+    - Consider the product sodium load and periodically assess electrolytes in patients with low potassium
+      reserves or other risk factors for hypokalemia.
+  no_recommendation_reason: null
+  source_ids:
+  - fda_dailymed_piperacillin_tazobactam_wgcc_spl_v14
+  limitations:
+  - The continuous interval is a provisional representation of the selected label renal categories and
+    must be independently reviewed before approval.
+  - Dose values are total grams of combined piperacillin–tazobactam product and must not be reinterpreted
+    as piperacillin-component dose.
+sources:
+- id: fda_dailymed_piperacillin_tazobactam_wgcc_spl_v14
+  evidence_level: guideline
+  citation: WG Critical Care, LLC. Piperacillin and Tazobactam for Injection, USP, pharmacy bulk package
+    bottles [prescribing information]. DailyMed set ID 17a400ae-cbaa-4d07-95f4-c6917dfc0585; SPL version
+    14; labeling revised 11/2025; DailyMed record updated 2026-06-24; version 14 published 2026-07-03.
+  source_document: Piperacillin and Tazobactam for Injection, USP, pharmacy bulk package bottles, for
+    intravenous use
+  source_version: DailyMed SPL version 14; labeling revised 11/2025; DailyMed record updated 2026-06-24;
+    version 14 published 2026-07-03
+  publication_date: '2026-06-24'
+  url: https://dailymed.nlm.nih.gov/dailymed/lookup.cfm?setid=17a400ae-cbaa-4d07-95f4-c6917dfc0585&version=14
+review:
+  status: draft
+  reviewed_content_version: null
+  reviewer: null
+  reviewer_role: null
+  reviewed_on: null
+  notes: Draft transcription from the selected sources. Independent review of source fidelity, continuous
+    unrounded renal-band boundaries, total combined-product dose units, evidence-level mapping, exact
+    source-context identifiers, monitoring text, exclusions, and prototype warnings remains required.
+limitations:
+- Prototype only — not for direct clinical use; use only with synthetic or properly de-identified cases.
+- Draft content is not eligible for rule matching and has not received independent clinical-content review.
+- This document adjusts only the exact supplied maintenance regimen and source-context indication; it
+  does not select initial therapy, infer an indication, choose companion therapy, determine duration,
+  or recommend an alternative regimen.
+- The continuous Decimal intervals for the source renal categories and the positive lower renal-domain
+  boundary are provisional interpretations pending independent review.
+- The version 1 schema provisionally represents FDA-approved prescribing information with evidence_level
+  guideline pending review.
+- The selected source is a pharmacy bulk package powder for solution; the exact powder_for_solution formulation
+  identifier remains pending independent review.
+- Pediatric, unstable-renal-function, dialysis, other renal-replacement-therapy, extended-infusion, continuous-infusion,
+  and unlisted dose, frequency, or infusion variants are unsupported.
