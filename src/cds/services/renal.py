@@ -91,7 +91,6 @@ def require_supplied_weight(
     return ValueWithUnit(value=weight.value, unit=weight.unit), weight_type
 
 
-
 def calculate_cockcroft_gault(
     *,
     patient: Patient,
@@ -158,6 +157,7 @@ def calculate_cockcroft_gault(
             ) / (Decimal("72") * serum_creatinine.value)
             if patient.sex is Sex.FEMALE:
                 crcl *= Decimal("0.85")
+            crcl = Decimal(format(crcl, "f"))
     except ArithmeticError as error:
         raise CalculationError("Cockcroft-Gault calculation failed.") from error
 

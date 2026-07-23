@@ -27,82 +27,68 @@ Use only the named files and task-specified commands. Do not install missing tes
 
 - Days 1–49 are complete.
 - **Day 49 — Weekly review: end-to-end cefepime** was completed out of sequence before Day 48.
+- Day 49 was reverified after completion of the Day 48 golden-case matrix.
 - The next sequential task is **Day 50 — Select and source piperacillin–tazobactam content**.
 
 ## Current state
 
-- `tests/unit/rules/test_cefepime_golden_cases.py` builds seven deterministic synthetic cefepime rule
-  outcomes through `evaluate_cefepime_rule()` and the canonical `dumps_json()` serializer.
-- Separate committed snapshots under `examples/golden/cefepime_rule/` cover normal renal function,
-  impaired renal function, the exact inclusive `30 mL/min` boundary, a missing renal value, an
-  unsupported regimen, unstable renal function, and a synthetic no-recommendation contraindication
-  outcome.
-- Normal, impaired, and exact-boundary cases return structured successful recommendations with
-  explicit decimal strings, units, renal-band identifiers, linked rule and order identifiers,
-  evidence, provenance, content version, and evaluation time.
-- Missing input remains `ResultStatus.INCOMPLETE`, while unsupported-regimen and unstable-renal
-  cases remain warning-bearing `ResultStatus.NOT_APPLICABLE`; all three fail closed without a dose
-  recommendation.
-- The synthetic contraindication case uses the existing explicit `no_recommendation` band outcome,
-  returns `applied=True` and `passed=False`, and produces no dose recommendation.
-- Test-only review metadata is created only in the focused Python fixture. No source-based cefepime
-  YAML document, persisted review metadata, clinical content, rule implementation, public contract,
-  dependency, or serialization behavior changed.
-- Four source-based cefepime documents remain `review.status: draft`; software tests have not made
-  them clinically eligible.
+- `tests/unit/rules/test_cefepime_golden_cases.py` and the seven committed snapshots under
+  `examples/golden/cefepime_rule/` cover normal, impaired, exact-boundary, missing,
+  unsupported-regimen, unstable-renal-function, and synthetic contraindication outcomes.
+- `tests/integration/test_cefepime_end_to_end.py` composes structural and sufficiency validation,
+  pure Cockcroft–Gault calculation, YAML content loading, exact cefepime rule matching, draft-content
+  ineligibility, and canonical serialization.
+- Combined verification exposed that an exact calculated value numerically equal to `50` could retain
+  the Decimal representation `5E+1`, causing the Day 49 wire-value assertions to receive `"5E+1"`
+  instead of `"50"`.
+- `calculate_cockcroft_gault()` now converts the already calculated Decimal through fixed-point text
+  and back to Decimal before storing it. This changes representation only; it does not round,
+  quantize, cap, floor, or otherwise change the numeric value used for renal-band matching.
+- The end-to-end result now emits `"50"` consistently in both `supporting_data.renal_value` and the
+  canonical serialized renal quantity.
+- No clinical content, renal formula, precision context, supported population, regimen, rule
+  eligibility behavior, public field, dependency, interface, or review status changed.
+- Four source-based cefepime documents remain `review.status: draft`; software verification has not
+  made them clinically eligible.
 
 ## Verification
 
-- Initial execution-context probe: `git rev-parse --show-toplevel` from `/mnt/data` failed because no
-  repository checkout was present; no filesystem search or clone was attempted.
-- Pytest was available: `pytest 9.0.2`; no dependency was installed.
-- `python -m py_compile /tmp/cds-platform/tests/unit/rules/test_cefepime_golden_cases.py` completed
-  successfully after the final edit.
-- The focused test file was checked for lines exceeding the configured 100-character Ruff limit;
-  none remained.
-- All seven locally generated JSON snapshots parsed successfully.
-- GitHub blob SHA values for the focused test and all seven committed snapshots matched the locally
-  generated files exactly.
-- The focused pytest command was not executed because the execution environment did not provide a
-  repository checkout and the connector responses were not mounted as source files for a faithful
-  bounded import checkout. No source stubs, direct repository download, clone, substitute runner,
-  CI, or GitHub Actions execution was used.
-- No pytest, full-suite, Ruff, type-check, CI, or GitHub Actions passing claim is made.
+- The execution environment did not provide a repository checkout.
+- A network clone was attempted only because combined verification and publication were explicitly
+  requested; it failed because the environment could not resolve `github.com`.
+- A bounded verification checkout was reconstructed from the authoritative default-branch test files
+  and their concretely required imports. No dependency was installed.
+- Available tools: Python `3.13.5`, pytest `9.0.2`, and PyYAML `6.0.3`.
+- The initial combined run collected six Day 48 and Day 49 tests: five passed and the successful Day 49
+  integration case failed because `Decimal('5E+1')` serialized as `"5E+1"` rather than `"50"`.
+- After the representation-only calculator correction, the following focused command completed with
+  **15 passed**:
+
+  `python -m pytest tests/unit/utils/test_serialization.py tests/unit/rules/test_cefepime_golden_cases.py tests/integration/test_cefepime_end_to_end.py`
+
+- The passing set includes nine canonical serialization tests, four Day 48 golden-case tests, and two
+  Day 49 end-to-end integration tests.
+- The full repository suite was not run because no full checkout was available and no workflow or CI
+  execution was created or used.
+- No full-suite, Ruff, type-check, CI, or GitHub Actions passing claim is made.
 
 ## Files changed
 
-- `tests/unit/rules/test_cefepime_golden_cases.py`
-- `examples/golden/cefepime_rule/normal.json`
-- `examples/golden/cefepime_rule/impaired.json`
-- `examples/golden/cefepime_rule/exact_boundary.json`
-- `examples/golden/cefepime_rule/missing.json`
-- `examples/golden/cefepime_rule/unsupported_regimen.json`
-- `examples/golden/cefepime_rule/unstable_renal_function.json`
-- `examples/golden/cefepime_rule/contraindication.json`
+- `src/cds/services/renal.py`
 - `CURRENT.md`
 
 ## Additional files inspected
 
-- `AGENTS.md` — source hierarchy, bounded execution rules, architecture boundaries, verification,
-  and close procedure.
-- `docs/TASK_TEMPLATE.md` and `CDS_12_Week_Daily_Project_Plan.html` — task structure and the exact
-  Day 48 golden-case deliverable.
-- `docs/SAFETY_INVARIANTS.md` — synthetic-data, fail-closed, auditability, and boundary-test
-  requirements.
-- `src/cds/rules/cefepime.py` and `tests/unit/rules/test_cefepime.py` — the exact rule API, output
-  categories, no-recommendation behavior, and existing synthetic fixture conventions.
-- `tests/unit/utils/test_golden_json_examples.py` — the existing per-case golden-file and canonical
-  byte-comparison convention.
-- `src/cds/utils/serialization.py` — deterministic JSON, decimal-string, enum, date, and UTC datetime
-  serialization behavior.
-- `src/cds/domain/clinical.py`, `src/cds/domain/enums.py`, `src/cds/domain/outputs.py`,
-  `src/cds/domain/support.py`, and `src/cds/domain/value_objects.py` — typed input, output,
-  traceability, enum, and quantity contracts imported by the focused test.
-- `src/cds/repositories/renal_content.py` and `src/cds/rules/predicates.py` — typed content objects and
-  exact unrounded renal-band boundary semantics used by the synthetic fixture.
-- `src/cds/domain/exceptions.py` — direct repository-content import required by the focused import
-  chain.
-- `pyproject.toml` — pytest configuration and Ruff line-length target.
+- `CDS_12_Week_Daily_Project_Plan.html` — exact Day 48 and Day 49 deliverables.
+- `tests/unit/rules/test_cefepime_golden_cases.py` and the Day 48 commits — required outcome matrix and
+  deterministic snapshot conventions.
+- `tests/integration/test_cefepime_end_to_end.py` — Day 49 validation-through-serialization contract.
+- `tests/unit/utils/test_serialization.py` and `src/cds/utils/serialization.py` — Decimal precision,
+  scale, and canonical wire-value behavior.
+- `src/cds/rules/cefepime.py` — renal supporting-data representation and exact band matching.
+- `src/cds/services/renal.py` — source of the exponent-form Decimal representation.
+- The domain, validation, repository, predicate, and synthetic YAML imports directly required by the
+  focused tests — bounded reconstruction and execution only.
 
 ## Active constraints
 
@@ -113,7 +99,7 @@ Use only the named files and task-specified commands. Do not install missing tes
 - Exact medication, regimen, indication, route, formulation, dose, frequency, infusion-duration,
   renal-unit, renal-method, and content-version keys are matched without aliases, normalization,
   fuzzy matching, interpolation, extrapolation, fallback, or automatic version selection.
-- Clinical decimal values and units remain explicit; renal-band matching uses the stored unquantized
+- Clinical decimal values and units remain explicit; renal-band matching uses the stored unrounded
   value.
 - No hidden `mg`/`g` conversion or equivalence comparison is authorized.
 - Draft or retired content is never eligible for rule matching. Software validation does not confer
