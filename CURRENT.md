@@ -25,60 +25,65 @@ Use only the named files and task-specified commands. Do not install missing tes
 
 ## Roadmap position
 
-- Days 1–56 are complete.
-- **Day 56 — Weekly review: duplication audit** is complete.
-- The next sequential task is **Day 57 — Define the evaluation context**.
+- Days 1–57 are complete.
+- **Day 57 — Define the evaluation context** is complete.
+- The next sequential task is **Day 58 — Implement the minimal rule interface**.
 
 ## Current state
 
-- `src/cds/rules/cefepime.py` is now a thin medication-specific wrapper around the existing pure
-  `evaluate_exact_renal_dose_rule` matcher, consistent with the piperacillin-tazobactam and
-  famotidine wrappers.
-- Cefepime-specific identifiers, display text, warning-code prefix, recommendation title,
-  provenance source name, and implementation version remain explicit in `ExactRenalDoseRuleConfig`.
-- The duplicated cefepime matching, fail-closed outcome, recommendation construction, evidence,
-  provenance, and band-selection logic was removed rather than abstracted again.
-- Medication and regimen content differences remain in versioned content and wrapper configuration;
-  no speculative rule hierarchy, registry, DSL, normalization, conversion, or inference was added.
-- Public exports and the existing cefepime implementation version remain unchanged.
+- `src/cds/app/context.py` defines the frozen, keyword-only `RenalDoseEvaluationContext` application
+  carrier.
+- The context contains only validated facts required by the existing Cockcroft–Gault calculator and
+  exact medication-regimen rule evaluation: patient, serum-creatinine result, supplied weight and
+  type, medication order, exact regimen and formulation identifiers, renal stability and renal
+  replacement therapy facts, requested content version, evaluation date, and evaluation timestamp.
+- The context performs no validation, normalization, inference, content loading, calculation, rule
+  matching, serialization, logging, mutation, or I/O.
+- Exact values and typed domain objects are preserved for later orchestration; optional formulation
+  absence remains explicit as `None`.
 
 ## Verification
 
 - No repository checkout was supplied to this connector-backed execution, so no local command was
   run and no filesystem search or clone was attempted.
-- The updated cefepime wrapper was reviewed directly against `src/cds/rules/exact_renal_dose.py`,
-  `src/cds/rules/piperacillin_tazobactam.py`, `src/cds/rules/famotidine.py`, and the focused cefepime
-  test imports.
+- The implementation and focused tests were reviewed directly against the current renal calculator,
+  renal sufficiency validator, medication-order sufficiency validator, and exact renal-dose matcher
+  signatures.
 - The intended focused command is:
-  `python -m pytest tests/unit/rules/test_cefepime.py tests/unit/rules/test_piperacillin_tazobactam.py tests/unit/rules/test_famotidine.py`
+  `python -m pytest tests/unit/app/test_context.py`
 - If `pytest` is unavailable in a supplied checkout environment, skip that command without installing
   it and report the limitation.
 - No full-suite, Ruff, type-check, CI, or GitHub Actions passing claim is made.
 
 ## Files changed
 
-- `src/cds/rules/cefepime.py` — replaced the copied matching engine with a thin shared-matcher wrapper.
+- `src/cds/app/context.py` — added the passive typed renal-dose evaluation context.
+- `tests/unit/app/test_context.py` — added focused field-boundary, preservation, immutability, and
+  explicit-absence tests.
 - `CURRENT.md` — replaced with the current state and next action.
 
 ## Additional files inspected
 
 - `docs/TASK_TEMPLATE.md` and `CDS_12_Week_Daily_Project_Plan.html` — bounded-task structure and the
-  exact Day 56 deliverable.
-- `docs/SAFETY_INVARIANTS.md` — fail-closed, exact-context, purity, versioning, and auditability
-  constraints.
+  exact Day 57 deliverable.
+- `docs/SAFETY_INVARIANTS.md` — validation-before-computation, fail-closed, explicit-context, purity,
+  and auditability constraints.
 - `CURRENT.md` — authoritative active task and completion context.
-- `src/cds/rules/exact_renal_dose.py` — demonstrated shared implementation already covering the
-  duplicated cefepime behavior.
-- `src/cds/rules/piperacillin_tazobactam.py` and `src/cds/rules/famotidine.py` — established thin-wrapper
-  pattern.
-- `tests/unit/rules/test_cefepime.py` — confirmed the focused public imports and test boundary.
+- `src/cds/services/renal.py` — exact validated inputs required by Cockcroft–Gault calculation.
+- `src/cds/rules/exact_renal_dose.py` — exact facts consumed by medication-regimen evaluation.
+- `src/cds/validation/renal.py` and `src/cds/validation/medication.py` — confirmed which facts must be
+  validated before constructing the context.
+- `src/cds/domain/clinical.py` — current typed patient, laboratory, and medication-order models.
+- `tests/unit/validation/test_renal.py` — focused test conventions and synthetic-data pattern.
 
 ## Active constraints
 
 - Preserve the prototype warning and use only synthetic or properly de-identified data.
-- Validate structure and task sufficiency before calculation or matching.
-- Missing, invalid, unsupported, ambiguous, unstable, and out-of-scope facts fail closed without a
-  dosing recommendation.
+- Validate structure and task sufficiency before constructing the evaluation context.
+- Missing, invalid, unsupported, ambiguous, unstable, and out-of-scope facts fail closed before
+  calculation or matching and produce no dosing recommendation.
+- Do not add validation, calculation, content selection, repository access, rule matching, mapping,
+  serialization, or interface behavior to the context.
 - Match exact medication, indication, route, formulation, dose, frequency, renal method, renal unit,
   indexing state, stability, renal replacement therapy, and content version without aliases,
   normalization, conversion, inference, interpolation, extrapolation, fallback, or automatic version
@@ -91,10 +96,9 @@ Use only the named files and task-specified commands. Do not install missing tes
 
 - A named independent clinical-content reviewer has not been identified.
 - Clinical-content source interpretations and review eligibility remain separate from this software
-  duplication audit.
+  context task.
 
 ## Next exact action
 
-> Day 57 — create one typed evaluation context containing only the validated facts required by renal
-> calculation and exact medication-regimen evaluation; do not move validation, content loading,
-> calculation, or rule behavior into the context object.
+> Day 58 — define a minimal rule interface with an `evaluate(context, content)` contract that returns
+> structured `RuleResult` values without adding registry, engine, content-loading, or interface logic.
