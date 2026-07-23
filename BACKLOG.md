@@ -43,30 +43,30 @@ versions, review states, reviewer fields, sources, and validation invariants are
   syntax are defined. [`docs/CEFEPIME_CONTENT_SELECTION.md`](docs/CEFEPIME_CONTENT_SELECTION.md)
   defines the initial cefepime identifiers.
   [`docs/PIPERACILLIN_TAZOBACTAM_CONTENT_SELECTION.md`](docs/PIPERACILLIN_TAZOBACTAM_CONTENT_SELECTION.md)
-  defines the initial piperacillin–tazobactam source-context indication, route, formulation,
-  standard-infusion, extended-infusion, regimen, content, rule, and source identifiers. Three
-  source-based draft YAML documents now encode those exact piperacillin–tazobactam identifiers.
-  Famotidine identifiers remain open for its scheduled source-selection task.
-- **Partially resolved — Governing evidence:** the initial cefepime FDA-approved DailyMed source is
-  recorded in [`docs/CEFEPIME_CONTENT_SELECTION.md`](docs/CEFEPIME_CONTENT_SELECTION.md).
-  Piperacillin–tazobactam standard infusion uses the selected WG Critical Care DailyMed SPL, and its
-  single extended-infusion variant uses the Patel et al. primary PK/PD publication recorded in
-  [`docs/PIPERACILLIN_TAZOBACTAM_CONTENT_SELECTION.md`](docs/PIPERACILLIN_TAZOBACTAM_CONTENT_SELECTION.md).
-  The three draft documents preserve the exact source IDs, versions, dates, citations, URLs, and
-  evidence-level mappings selected there. The governing famotidine source remains open.
+  defines the initial piperacillin–tazobactam identifiers, and three source-based draft YAML
+  documents encode them. [`docs/FAMOTIDINE_CONTENT_SELECTION.md`](docs/FAMOTIDINE_CONTENT_SELECTION.md)
+  now defines one exact oral film-coated-tablet, symptomatic-nonerosive-GERD regimen plus its
+  content, rule, source, indication, route, formulation, dose, and frequency identifiers.
+- **Partially resolved — Governing evidence:** cefepime and piperacillin–tazobactam sources are
+  recorded in their selection documents. The governing famotidine source is now the selected
+  Sportpharm DailyMed SPL version 1, updated `2026-06-26` and revised `06/2026`, recorded in
+  [`docs/FAMOTIDINE_CONTENT_SELECTION.md`](docs/FAMOTIDINE_CONTENT_SELECTION.md). The selected record
+  is a repackaged FDA-approved label; independent review must confirm that source choice or replace
+  it through a separately versioned decision.
 - **Partially resolved — Supported variants:** the initial cefepime set remains limited to four exact
   IV powder-for-solution maintenance regimens over 30 minutes. Three draft
-  piperacillin–tazobactam documents now encode two exact FDA-labeled standard-infusion regimens and
-  one exact primary-literature extended-infusion regimen. Pediatric, unstable-renal-function,
-  renal-replacement-therapy, continuous-infusion, unlisted dose, unlisted frequency, and unlisted
-  infusion variants remain unsupported. Famotidine variants remain open.
-- **Partially resolved — Renal boundaries:** the selected cefepime source bands and maintenance
-  matrix are recorded. The piperacillin–tazobactam standard-label matrices and extended-infusion
-  less-than-or-equal-to `20 mL/min` adjustment threshold are now encoded as complete continuous
-  draft partitions using unrounded values. Independent review must approve every interval
-  representation before content is marked reviewed.
+  piperacillin–tazobactam documents encode two exact FDA-labeled standard-infusion regimens and one
+  exact primary-literature extended-infusion regimen. The selected famotidine scope is limited to
+  oral film-coated tablets, `adult_symptomatic_nonerosive_gerd`, and the exact `20 mg` every
+  `12 hours` parent regimen. Famotidine suspension, `10 mg` formulations, IV products, other
+  indications, and other regimens remain unsupported.
+- **Partially resolved — Renal boundaries:** the selected cefepime and piperacillin–tazobactam
+  partitions are recorded or encoded as draft content. Famotidine now has a candidate continuous
+  partition of greater than `0` to less than `30`, `30` to less than `60`, and greater than or equal
+  to `60 mL/min`. Independent review must approve assigning exactly `60` to the no-adjustment band
+  based on label section 8.6 despite the renal table's compact `30 to 60` heading.
 - **Open — Regulatory-label evidence level:** the version 1 schema lacks a `regulatory_label`
-  evidence level. The cefepime and piperacillin–tazobactam selection records and draft documents
+  evidence level. The cefepime, piperacillin–tazobactam, and famotidine selection records
   provisionally map FDA-approved prescribing information to `guideline`. Independent review must
   approve that mapping or a separately scoped schema change is required before reviewed
   label-derived content is eligible for matching.
@@ -76,9 +76,14 @@ versions, review states, reviewer fields, sources, and validation invariants are
   less-than-or-equal-to `20 mL/min` adjustment band. Independent review must approve or replace those
   representations and confirm that the off-label modeling source is acceptable for the frozen
   prototype.
+- **Partially resolved — Famotidine maximum-dose representation:** the selected label describes renal
+  rows as recommended maximum dosages and offers alternate formulations for some lower-dose
+  regimens. The initial selection intentionally models only the exact `20 mg` tablet outcomes and
+  excludes alternate-formulation dosing. Independent review must approve that fail-closed
+  representation before content can become reviewed.
 - **Partially resolved — Independent review:** required review fields and medication-specific
-  attestations are defined for cefepime and piperacillin–tazobactam. All source-based documents
-  remain `draft`; a named independent clinical-content reviewer is required before any may be marked
+  attestations are defined for all three medications. Existing source-based documents remain
+  `draft`; a named independent clinical-content reviewer is required before any may be marked
   `reviewed` or become eligible for rule matching.
 
 ## Later decisions
