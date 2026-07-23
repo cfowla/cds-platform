@@ -25,77 +25,86 @@ Use only the named files and task-specified commands. Do not install missing tes
 
 ## Roadmap position
 
-- Days 1–50 are complete.
-- **Day 50 — Select and source piperacillin–tazobactam content** is complete.
-- The next sequential task is **Day 51 — Encode and test piperacillin–tazobactam content**.
+- Days 1–51 are complete.
+- **Day 51 — Encode and test piperacillin–tazobactam content** is complete.
+- The next sequential task is **Day 52 — Add piperacillin–tazobactam rule coverage**.
 
 ## Current state
 
-- `docs/PIPERACILLIN_TAZOBACTAM_CONTENT_SELECTION.md` now records one current FDA-approved DailyMed
-  source for standard 30-minute infusion and one primary PK/PD publication for one
-  extended-infusion variant.
-- The selected standard source is the WG Critical Care piperacillin–tazobactam pharmacy-bulk-package
-  SPL with DailyMed set ID `17a400ae-cbaa-4d07-95f4-c6917dfc0585`, SPL version `14`, record update
-  date `2026-06-24`, version publication date `2026-07-03`, and labeling revision `11/2025`.
-- The selected extended-infusion source is Patel et al., Antimicrobial Agents and Chemotherapy
-  2010;54(1):460-465, DOI `10.1128/AAC.00296-09`, electronically published `2009-10-26`.
-- The initial content set is limited to three exact supplied maintenance regimens:
-  `3.375 g` IV every `6 hours` over `30 minutes`, `4.5 g` IV every `6 hours` over `30 minutes`, and
-  `3.375 g` IV every `8 hours` over `240 minutes`.
-- The standard-label non-dialysis matrices are recorded at greater than `40`, `20 to 40`, and less
-  than `20 mL/min`. The extended-infusion candidate retains the parent regimen above `20 mL/min`
-  and changes the interval to every `12 hours` at less than or equal to `20 mL/min`.
-- Exact medication, route, formulation, source-context indication, regimen, content, rule, and
-  source identifiers are documented. Total combined product dose remains explicit in `g`.
-- The standard-label `guideline` evidence-level mapping, composite nosocomial-pneumonia source
-  context, extended-infusion indication context, nullable formulation, off-label modeling source,
-  and continuous unrounded interval representations remain provisional pending independent review.
-- `BACKLOG.md` now marks piperacillin–tazobactam source, identifiers, selected variants, and source
-  renal matrices as partially resolved while retaining the exact review blockers.
-- No YAML content, rule, matcher, validation behavior, recommendation behavior, public import,
-  serialized contract, medication scope, population, interface, or dependency changed.
+- Three exact source-based piperacillin–tazobactam renal-dose documents now exist under
+  `src/cds/content/renal/` with immutable content version `1.0.0-draft`.
+- The standard-infusion documents encode `3.375 g` IV every `6 hours` over `30 minutes` and `4.5 g`
+  IV every `6 hours` over `30 minutes`, using the selected WG Critical Care DailyMed SPL version 14.
+- The extended-infusion document encodes `3.375 g` IV every `8 hours` over `240 minutes`, using Patel
+  et al. as the governing dosing source and the selected DailyMed label only for explicitly separated
+  safety-monitoring statements.
+- Standard-label content preserves the complete non-dialysis partitions greater than `0` and less
+  than `20`, `20` through `40`, and greater than `40 mL/min` with exact endpoint ownership.
+- Extended-infusion content preserves the complete draft partition greater than `0` through `20` and
+  greater than `20 mL/min`, changing only the interval from every `8` to every `12 hours` in the lower
+  band.
+- All base and recommendation doses remain total combined piperacillin–tazobactam product in `g`;
+  frequency uses `hours`, infusion duration uses `minutes`, and no hidden component conversion occurs.
+- Every document retains exact medication, regimen, indication, route, formulation, rule, source, and
+  content identifiers; explicit rationale, monitoring, provenance, and limitations; and the prototype
+  clinical-use prohibition.
+- Every document remains `review.status: draft` with null reviewer fields and is ineligible for rule
+  matching until independent clinical-content review is completed.
+- Focused tests lock the repository to the three selected documents, verify both renal matrices and
+  boundaries, check source provenance and draft state, and prove four unselected infusion variants are
+  not encoded.
+- No piperacillin–tazobactam rule, matcher, repository eligibility behavior, application workflow,
+  public import, serialized contract, dependency, interface, medication scope, or population changed.
 
 ## Verification
 
 - Initial execution-context probe: `git rev-parse --show-toplevel` from `/mnt/data` failed because no
   repository checkout was present; no filesystem search or clone was attempted.
-- A bounded documentation checkout was materialized at `/tmp/cds-platform` using only the task
-  documents and generated replacements.
-- Focused standard-library verification command completed successfully:
-  `python /tmp/cds-platform/verify_day50.py`.
-- The verification checked the prototype warning, both selected source identities and versions,
-  three exact regimen records, standard and extended renal matrices, exact draft review metadata,
-  explicit exclusions, backlog references, and the Day 51 next action.
-- No pytest command was required because this task changes source-selection documentation and active
-  state only; no executable behavior or test contract changed.
-- No dependency was installed. No full-suite, lint, type-check, CI, or GitHub Actions passing claim
-  is made.
+- A bounded verification checkout was materialized at `/tmp/cds-platform` with only the three new
+  content documents and the focused Day 51 test.
+- Available tools were Python `3.13.5`, pytest `9.0.2`, and PyYAML `6.0.3`; no dependency was installed.
+- Focused collection completed successfully:
+  `python -m pytest tests/unit/repositories/test_piperacillin_tazobactam_content.py --collect-only -q`.
+- Result: `17 tests collected in 0.03s`.
+- Focused execution completed successfully:
+  `python -m pytest tests/unit/repositories/test_piperacillin_tazobactam_content.py -q`.
+- Result: `17 passed in 0.22s`.
+- `python -m compileall -q tests/unit/repositories/test_piperacillin_tazobactam_content.py`
+  completed successfully.
+- The full suite was not run because no complete checkout was available and Day 51 does not change a
+  shared implementation contract.
+- No full-suite, Ruff, type-check, CI, or GitHub Actions passing claim is made.
 
 ## Files changed
 
-- `docs/PIPERACILLIN_TAZOBACTAM_CONTENT_SELECTION.md` — created.
+- `src/cds/content/renal/piperacillin_tazobactam_standard_infusion_iv_3_375_g_every_6_hours_over_30_minutes.yaml` — created.
+- `src/cds/content/renal/piperacillin_tazobactam_standard_infusion_iv_4_5_g_every_6_hours_over_30_minutes.yaml` — created.
+- `src/cds/content/renal/piperacillin_tazobactam_extended_infusion_iv_3_375_g_every_8_hours_over_240_minutes.yaml` — created.
+- `tests/unit/repositories/test_piperacillin_tazobactam_content.py` — created.
 - `BACKLOG.md` — updated.
 - `CURRENT.md` — replaced with the current state and next action.
 
 ## Additional files inspected
 
-- `AGENTS.md` — repository source hierarchy, bounded-checkout rules, clinical-content decisions, and
-  close procedure.
-- `docs/TASK_TEMPLATE.md` and `CDS_12_Week_Daily_Project_Plan.html` — task-template structure and the
-  exact Day 50 deliverable.
+- `AGENTS.md` — source hierarchy, bounded-checkout rules, clinical-content boundaries, verification,
+  and close procedure.
+- `docs/TASK_TEMPLATE.md` and `CDS_12_Week_Daily_Project_Plan.html` — task-template
+  structure and the exact Day 51 deliverable.
 - `docs/SAFETY_INVARIANTS.md`, `PROJECT_CHARTER.md`, and `FIRST_VERTICAL_SLICE.md` — required because
-  Day 50 selects medication-specific clinical content inside the frozen scope.
-- `BACKLOG.md` — existing unresolved piperacillin–tazobactam source, identifier, variant, boundary,
-  and review decisions.
-- `docs/RENAL_DOSE_CONTENT_SCHEMA.md` — exact identifier syntax, one-document-per-regimen contract,
-  renal-boundary semantics, source fields, evidence levels, and review metadata.
-- `docs/CEFEPIME_CONTENT_SELECTION.md` — directly relevant source-selection and review-record
-  convention established by Day 43.
-- The selected WG Critical Care DailyMed piperacillin–tazobactam SPL version 14 — exact product,
-  label dates, adult indications, standard regimens, 30-minute administration, renal matrix, and
-  warnings.
-- Patel et al. 2010, DOI `10.1128/AAC.00296-09` — exact extended-infusion regimen, Cockcroft–Gault
-  method, candidate renal adjustment threshold, PK/PD target, and modeling limitations.
+  Day 51 authors medication-specific clinical content inside the frozen renal-dose scope.
+- `CURRENT.md` and `BACKLOG.md` — active task, exact next action, and unresolved review and
+  representation decisions.
+- `docs/PIPERACILLIN_TAZOBACTAM_CONTENT_SELECTION.md` — authoritative selected sources, identifiers,
+  regimens, renal matrices, monitoring sections, limitations, and review requirements.
+- `docs/RENAL_DOSE_CONTENT_SCHEMA.md` — version 1 document shape, exact identifier syntax, quoted
+  clinical decimals, interval semantics, evidence fields, and review-state contract.
+- `src/cds/repositories/renal_content_schema.py` — existing generic closed-schema boundary; no
+  medication-specific logic was added.
+- The Day 44 cefepime source-based YAML and focused content-test convention — directly relevant
+  repository pattern for source-linked draft documents and bounded content tests.
+- The selected WG Critical Care DailyMed SPL version 14 and Patel et al. 2010 publication — used only
+  to confirm already selected dose matrices, infusion strategies, source metadata, monitoring text,
+  and recorded limitations.
 
 ## Active constraints
 
@@ -107,7 +116,8 @@ Use only the named files and task-specified commands. Do not install missing tes
   frequency, infusion duration, renal unit, renal method, and content-version keys are matched
   without aliases, normalization, fuzzy matching, hidden component conversion, interpolation,
   extrapolation, fallback, or automatic version selection.
-- Standard and extended infusion remain separate exact variants with separate governing sources.
+- Standard and extended infusion remain separate exact variants with separate governing dosing
+  sources.
 - The prototype does not select therapy, infer an indication or organism, interpret MICs, verify a
   companion aminoglycoside, select duration, or extrapolate to unlisted infusion strategies.
 - Clinical decimal values and units remain explicit; renal-band matching uses the stored unrounded
@@ -126,15 +136,15 @@ Use only the named files and task-specified commands. Do not install missing tes
 - The reviewer must approve or replace the extended-infusion source-context indication,
   `formulation_id: null`, less-than-or-equal-to `20 mL/min` continuous partition, and use of the
   off-label PK/PD modeling publication for the frozen prototype.
-- Exact source-based monitoring, warning, rationale, limitation, and immutable content-version text
-  has not yet been authored.
-- Until review is complete, all future source-based piperacillin–tazobactam documents must remain
-  draft and cannot produce a successful recommendation through a rule.
+- The reviewer must verify the exact source transcription, monitoring text, total-product dose
+  interpretation, and separation of the extended-infusion dosing source from label-derived safety
+  monitoring.
+- Until review is complete, all three documents remain draft and cannot produce a successful
+  recommendation through a rule.
 
 ## Next exact action
 
-> Day 51 — encode and test the three exact piperacillin–tazobactam documents defined in
-> `docs/PIPERACILLIN_TAZOBACTAM_CONTENT_SELECTION.md`, preserving separate standard-label and
-> extended-infusion sources, total combined-product dose units, complete non-dialysis renal
-> partitions, exact source-context indications, explicit limitations, and `review.status: draft`;
-> do not add another regimen or implement medication-specific engine behavior.
+> Day 52 — add piperacillin–tazobactam rule coverage by reusing the existing generic exact-regimen
+> matcher where possible, requiring exact medication, source-context indication, route, formulation,
+> total-product dose, frequency, infusion duration, renal method, renal unit, and reviewed content
+> context; preserve explicit unsupported outcomes and do not add medication-specific engine behavior.
