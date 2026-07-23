@@ -25,39 +25,44 @@ Use only the named files and task-specified commands. Do not install missing tes
 
 ## Roadmap position
 
-- Days 1–47 are complete.
-- **Day 49 — Weekly review: end-to-end cefepime** was completed out of sequence as explicitly
-  requested.
-- Current sequential task remains **Day 48 — Write cefepime golden cases**.
+- Days 1–49 are complete.
+- **Day 49 — Weekly review: end-to-end cefepime** was completed out of sequence before Day 48.
+- The next sequential task is **Day 50 — Select and source piperacillin–tazobactam content**.
 
 ## Current state
 
-- `tests/integration/test_cefepime_end_to_end.py` now composes the existing structural patient and
-  serum-creatinine validators, renal and medication sufficiency validators, pure Cockcroft–Gault
-  calculator, YAML repository, exact cefepime rule, and canonical serializer.
-- The successful integration path uses only synthetic facts and derives an exact unrounded
-  Cockcroft–Gault result of `50 mL/min`. This proves deterministic selection of the inclusive
-  upper synthetic band.
-- The successful path creates a distinct, test-only typed content version after loading the draft
-  synthetic YAML fixture. It does not edit the YAML fixture, source-based cefepime documents, or any
-  persisted review metadata and does not represent clinical review.
-- A separate integration case loads the unchanged draft YAML content and verifies that it remains
-  `ResultStatus.INCOMPLETE`, unapplied, indeterminate, and without a recommendation.
-- The integration result is checked through `to_jsonable()` for the standard status, renal quantity,
-  linked order, and explicit test-only content version.
-- No production implementation, clinical scope, supported regimen, domain contract, rule behavior,
-  content document, review state, interface, dependency, or serialization rule changed.
-- Four source-based cefepime documents remain `review.status: draft`; software validation and
-  testing have not made them clinically eligible.
+- `tests/unit/rules/test_cefepime_golden_cases.py` builds seven deterministic synthetic cefepime rule
+  outcomes through `evaluate_cefepime_rule()` and the canonical `dumps_json()` serializer.
+- Separate committed snapshots under `examples/golden/cefepime_rule/` cover normal renal function,
+  impaired renal function, the exact inclusive `30 mL/min` boundary, a missing renal value, an
+  unsupported regimen, unstable renal function, and a synthetic no-recommendation contraindication
+  outcome.
+- Normal, impaired, and exact-boundary cases return structured successful recommendations with
+  explicit decimal strings, units, renal-band identifiers, linked rule and order identifiers,
+  evidence, provenance, content version, and evaluation time.
+- Missing input remains `ResultStatus.INCOMPLETE`, while unsupported-regimen and unstable-renal
+  cases remain warning-bearing `ResultStatus.NOT_APPLICABLE`; all three fail closed without a dose
+  recommendation.
+- The synthetic contraindication case uses the existing explicit `no_recommendation` band outcome,
+  returns `applied=True` and `passed=False`, and produces no dose recommendation.
+- Test-only review metadata is created only in the focused Python fixture. No source-based cefepime
+  YAML document, persisted review metadata, clinical content, rule implementation, public contract,
+  dependency, or serialization behavior changed.
+- Four source-based cefepime documents remain `review.status: draft`; software tests have not made
+  them clinically eligible.
 
 ## Verification
 
-- Initial execution-context probe: `git rev-parse --show-toplevel` from `/mnt/data` failed because
-  no repository checkout was present; no filesystem search or clone was attempted.
+- Initial execution-context probe: `git rev-parse --show-toplevel` from `/mnt/data` failed because no
+  repository checkout was present; no filesystem search or clone was attempted.
 - Pytest was available: `pytest 9.0.2`; no dependency was installed.
-- `python -m py_compile /tmp/cds-platform/tests/integration/test_cefepime_end_to_end.py` completed
+- `python -m py_compile /tmp/cds-platform/tests/unit/rules/test_cefepime_golden_cases.py` completed
   successfully after the final edit.
-- The file was checked for lines exceeding the configured 100-character Ruff limit; none remained.
+- The focused test file was checked for lines exceeding the configured 100-character Ruff limit;
+  none remained.
+- All seven locally generated JSON snapshots parsed successfully.
+- GitHub blob SHA values for the focused test and all seven committed snapshots matched the locally
+  generated files exactly.
 - The focused pytest command was not executed because the execution environment did not provide a
   repository checkout and the connector responses were not mounted as source files for a faithful
   bounded import checkout. No source stubs, direct repository download, clone, substitute runner,
@@ -66,7 +71,14 @@ Use only the named files and task-specified commands. Do not install missing tes
 
 ## Files changed
 
-- `tests/integration/test_cefepime_end_to_end.py`
+- `tests/unit/rules/test_cefepime_golden_cases.py`
+- `examples/golden/cefepime_rule/normal.json`
+- `examples/golden/cefepime_rule/impaired.json`
+- `examples/golden/cefepime_rule/exact_boundary.json`
+- `examples/golden/cefepime_rule/missing.json`
+- `examples/golden/cefepime_rule/unsupported_regimen.json`
+- `examples/golden/cefepime_rule/unstable_renal_function.json`
+- `examples/golden/cefepime_rule/contraindication.json`
 - `CURRENT.md`
 
 ## Additional files inspected
@@ -74,25 +86,23 @@ Use only the named files and task-specified commands. Do not install missing tes
 - `AGENTS.md` — source hierarchy, bounded execution rules, architecture boundaries, verification,
   and close procedure.
 - `docs/TASK_TEMPLATE.md` and `CDS_12_Week_Daily_Project_Plan.html` — task structure and the exact
-  Day 49 end-to-end cefepime deliverable.
-- `docs/SAFETY_INVARIANTS.md` — validate-before-calculate behavior, draft-content ineligibility,
-  fail-closed requirements, auditability, and boundary testing.
-- `src/cds/domain/clinical.py`, `src/cds/domain/enums.py`, `src/cds/domain/outputs.py`, and
-  `src/cds/domain/value_objects.py` — typed input, renal-result, standard-result, enum, and
-  quantity contracts required by the integration flow.
-- `src/cds/validation/patient.py`, `src/cds/validation/lab.py`, `src/cds/validation/renal.py`, and
-  `src/cds/validation/medication.py` — exact structural and sufficiency validation APIs.
-- `src/cds/services/renal.py` — pure Cockcroft–Gault service boundary and reproducible inputs.
-- `src/cds/repositories/renal_content.py`, `src/cds/repositories/yaml_renal_content.py`, and
-  `tests/unit/repositories/test_renal_content_failure_matrix.py` — exact-key content loading,
-  test-only in-memory replacement, and existing failure expectations.
-- `src/cds/content/renal/cefepime_synthetic_fixture.yaml` — prototype-only synthetic content used
-  by the integration test.
-- `src/cds/rules/cefepime.py` and `tests/unit/rules/test_cefepime.py` — exact-context rule API,
-  review eligibility, boundary outcome, and existing synthetic test conventions.
-- `src/cds/utils/serialization.py` — canonical standard-result serialization contract.
-- `tests/unit/services/test_renal.py` — existing synthetic Cockcroft–Gault input conventions.
-- `pyproject.toml` — pytest configuration, PyYAML declaration, and Ruff line-length target.
+  Day 48 golden-case deliverable.
+- `docs/SAFETY_INVARIANTS.md` — synthetic-data, fail-closed, auditability, and boundary-test
+  requirements.
+- `src/cds/rules/cefepime.py` and `tests/unit/rules/test_cefepime.py` — the exact rule API, output
+  categories, no-recommendation behavior, and existing synthetic fixture conventions.
+- `tests/unit/utils/test_golden_json_examples.py` — the existing per-case golden-file and canonical
+  byte-comparison convention.
+- `src/cds/utils/serialization.py` — deterministic JSON, decimal-string, enum, date, and UTC datetime
+  serialization behavior.
+- `src/cds/domain/clinical.py`, `src/cds/domain/enums.py`, `src/cds/domain/outputs.py`,
+  `src/cds/domain/support.py`, and `src/cds/domain/value_objects.py` — typed input, output,
+  traceability, enum, and quantity contracts imported by the focused test.
+- `src/cds/repositories/renal_content.py` and `src/cds/rules/predicates.py` — typed content objects and
+  exact unrounded renal-band boundary semantics used by the synthetic fixture.
+- `src/cds/domain/exceptions.py` — direct repository-content import required by the focused import
+  chain.
+- `pyproject.toml` — pytest configuration and Ruff line-length target.
 
 ## Active constraints
 
@@ -106,8 +116,6 @@ Use only the named files and task-specified commands. Do not install missing tes
 - Clinical decimal values and units remain explicit; renal-band matching uses the stored unquantized
   value.
 - No hidden `mg`/`g` conversion or equivalence comparison is authorized.
-- Pediatric, intramuscular, unstable-renal-function, renal-replacement-therapy, extended-infusion,
-  continuous-infusion, and unlisted cefepime variants remain unsupported.
 - Draft or retired content is never eligible for rule matching. Software validation does not confer
   clinical review status.
 - Synthetic test-only review metadata must remain confined to transient test objects and must not be
@@ -117,10 +125,9 @@ Use only the named files and task-specified commands. Do not install missing tes
 
 ## Blockers
 
-- Day 48 golden-case coverage remains pending and is still the next sequential roadmap task.
 - A named independent clinical-content reviewer has not been identified.
-- The reviewer must approve or replace the provisional continuous interpretation of the source's
-  integer-labeled renal bands before any source-based document is marked reviewed.
+- The reviewer must approve or replace the provisional continuous interpretation of the cefepime
+  source's integer-labeled renal bands before any source-based document is marked reviewed.
 - The reviewer must approve the provisional `guideline` evidence-level mapping for FDA-approved
   prescribing information or require a separately scoped schema change.
 - Until review is complete, all four source-based cefepime documents remain draft and cannot produce
@@ -128,6 +135,7 @@ Use only the named files and task-specified commands. Do not install missing tes
 
 ## Next exact action
 
-> Day 48 — add deterministic cefepime golden cases covering normal, impaired, exact-boundary,
-> missing, unsupported-regimen, unstable-renal-function, and contraindication outcomes through the
-> canonical serializer, without marking draft clinical content reviewed.
+> Day 50 — select and source piperacillin–tazobactam content by documenting exact medication and
+> regimen identifiers, the authoritative source and version, supported indications, standard and
+> extended-infusion variants, renal bands, ambiguities, limitations, and required reviewer metadata
+> without encoding content or implementing rule behavior.
