@@ -88,19 +88,21 @@ def _load_content(*, reviewed_for_test: bool) -> RenalDoseContent:
     if not reviewed_for_test:
         return loaded
 
+    test_content_version = "0.1.0-integration-test-reviewed"
     reviewed = replace(
         loaded,
+        content_version=test_content_version,
         review=replace(
             loaded.review,
             status="reviewed",
-            reviewed_content_version=loaded.content_version,
+            reviewed_content_version=test_content_version,
             reviewer="Synthetic integration-test reviewer",
             reviewer_role="Software test fixture reviewer",
             reviewed_on=date(2026, 7, 22),
             notes="Test-only eligibility override; not clinical review or guidance.",
         ),
     )
-    return InMemoryRenalDoseContentRepository([reviewed]).get(CONTENT_KEY)
+    return InMemoryRenalDoseContentRepository([reviewed]).get(reviewed.key)
 
 
 def _calculate_validated_renal_result() -> RenalFunctionResult:
@@ -192,7 +194,10 @@ def test_exact_boundary_flows_end_to_end_to_canonical_result() -> None:
         "unit": "mL/min",
     }
     assert payload["recommendations"][0]["linked_order_id"] == order.order_id
-    assert payload["supporting_data"]["content_version"] == "0.1.0-draft"
+    assert (
+        payload["supporting_data"]["content_version"]
+        == "0.1.0-integration-test-reviewed"
+    )
 
 
 def test_yaml_loaded_draft_content_remains_ineligible_after_validated_calculation() -> None:
