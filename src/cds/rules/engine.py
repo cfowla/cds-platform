@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from cds.app.context import RenalDoseEvaluationContext
 from cds.domain.enums import ResultStatus
-from cds.domain.outputs import RuleResult
+from cds.domain.outputs import RenalFunctionResult, RuleResult
 from cds.repositories.renal_content import RenalDoseContent
 from cds.rules.registry import RenalDoseRuleRegistry
 
@@ -31,6 +31,7 @@ class RenalDoseRuleEngine:
     def evaluate(
         self,
         context: RenalDoseEvaluationContext,
+        renal_function: RenalFunctionResult,
         content: RenalDoseContent,
         /,
     ) -> RuleResult:
@@ -46,6 +47,7 @@ class RenalDoseRuleEngine:
         if not registrations:
             return _nonmatch_result(
                 context=context,
+                renal_function=renal_function,
                 content=content,
                 medication_id=medication_id,
                 outcome_category=_OUTCOME_UNSUPPORTED,
@@ -55,10 +57,11 @@ class RenalDoseRuleEngine:
 
         for registration in registrations:
             if registration.rule_id == content.rule_id:
-                return registration.rule.evaluate(context, content)
+                return registration.rule.evaluate(context, renal_function, content)
 
         return _nonmatch_result(
             context=context,
+            renal_function=renal_function,
             content=content,
             medication_id=medication_id,
             outcome_category=_OUTCOME_UNMATCHED,
@@ -73,6 +76,7 @@ class RenalDoseRuleEngine:
 def _nonmatch_result(
     *,
     context: RenalDoseEvaluationContext,
+    renal_function: RenalFunctionResult,
     content: RenalDoseContent,
     medication_id: str | None,
     outcome_category: str,
@@ -88,6 +92,7 @@ def _nonmatch_result(
         applied=False,
         passed=None,
         summary=summary,
+        renal_function_result=renal_function,
         evaluated_at=context.evaluated_at,
         supporting_data={
             _OUTCOME_CATEGORY_KEY: outcome_category,
