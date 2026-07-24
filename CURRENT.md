@@ -11,7 +11,7 @@ bounded verification checkout.
 GitHub is the authoritative source and destination for repository files.
 
 Prohibited unless explicitly requested:
-- repository cloning or filesystem searches for another checkout
+- repository cloning or broad filesystem searches for another checkout
 - GitHub Actions or CI investigation
 - workflow creation or modification
 - broad repository review
@@ -21,77 +21,86 @@ Use only the named files and task-specified commands. Do not install missing tes
 
 ## Roadmap position
 
-- Days 1–63 are complete.
-- **Day 63 — Weekly review: architecture boundary test** is complete.
-- The next sequential task is **Day 64 — Define the CLI request DTO**.
+- Days 1–64 are complete.
+- **Day 64 — Define the CLI request DTO** is complete.
+- The next sequential task is **Day 65 — Implement request mapping**.
 
 ## Current state
 
-- `tests/contract/test_architecture_boundaries.py` recursively parses Python imports under
-  `src/cds/` with the standard-library `ast` module.
-- The test verifies that all documented layer directories remain present and that internal imports
-  follow the dependency direction defined in `ARCHITECTURE.md`.
-- The test also rejects direct file, serialization, network, subprocess, database, and YAML imports
-  from the passive domain layer and the pure services and rules layers.
-- `RenalDoseEvaluationContext` is now canonically defined in `src/cds/rules/context.py`.
-- `src/cds/app/context.py` remains a compatibility export, preserving the existing public import.
-- `src/cds/rules/interface.py` and `src/cds/rules/engine.py` no longer import from `cds.app`.
-- No calculation, validation, content, rule-matching, result, identifier, serialization, or
-  fail-closed behavior changed.
+- `src/cds/app/dto.py` defines the passive, frozen, slotted, keyword-only
+  `RenalDoseCLIRequest` data-transfer object.
+- The DTO specifies the minimal synthetic renal-dose CLI wire facts for patient identity and birth
+  date, sex, supplied weight and type, serum-creatinine value and collection facts, explicit renal
+  stability and exclusion facts, exact medication and regimen identifiers, regimen-specific route,
+  dose, frequency, indication, and infusion facts, requested content version, evaluation date, and
+  timezone-bearing evaluation time.
+- Date, datetime, Decimal, enum, unit, and identifier values remain in their JSON wire
+  representation. Day 64 adds no parsing or conversion behavior; the Day 65 mapper owns those
+  decisions.
+- Every field defaults to `None`, preserving missing source data without fabricating a numeric,
+  categorical, temporal, identifier, unit, or Boolean value.
+- The DTO performs no validation, normalization, inference, domain construction, serialization,
+  calculation, content loading, rule matching, I/O, or mutation.
+- No clinical scope, supported medication or population, content, calculator, validation, rule,
+  use-case, serialization, mapper, interface, or public domain contract changed.
 
 ## Verification
 
-- The required `git rev-parse --show-toplevel` probe was run once from `/mnt/data` and reported that
-  the directory is not inside a Git repository.
-- No filesystem search, repository clone, dependency installation, substitute runner, CI, or
-  GitHub Actions investigation was attempted.
+- The required `git rev-parse --show-toplevel` probe was run once from `/` and did not identify a
+  repository checkout.
+- No repository clone, dependency installation, substitute runner, CI, or GitHub Actions
+  investigation was attempted.
 - GitHub was authoritative for source retrieval and final repository changes.
-- A bounded verification checkout was materialized at `/tmp/cds-platform` with the edited files,
-  the new contract test, and the architecture layer directories required by the focused test.
+- A bounded verification checkout was materialized at `/tmp/cds-platform` with only the new DTO,
+  focused test, package initializers, and `pyproject.toml` needed for pytest configuration.
 - The environment supplied pytest 9.0.2.
 - Focused collection command:
-  `python -m pytest tests/contract/test_architecture_boundaries.py --collect-only -q`
-- Collection result: `3 tests collected in 0.01s`.
+  `python -m pytest tests/unit/app/test_dto.py --collect-only -q`
+- Collection result: `4 tests collected in 0.01s`.
 - Focused test command:
-  `python -m pytest tests/contract/test_architecture_boundaries.py -q`
-- Test result: `3 passed in 0.05s`.
+  `python -m pytest tests/unit/app/test_dto.py -q`
+- Test result: `4 passed in 0.05s`.
 - Compile command:
-  `python -m compileall -q src/cds/app/context.py src/cds/rules/context.py src/cds/rules/interface.py src/cds/rules/engine.py tests/contract/test_architecture_boundaries.py`
+  `python -m compileall -q src/cds/app/dto.py tests/unit/app/test_dto.py`
 - Compile result: completed with no output or error.
-- The bounded checkout did not contain every repository Python file, so the local architecture scan
-  is not a full-repository verification claim. In a complete checkout, the committed test scans
-  every Python file under `src/cds/`.
 - No full-suite, lint, type-check, CI, or GitHub Actions passing claim is made.
 
 ## Files changed
 
-- `src/cds/rules/context.py` — added the canonical passive rule-evaluation context.
-- `src/cds/app/context.py` — retained the former import path as a compatibility export.
-- `src/cds/rules/interface.py` — removed the rules-to-app dependency.
-- `src/cds/rules/engine.py` — removed the rules-to-app dependency.
-- `tests/contract/test_architecture_boundaries.py` — added executable dependency and purity checks.
-- `CURRENT.md` — replaced with the Day 63 state and Day 64 next action.
+- `src/cds/app/dto.py` — added the passive synthetic renal-dose CLI request DTO.
+- `tests/unit/app/test_dto.py` — added focused field-shape, wire-preservation, missing-data, and
+  passivity tests.
+- `CURRENT.md` — replaced with the Day 64 state and Day 65 next action.
 
 ## Additional files inspected
 
-- `docs/TASK_TEMPLATE.md` and `CDS_12_Week_Daily_Project_Plan.html` — task structure and roadmap text.
-- `AGENTS.md` — source hierarchy, execution constraints, boundaries, and close procedure.
-- `docs/SAFETY_INVARIANTS.md` — ordering, purity, repository, and auditability constraints.
-- `CURRENT.md` — authoritative Day 62 state and Day 63 action.
-- `ARCHITECTURE.md` — dependency direction and module responsibilities.
-- `src/cds/app/renal_dose.py` — application orchestration imports and responsibilities.
-- `src/cds/repositories/renal_content.py` — typed content and repository boundary.
-- `src/cds/services/renal.py` — pure calculator dependencies.
-- `src/cds/utils/serialization.py` — serialization boundary.
-- `tests/unit/app/test_context.py` — compatibility import and passive context contract.
-- `pyproject.toml` — pytest configuration and declared dependencies.
+- `docs/TASK_TEMPLATE.md` and `CDS_12_Week_Daily_Project_Plan.html` — task structure and Day 64
+  roadmap wording.
+- `AGENTS.md` — source hierarchy, bounded-checkout rules, architecture boundaries, and close
+  procedure.
+- `docs/SAFETY_INVARIANTS.md` — missing-data, explicit-unit, no-inference, and fail-closed
+  constraints.
+- `ARCHITECTURE.md` — DTO, mapper, application, and interface responsibility boundaries.
+- `docs/RENAL_CALCULATOR_SPEC.md` — authoritative birth-date plus evaluation-date age input,
+  explicit time, exact units, and Decimal requirements.
+- `src/cds/app/renal_dose.py` — current use-case input facts and exact identifier requirements.
+- `src/cds/rules/context.py` — validated context fields that the future mapper must support.
+- `src/cds/domain/enums.py` and `src/cds/domain/clinical.py` — target enum and domain-object fields
+  for the future mapping boundary.
+- `src/cds/validation/lab.py` and `src/cds/validation/medication.py` — exact laboratory and regimen
+  facts required for successful downstream validation.
+- `tests/unit/app/test_context.py` — existing passive application-data-object test conventions.
+- `src/cds/__init__.py`, `src/cds/app/__init__.py`, and `pyproject.toml` — bounded package and pytest
+  configuration requirements.
 
 ## Active constraints
 
 - Preserve the prototype warning and use only synthetic or properly de-identified data.
 - Validate structure and task sufficiency before calculation or rule matching.
 - Unsupported or insufficient cases remain fail-closed and produce no recommendation.
-- Keep identifiers exact and case-sensitive; do not normalize, infer, alias, or fall back.
+- Keep identifiers and units exact and case-sensitive; do not normalize, infer, alias, or fall back.
+- JSON clinical numerics must not be converted through binary `float`; the future mapper must create
+  `Decimal` values explicitly from supported wire strings.
 - Keep domain models passive, services and rules pure, repositories responsible for content access,
   app modules responsible for orchestration, and mappers and interfaces free of clinical logic.
 - Preserve existing public imports and serialized contracts unless a task explicitly changes them.
@@ -100,11 +109,12 @@ Use only the named files and task-specified commands. Do not install missing tes
 ## Blockers
 
 - A named independent content reviewer has not been identified.
-- Content review eligibility remains separate from this software architecture task.
+- Content review eligibility remains separate from this request-contract task.
 - Full-repository verification was not available in the supplied execution context.
 
 ## Next exact action
 
-> Day 64 — define the minimal synthetic CLI request DTO for age or evaluation date, sex, stable serum
-> creatinine, supplied weight and weight type, exact medication and regimen facts, and explicit
-> evaluation time without adding mapping, interface, or decision logic.
+> Day 65 — implement a focused request mapper that converts parsed synthetic JSON into
+> `RenalDoseCLIRequest` and then into the existing typed patient, serum-creatinine, medication-order,
+> enum, value-object, date, and timezone-aware datetime inputs with explicit missing-data, Decimal,
+> unit, and exact-identifier handling and no clinical decision logic.
