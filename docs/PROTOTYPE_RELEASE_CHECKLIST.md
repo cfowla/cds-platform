@@ -21,6 +21,31 @@ A release decision is **no-go** until every required item is complete and every 
 has an explicit disposition. Unchecked, unknown, unavailable, or not-applicable evidence must not be
 interpreted as passing.
 
+## Latest recorded verification attempt
+
+This section records a failed attempt. It does not complete any unchecked item below and must not be
+copied forward as evidence for a repaired candidate.
+
+- Tested candidate: `73c3fcfd10548db31c2bf6707e73f65c5e7f2eb0`
+- Python: 3.12.1
+- Durable evidence: `artifacts/verification/full-verification-20260724T082921Z.txt`
+- Pytest: 63 failed, 869 passed, 16 skipped; exit status 1
+- Ruff: 284 diagnostics, 261 reported fixable; exit status 1
+- CLI walkthrough: not recorded
+- Evidence-only PR: #53
+- Evidence merge commit: `196a351eb48b30a70616d862a640190e0201c9e6`
+- Decision: **no-go**
+
+Primary software blockers are stale integration route and indication coding-system fixtures, an
+unresolved synthetic-content snapshot policy, an unreviewed cefepime golden-output case change, and
+invalid Decimal-context object-equality assertions. The Ruff artifact does not establish the intended
+ruleset because it omits the exact command and effective settings. Required environment facts,
+clean-tree status, CLI result, and disposition of all 16 placeholder skips are also incomplete.
+
+Follow `docs/PROTOTYPE_RELEASE_REMEDIATION_PLAN.md`. Any repair to implementation, tests, snapshots,
+goldens, content, configuration, or verification tooling creates a new candidate that must be
+verified from the beginning.
+
 ## 1. Identify the exact candidate
 
 - [ ] Record the repository commit SHA: `<commit-sha>`.
