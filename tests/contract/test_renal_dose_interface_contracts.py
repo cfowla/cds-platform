@@ -333,9 +333,9 @@ def _request_payload() -> dict[str, object]:
         "serum_creatinine_unit": "mg/dL",
         "serum_creatinine_collected_at": "2026-07-24T07:30:00-04:00",
         "serum_creatinine_status": "final",
-        "renal_function_stable": true,
-        "renal_replacement_therapy": false,
-        "pregnant_or_lactating": false,
+        "renal_function_stable": True,
+        "renal_replacement_therapy": False,
+        "pregnant_or_lactating": False,
         "medication_order_id": "synthetic-order-contract-001",
         "medication_system": "cds-medication-id",
         "medication_code": "cefepime",
@@ -353,7 +353,7 @@ def _request_payload() -> dict[str, object]:
         "infusion_duration_unit": "minutes",
         "requested_content_version": "2026.7-contract-reviewed",
         "evaluation_date": "2026-07-24",
-        "evaluated_at": "2026-07-24T08:15:30.120000-04:00"
+        "evaluated_at": "2026-07-24T08:15:30.120000-04:00",
     }
 
 
