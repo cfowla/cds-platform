@@ -7,10 +7,11 @@ from decimal import Decimal
 
 import pytest
 
+import cds.app.renal_dose as renal_dose_module
 from cds.app.renal_dose import RenalDoseUseCase
 from cds.domain.clinical import LabResult, MedicationOrder, Patient
 from cds.domain.enums import ResultStatus, Sex, WeightType
-from cds.domain.exceptions import ContentNotFound
+from cds.domain.exceptions import CalculationError, ContentNotFound, ValidationError
 from cds.domain.outputs import RuleResult
 from cds.domain.value_objects import CodeableConcept, ValueWithUnit
 from cds.repositories.renal_content import (
@@ -50,9 +51,12 @@ class _Engine:
             passed=True,
         )
         self.calls: list[tuple[object, object, object]] = []
+        self.error: Exception | None = None
 
     def evaluate(self, context, renal_function, content, /) -> RuleResult:
         self.calls.append((context, renal_function, content))
+        if self.error is not None:
+            raise self.error
         return self.result
 
 
@@ -219,18 +223,154 @@ def test_exact_identifier_values_are_not_normalized_before_repository_lookup() -
     repository = _Repository(_content())
     repository.error = ContentNotFound("exact key absent")
 
-    with pytest.raises(ContentNotFound, match="exact key absent"):
-        _evaluate(order=order, repository=repository)
+    result, _, _ = _evaluate(order=order, repository=repository)
 
     assert repository.keys[0].medication_id == "CEFEPIME"
+    assert result.rule_result.status is ResultStatus.FAILED
+    assert result.rule_result.supporting_data["failure_code"] == "content_not_found"
 
 
-def test_repository_exception_mapping_is_deferred_to_the_next_task() -> None:
+def test_content_not_found_maps_to_failed_result_without_exception_details() -> None:
     repository = _Repository(_content())
-    repository.error = ContentNotFound("missing exact content")
+    repository.error = ContentNotFound("missing exact content for synthetic-patient")
 
-    with pytest.raises(ContentNotFound, match="missing exact content"):
-        _evaluate(repository=repository)
+    result, _, engine = _evaluate(repository=repository)
+
+    assert result.validation.is_valid is True
+    assert result.rule_result.status is ResultStatus.FAILED
+    assert result.rule_result.applied is False
+    assert result.rule_result.passed is None
+    assert result.rule_result.patient_id == "synthetic-patient"
+    assert result.rule_result.encounter_id == "synthetic-encounter"
+    assert result.rule_result.evaluated_at == EVALUATED_AT
+    assert result.rule_result.rule_id is None
+    assert result.rule_result.renal_function_result is None
+    assert result.rule_result.recommendations == []
+    assert result.rule_result.alerts == []
+    assert result.rule_result.supporting_data == {
+        "outcome_category": "failed",
+        "failure_code": "content_not_found",
+        "failure_stage": "content_repository",
+        "medication_id": "cefepime",
+        "regimen_id": "cefepime-synthetic-regimen",
+        "requested_content_version": "2026.1",
+        "content_version": None,
+    }
+    rendered = repr(result)
+    assert "missing exact content" not in rendered
+    assert "synthetic-patient" in rendered
+    assert engine.calls == []
+
+
+def test_unexpected_content_repository_failure_maps_without_exception_details() -> None:
+    repository = _Repository(_content())
+    repository.error = RuntimeError("repository payload for synthetic-patient")
+
+    result, _, engine = _evaluate(repository=repository)
+
+    assert result.validation.is_valid is True
+    assert result.rule_result.status is ResultStatus.FAILED
+    assert (
+        result.rule_result.supporting_data["failure_code"]
+        == "unexpected_content_repository_failure"
+    )
+    assert result.rule_result.supporting_data["failure_stage"] == "content_repository"
+    assert "repository payload" not in repr(result)
+    assert engine.calls == []
+
+
+def test_unexpected_application_failure_maps_without_exception_details(monkeypatch) -> None:
+    def fail_context(**kwargs):
+        raise RuntimeError("application payload for synthetic-patient")
+
+    monkeypatch.setattr(renal_dose_module, "RenalDoseEvaluationContext", fail_context)
+
+    result, repository, engine = _evaluate()
+
+    assert result.validation.is_valid is True
+    assert repository.keys == [repository.content.key]
+    assert result.rule_result.status is ResultStatus.FAILED
+    assert (
+        result.rule_result.supporting_data["failure_code"]
+        == "unexpected_application_failure"
+    )
+    assert result.rule_result.supporting_data["failure_stage"] == "context_assembly"
+    assert result.rule_result.rule_id == "synthetic-rule"
+    assert "application payload" not in repr(result)
+    assert engine.calls == []
+
+
+def test_validation_error_maps_to_failed_result_without_exception_details(monkeypatch) -> None:
+    def fail_validation(*args, **kwargs):
+        raise ValidationError("validation payload for synthetic-patient")
+
+    monkeypatch.setattr(renal_dose_module, "validate_patient_structure", fail_validation)
+
+    result, repository, engine = _evaluate()
+
+    assert result.validation.is_valid is None
+    assert result.rule_result.status is ResultStatus.FAILED
+    assert result.rule_result.supporting_data["failure_code"] == "validation_boundary_failure"
+    assert result.rule_result.supporting_data["failure_stage"] == "initial_validation"
+    assert "validation payload" not in repr(result)
+    assert repository.keys == []
+    assert engine.calls == []
+
+
+def test_calculation_error_maps_to_failed_result_after_successful_validation(monkeypatch) -> None:
+    def fail_calculation(**kwargs):
+        raise CalculationError("creatinine detail for synthetic-patient")
+
+    monkeypatch.setattr(renal_dose_module, "calculate_cockcroft_gault", fail_calculation)
+
+    result, repository, engine = _evaluate()
+
+    assert result.validation.is_valid is True
+    assert repository.keys == [repository.content.key]
+    assert result.rule_result.status is ResultStatus.FAILED
+    assert result.rule_result.rule_id == "synthetic-rule"
+    assert result.rule_result.renal_function_result is None
+    assert result.rule_result.supporting_data["failure_code"] == "calculation_failure"
+    assert result.rule_result.supporting_data["failure_stage"] == "renal_calculation"
+    assert result.rule_result.supporting_data["content_version"] == "2026.1"
+    assert "creatinine detail" not in repr(result)
+    assert engine.calls == []
+
+
+def test_unexpected_rule_failure_maps_to_failed_result_and_preserves_renal_audit() -> None:
+    engine = _Engine()
+    engine.error = RuntimeError("rule payload for synthetic-patient")
+
+    result, _, _ = _evaluate(engine=engine)
+
+    assert result.validation.is_valid is True
+    assert len(engine.calls) == 1
+    _, renal_function, _ = engine.calls[0]
+    assert result.rule_result.status is ResultStatus.FAILED
+    assert result.rule_result.rule_id == "synthetic-rule"
+    assert result.rule_result.renal_function_result is renal_function
+    assert result.rule_result.supporting_data["failure_code"] == "unexpected_rule_failure"
+    assert result.rule_result.supporting_data["failure_stage"] == "rule_evaluation"
+    assert result.rule_result.recommendations == []
+    assert "rule payload" not in repr(result)
+
+
+def test_expected_unsupported_rule_outcome_remains_not_applicable() -> None:
+    engine = _Engine(
+        RuleResult(
+            rule_id="synthetic-rule",
+            status=ResultStatus.NOT_APPLICABLE,
+            applied=False,
+            passed=None,
+            supporting_data={"outcome_category": "unsupported"},
+        )
+    )
+
+    result, _, _ = _evaluate(engine=engine)
+
+    assert result.rule_result.status is ResultStatus.NOT_APPLICABLE
+    assert result.rule_result.supporting_data == {"outcome_category": "unsupported"}
+    assert result.rule_result.renal_function_result is not None
 
 
 def test_evaluation_date_mismatch_fails_closed_before_repository_access() -> None:
