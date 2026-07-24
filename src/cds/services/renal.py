@@ -30,6 +30,15 @@ def _is_finite_positive_decimal(value: object) -> bool:
     )
 
 
+def _canonical_plain_decimal(value: Decimal) -> Decimal:
+    """Remove incidental fractional trailing zeros without rounding the value."""
+
+    text = format(value, "f")
+    if "." in text:
+        text = text.rstrip("0").rstrip(".")
+    return Decimal(text)
+
+
 def derive_age_years(*, birth_date: date, evaluation_date: date) -> int:
     """Return completed calendar years at an explicit evaluation date.
 
@@ -157,7 +166,7 @@ def calculate_cockcroft_gault(
             ) / (Decimal("72") * serum_creatinine.value)
             if patient.sex is Sex.FEMALE:
                 crcl *= Decimal("0.85")
-            crcl = Decimal(format(crcl, "f"))
+            crcl = _canonical_plain_decimal(crcl)
     except ArithmeticError as error:
         raise CalculationError("Cockcroft-Gault calculation failed.") from error
 
