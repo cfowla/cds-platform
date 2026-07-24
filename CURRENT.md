@@ -21,27 +21,28 @@ Use only the named files and task-specified commands. Do not install missing tes
 
 ## Roadmap position
 
-- Days 1–76 are complete.
-- **Day 76 — Add logging policy** is implemented.
-- The next sequential task is **Day 77 — Weekly review: run a safety failure drill**.
+- Days 1–77 are complete.
+- **Day 77 — Weekly review: run a safety failure drill** is implemented.
+- The next sequential task is **Day 78 — Review the architecture overview**.
 
 ## Current state
 
-- `src/cds/utils/logging.py` defines a standard-library diagnostic logging boundary with a fixed,
-  allowlisted field set rather than arbitrary metadata.
-- Diagnostic values must be lower-case controlled tokens; free text, JSON-like payloads, whitespace,
-  and mixed-case failure codes are rejected before a log record is emitted.
-- `log_diagnostic` accepts only event, component, operation, stage, status, and failure-code fields;
-  it has no patient-identifier, clinical-value, request-payload, response-payload, or arbitrary-extra
-  parameter.
-- `log_failure` records the exception class only. It does not emit the exception message, arguments,
-  payload details, traceback, or `exc_info`.
-- Log records expose the same allowlisted values under `cds_*` structured fields for formatters and
-  handlers without carrying sensitive case data.
-- Focused tests use synthetic identifiers and payload details to prove that failure output does not
-  disclose them and that payload-like diagnostic values are rejected.
+- `tests/integration/test_safety_failure_drill.py` exercises the existing CLI and application
+  failure boundaries as one bounded synthetic safety drill.
+- Corrupted JSON is rejected before mapping or application invocation and emits no canonical output.
+- An unsupported medication coding system fails closed before content access or rule evaluation and
+  produces an incomplete result with no recommendation.
+- A corrupted-content repository failure is converted to a structured failed result and the CLI
+  content-failure exit path.
+- An unexpected rule failure is converted to a structured failed result and the CLI system-failure
+  exit path while preserving the existing renal audit result behavior.
+- The drill asserts that failed or unsupported paths contain no dosing recommendation and that CLI
+  diagnostics expose no traceback, synthetic patient identifier, or injected sensitive payload
+  detail.
+- The canonical structured response contract was not changed; identifiers already included in that
+  contract remain separate from sanitized diagnostic output.
 - No clinical calculation, validation behavior, content, recommendation behavior, public interface,
-  serialized contract, dependency, or logging backend configuration changed.
+  serialization contract, dependency, or logging configuration changed.
 
 ## Verification
 
@@ -50,40 +51,44 @@ Use only the named files and task-specified commands. Do not install missing tes
 - No repository clone, dependency installation, substitute runner, CI, or GitHub Actions
   investigation was attempted.
 - GitHub was authoritative for source retrieval and final repository changes.
-- A bounded verification checkout was used at `/tmp/cds-platform` for the new utility and focused
-  test module.
+- A bounded verification checkout was created at `/tmp/cds-platform` containing the new focused test
+  module.
 - Pytest was available in the supplied environment.
 - Syntax verification command:
-  `python -m py_compile src/cds/utils/logging.py tests/unit/utils/test_logging.py`
+  `python -m py_compile /tmp/cds-platform/tests/integration/test_safety_failure_drill.py`
 - Syntax verification result: passed.
+- Structural line-length check result: no lines exceeded the configured 100-character limit.
 - Focused collection command:
-  `PYTHONPATH=src python -m pytest tests/unit/utils/test_logging.py --collect-only -q`
-- Focused collection result: 7 tests collected.
-- Focused execution command:
-  `PYTHONPATH=src python -m pytest tests/unit/utils/test_logging.py -q`
-- Focused execution result: 7 passed in 0.03 seconds.
-- A structural line-length check found no lines longer than the configured 100-character limit.
-- Ruff was not installed in the supplied environment, so no Ruff passing claim is made.
-- No full-suite, type-check, CI, or GitHub Actions passing claim is made.
+  `PYTHONPATH=src python -m pytest tests/integration/test_safety_failure_drill.py --collect-only -q`
+- Focused collection result: blocked because the supplied environment had no repository checkout and
+  the bounded checkout did not contain the imported `cds` package (`ModuleNotFoundError: cds`).
+- No focused execution, full-suite, lint, type-check, CI, or GitHub Actions passing claim is made.
 
 ## Files changed
 
-- `src/cds/utils/logging.py` — added the allowlisted, privacy-preserving diagnostic and failure
-  logging helpers.
-- `tests/unit/utils/test_logging.py` — added seven tests for safe fields, payload rejection, exception
-  sanitization, and absence of patient or payload parameters.
-- `CURRENT.md` — replaced with the Day 76 state and Day 77 next action.
+- `tests/integration/test_safety_failure_drill.py` — added four collected test cases covering corrupt
+  input, unsupported context, corrupted content access, and unexpected rule failure through the CLI
+  and application boundaries.
+- `CURRENT.md` — replaced with the Day 77 state and Day 78 next action.
 
 ## Additional files inspected
 
-- `docs/TASK_TEMPLATE.md` and `CDS_12_Week_Daily_Project_Plan.html` — task structure and exact Day 76
-  and Day 77 roadmap wording.
+- `docs/TASK_TEMPLATE.md` and `CDS_12_Week_Daily_Project_Plan.html` — task structure and exact Day 77
+  and Day 78 roadmap wording.
 - `AGENTS.md`, `docs/SAFETY_INVARIANTS.md`, and the prior `CURRENT.md` — bounded execution, prototype,
-  PHI exclusion, scope, verification, and close-procedure requirements.
-- `src/cds/interfaces/cli.py` and `tests/unit/interfaces/test_cli.py` — existing sanitized diagnostic
-  behavior and exception-detail suppression at the current user-facing interface boundary.
-- `src/cds/utils/__init__.py` and `pyproject.toml` — package convention, Python version, pytest
-  configuration, and configured line-length limit.
+  PHI exclusion, fail-closed, verification, and close-procedure requirements.
+- `tests/integration/test_renal_safety_invariants.py` — existing integration fixture conventions and
+  adjacent Day 75 safety assertions.
+- `src/cds/app/renal_dose.py` and `tests/unit/app/test_renal_dose.py` — structured application failure
+  mapping, failure stages, and established unit coverage.
+- `src/cds/interfaces/cli.py` and `tests/unit/interfaces/test_cli.py` — sanitized CLI diagnostics,
+  exit-code mapping, and existing interface-level failure behavior.
+- `src/cds/mappers/renal_dose_request.py` and `src/cds/mappers/renal_dose_response.py` — exact request
+  wire fields and canonical response serialization used by the integration drill.
+- `src/cds/repositories/yaml_renal_content.py` and
+  `src/cds/content/renal/cefepime_iv_2_g_every_8_hours_over_30_minutes.yaml` — repository-boundary and
+  exact content-field conventions needed to model corrupted content access without changing clinical
+  content.
 
 ## Active constraints
 
@@ -104,7 +109,7 @@ Use only the named files and task-specified commands. Do not install missing tes
 - Preserve existing public imports and serialized contracts unless a task explicitly changes them.
 - Preserve unrounded calculated values for matching and auditability.
 - Do not place patient identifiers, clinical payloads, exception messages, or tracebacks in
-  diagnostic logs.
+  diagnostic logs or CLI diagnostics.
 
 ## Blockers
 
@@ -114,11 +119,13 @@ Use only the named files and task-specified commands. Do not install missing tes
   calculation.
 - The famotidine adult minimum-weight boundary is not currently enforced in the full flow.
 - The production CLI remains a dependency-injected boundary without a standalone composition root.
-- The new logging policy is not yet wired into application or interface failure paths.
+- The logging policy is not yet wired into application or interface failure paths.
+- Focused Day 77 pytest execution remains unverified in this environment because no complete checkout
+  or materialized application import graph was available.
 - Full-repository verification was not available in the supplied execution context.
 
 ## Next exact action
 
-> Day 77 — run a bounded safety failure drill that corrupts content and input, exercises unsupported
-> contexts and system errors, and proves fail-closed results contain no recommendation, exposed
-> stack trace, patient identifier, or sensitive synthetic payload detail.
+> Day 78 — reconcile `ARCHITECTURE.md` with the implemented modules, dependency direction,
+> processing flow, standard result shape, and approved deviations without adding implementation
+> history.
