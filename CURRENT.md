@@ -21,28 +21,34 @@ Use only the named files and task-specified commands. Do not install missing tes
 
 ## Roadmap position
 
-- Days 1–64 are complete.
-- **Day 64 — Define the CLI request DTO** is complete.
-- The next sequential task is **Day 65 — Implement request mapping**.
+- Days 1–65 are complete.
+- **Day 65 — Implement request mapping** is complete.
+- The next sequential task is **Day 66 — Implement response mapping**.
 
 ## Current state
 
-- `src/cds/app/dto.py` defines the passive, frozen, slotted, keyword-only
-  `RenalDoseCLIRequest` data-transfer object.
-- The DTO specifies the minimal synthetic renal-dose CLI wire facts for patient identity and birth
-  date, sex, supplied weight and type, serum-creatinine value and collection facts, explicit renal
-  stability and exclusion facts, exact medication and regimen identifiers, regimen-specific route,
-  dose, frequency, indication, and infusion facts, requested content version, evaluation date, and
-  timezone-bearing evaluation time.
-- Date, datetime, Decimal, enum, unit, and identifier values remain in their JSON wire
-  representation. Day 64 adds no parsing or conversion behavior; the Day 65 mapper owns those
-  decisions.
-- Every field defaults to `None`, preserving missing source data without fabricating a numeric,
-  categorical, temporal, identifier, unit, or Boolean value.
-- The DTO performs no validation, normalization, inference, domain construction, serialization,
-  calculation, content loading, rule matching, I/O, or mutation.
+- `src/cds/mappers/renal_dose_request.py` defines the focused synthetic renal-dose request mapping
+  boundary.
+- `dto_from_mapping()` accepts one parsed JSON object, rejects unknown fields and incorrect JSON
+  primitive types, preserves exact string and Boolean wire values, and never converts a JSON number
+  through binary `float` for a clinical numeric.
+- `map_renal_dose_request()` converts `RenalDoseCLIRequest` into a frozen
+  `RenalDoseMappedInput` containing the existing typed `Patient`, serum-creatinine `LabResult`,
+  `MedicationOrder`, `Sex`, `WeightType`, `ValueWithUnit`, `CodeableConcept`, date, and timezone-aware
+  datetime inputs.
+- Clinical numerics are constructed directly from source strings as `Decimal`; supplied precision,
+  identifiers, units, casing, and timezone offsets remain visible.
+- Missing numeric, identifier, unit, temporal, and Boolean values remain `None` where permitted.
+  Missing controlled categories map to their explicit `UNKNOWN` enum members rather than fabricated
+  values.
+- Malformed Decimal, ISO date, ISO datetime, naive datetime, unsupported enum, unknown-field, and
+  wrong-wire-type inputs raise `RequestMappingError` before application use-case invocation.
+- The mapper performs no clinical validation, unit conversion, normalization, identifier lookup,
+  calculation, content access, rule matching, recommendation selection, serialization, or I/O.
+- Clinically invalid but representable values remain available for the existing validation layer to
+  reject; the mapper does not make insufficient input sufficient.
 - No clinical scope, supported medication or population, content, calculator, validation, rule,
-  use-case, serialization, mapper, interface, or public domain contract changed.
+  use-case, serialization, interface, or public domain contract changed.
 
 ## Verification
 
@@ -51,47 +57,52 @@ Use only the named files and task-specified commands. Do not install missing tes
 - No repository clone, dependency installation, substitute runner, CI, or GitHub Actions
   investigation was attempted.
 - GitHub was authoritative for source retrieval and final repository changes.
-- A bounded verification checkout was materialized at `/tmp/cds-platform` with only the new DTO,
-  focused test, package initializers, and `pyproject.toml` needed for pytest configuration.
+- A bounded verification checkout was materialized at `/tmp/cds-platform` with the mapper, focused
+  test, DTO, directly imported domain modules, required package initializers, and `pyproject.toml`.
 - The environment supplied pytest 9.0.2.
 - Focused collection command:
-  `python -m pytest tests/unit/app/test_dto.py --collect-only -q`
-- Collection result: `4 tests collected in 0.01s`.
+  `python -m pytest tests/unit/mappers/test_renal_dose_request.py --collect-only -q`
+- Collection result: `14 tests collected in 0.08s`.
 - Focused test command:
-  `python -m pytest tests/unit/app/test_dto.py -q`
-- Test result: `4 passed in 0.05s`.
+  `python -m pytest tests/unit/mappers/test_renal_dose_request.py -q`
+- Test result: `14 passed in 0.07s`.
 - Compile command:
-  `python -m compileall -q src/cds/app/dto.py tests/unit/app/test_dto.py`
+  `python -m compileall -q src/cds/mappers/renal_dose_request.py tests/unit/mappers/test_renal_dose_request.py`
 - Compile result: completed with no output or error.
-- No full-suite, lint, type-check, CI, or GitHub Actions passing claim is made.
+- Ruff was not installed in the supplied environment, so no lint passing claim is made.
+- No full-suite, type-check, CI, or GitHub Actions passing claim is made.
 
 ## Files changed
 
-- `src/cds/app/dto.py` — added the passive synthetic renal-dose CLI request DTO.
-- `tests/unit/app/test_dto.py` — added focused field-shape, wire-preservation, missing-data, and
-  passivity tests.
-- `CURRENT.md` — replaced with the Day 64 state and Day 65 next action.
+- `src/cds/mappers/renal_dose_request.py` — added the parsed-JSON-to-DTO and DTO-to-typed-input
+  mapping boundary.
+- `tests/unit/mappers/test_renal_dose_request.py` — added focused wire-shape, exact-conversion,
+  missing-data, invalid-representation, strict-enum, timezone, and validation-boundary tests.
+- `CURRENT.md` — replaced with the Day 65 state and Day 66 next action.
 
 ## Additional files inspected
 
-- `docs/TASK_TEMPLATE.md` and `CDS_12_Week_Daily_Project_Plan.html` — task structure and Day 64
+- `docs/TASK_TEMPLATE.md` and `CDS_12_Week_Daily_Project_Plan.html` — task structure and Day 65
   roadmap wording.
 - `AGENTS.md` — source hierarchy, bounded-checkout rules, architecture boundaries, and close
   procedure.
-- `docs/SAFETY_INVARIANTS.md` — missing-data, explicit-unit, no-inference, and fail-closed
-  constraints.
-- `ARCHITECTURE.md` — DTO, mapper, application, and interface responsibility boundaries.
-- `docs/RENAL_CALCULATOR_SPEC.md` — authoritative birth-date plus evaluation-date age input,
-  explicit time, exact units, and Decimal requirements.
-- `src/cds/app/renal_dose.py` — current use-case input facts and exact identifier requirements.
-- `src/cds/rules/context.py` — validated context fields that the future mapper must support.
-- `src/cds/domain/enums.py` and `src/cds/domain/clinical.py` — target enum and domain-object fields
-  for the future mapping boundary.
-- `src/cds/validation/lab.py` and `src/cds/validation/medication.py` — exact laboratory and regimen
-  facts required for successful downstream validation.
-- `tests/unit/app/test_context.py` — existing passive application-data-object test conventions.
-- `src/cds/__init__.py`, `src/cds/app/__init__.py`, and `pyproject.toml` — bounded package and pytest
-  configuration requirements.
+- `docs/SAFETY_INVARIANTS.md` and `docs/DOMAIN_CONVENTIONS.md` — missing-data, explicit-unit,
+  exact-enum, Decimal, timezone, and no-inference conventions.
+- `ARCHITECTURE.md` — mapper, application, validation, domain, and interface responsibility
+  boundaries.
+- `src/cds/app/dto.py` and `src/cds/app/renal_dose.py` — source wire contract and target use-case
+  inputs.
+- `src/cds/rules/context.py` — validated renal-dose facts that later orchestration must preserve.
+- `src/cds/domain/enums.py`, `src/cds/domain/clinical.py`, `src/cds/domain/value_objects.py`, and
+  `src/cds/domain/support.py` — exact target enums, domain models, nested values, and import chain.
+- `src/cds/services/renal.py` — direct confirmation that clinical quantities require string-derived
+  `Decimal`, exact units, explicit weight type, and timezone-aware calculation time.
+- `src/cds/validation/patient.py`, `src/cds/validation/lab.py`, and
+  `src/cds/validation/medication.py` — confirmation that clinical sufficiency and supported-value
+  decisions remain downstream of mapping.
+- `tests/unit/app/test_dto.py` — existing request-wire fixtures and passive DTO conventions.
+- `src/cds/__init__.py`, `src/cds/app/__init__.py`, `src/cds/domain/__init__.py`,
+  `src/cds/mappers/__init__.py`, and `pyproject.toml` — bounded package and pytest configuration.
 
 ## Active constraints
 
@@ -99,8 +110,11 @@ Use only the named files and task-specified commands. Do not install missing tes
 - Validate structure and task sufficiency before calculation or rule matching.
 - Unsupported or insufficient cases remain fail-closed and produce no recommendation.
 - Keep identifiers and units exact and case-sensitive; do not normalize, infer, alias, or fall back.
-- JSON clinical numerics must not be converted through binary `float`; the future mapper must create
-  `Decimal` values explicitly from supported wire strings.
+- JSON clinical numerics must be strings at the request boundary and become `Decimal` without binary
+  floating-point conversion.
+- Missing numerics remain `None`; missing enum categories use explicit `UNKNOWN` members.
+- Datetimes crossing the mapper boundary must include a usable UTC offset; do not assign a timezone
+  to naive input.
 - Keep domain models passive, services and rules pure, repositories responsible for content access,
   app modules responsible for orchestration, and mappers and interfaces free of clinical logic.
 - Preserve existing public imports and serialized contracts unless a task explicitly changes them.
@@ -109,12 +123,12 @@ Use only the named files and task-specified commands. Do not install missing tes
 ## Blockers
 
 - A named independent content reviewer has not been identified.
-- Content review eligibility remains separate from this request-contract task.
+- Content review eligibility remains separate from this input-mapping task.
 - Full-repository verification was not available in the supplied execution context.
 
 ## Next exact action
 
-> Day 65 — implement a focused request mapper that converts parsed synthetic JSON into
-> `RenalDoseCLIRequest` and then into the existing typed patient, serum-creatinine, medication-order,
-> enum, value-object, date, and timezone-aware datetime inputs with explicit missing-data, Decimal,
-> unit, and exact-identifier handling and no clinical decision logic.
+> Day 66 — implement a focused response mapper that converts the existing renal-dose use-case result
+> into stable canonical JSON-compatible output with ISO dates, UTC datetimes, Decimal strings,
+> structured validation issues, warnings, evidence, provenance, rule identifiers, and content
+> versions, without adding clinical logic or changing the standard result contract.
