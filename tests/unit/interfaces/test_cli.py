@@ -120,7 +120,108 @@ def test_main_writes_optional_output_path_without_writing_stdout(tmp_path: Path)
     assert len(use_case.calls) == 1
     assert stdout.getvalue() == ""
     assert output_path.read_text(encoding="utf-8").endswith("\n")
-    assert json.loads(output_path.read_text(encoding="utf-8"))["rule_result"]["status"] == "success"
+    assert json.loads(output_path.read_text(encoding="utf-8"))["rule_result"]["status"] == (
+        "success"
+    )
+
+
+def test_main_writes_optional_summary_to_stderr_without_contaminating_json(
+    tmp_path: Path,
+) -> None:
+    use_case = _ConfiguredUseCase()
+    use_case.result = _UseCaseResult(
+        validation={
+            "is_valid": True,
+            "issues": [
+                {
+                    "severity": "warning",
+                    "message": "Validation warning text.",
+                }
+            ],
+        },
+        rule_result={
+            "status": "success_with_warnings",
+            "renal_function_result": {
+                "value": {
+                    "value": Decimal("64.73379629629629629629629630"),
+                    "unit": "mL/min",
+                },
+                "warnings": [{"message": "Renal result warning text."}],
+                "evidence": [{"summary": "Cockcroft–Gault calculation evidence."}],
+            },
+            "recommendations": [
+                {
+                    "title": "Use the encoded cefepime renal regimen.",
+                    "warnings": [{"message": "Recommendation warning text."}],
+                    "evidence": [{"summary": "Reviewed cefepime content evidence."}],
+                }
+            ],
+            "warnings": [{"message": "Rule warning text."}],
+            "evidence": [{"summary": "Matched renal-dose rule evidence."}],
+        },
+    )
+    stdout = StringIO()
+    stderr = StringIO()
+
+    exit_code = main(
+        [str(_write_input(tmp_path)), "--summary"],
+        use_case=use_case,
+        stdout=stdout,
+        stderr=stderr,
+    )
+
+    assert exit_code == 0
+    response = json.loads(stdout.getvalue())
+    assert response["rule_result"]["status"] == "success_with_warnings"
+    assert response["rule_result"]["renal_function_result"]["value"]["value"] == (
+        "64.73379629629629629629629630"
+    )
+    assert stderr.getvalue() == (
+        "PROTOTYPE — not for direct clinical use; use synthetic or properly de-identified data "
+        "only.\n"
+        "Status: success_with_warnings\n"
+        "Renal result: 64.73379629629629629629629630 mL/min\n"
+        "Recommendation:\n"
+        "- Use the encoded cefepime renal regimen.\n"
+        "Warnings:\n"
+        "- Rule warning text.\n"
+        "- Renal result warning text.\n"
+        "- Recommendation warning text.\n"
+        "- Validation warning text.\n"
+        "Evidence:\n"
+        "- Matched renal-dose rule evidence.\n"
+        "- Cockcroft–Gault calculation evidence.\n"
+        "- Reviewed cefepime content evidence.\n"
+    )
+
+
+def test_summary_marks_missing_result_fields_without_inventing_values(tmp_path: Path) -> None:
+    use_case = _ConfiguredUseCase()
+    use_case.result = _UseCaseResult(
+        validation={"is_valid": False, "issues": []},
+        rule_result={"status": "incomplete", "recommendations": []},
+    )
+    stdout = StringIO()
+    stderr = StringIO()
+
+    exit_code = main(
+        [str(_write_input(tmp_path)), "--summary"],
+        use_case=use_case,
+        stdout=stdout,
+        stderr=stderr,
+    )
+
+    assert exit_code == 0
+    assert json.loads(stdout.getvalue())["rule_result"]["status"] == "incomplete"
+    assert stderr.getvalue() == (
+        "PROTOTYPE — not for direct clinical use; use synthetic or properly de-identified data "
+        "only.\n"
+        "Status: incomplete\n"
+        "Renal result: not present in structured result.\n"
+        "Recommendation: not present in structured result.\n"
+        "Warnings: none recorded.\n"
+        "Evidence: none recorded.\n"
+    )
 
 
 @pytest.mark.parametrize("missing_field", ["evaluation_date", "evaluated_at"])
