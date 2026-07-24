@@ -169,6 +169,36 @@ For a bounded checkout:
 
 Do not install or recreate the entire development environment unless a focused test proves it is necessary. Report commands and results accurately; do not claim CI or local checks that were not run.
 
+### Release-gate verification evidence
+
+When a task verifies a release candidate, checkpoint, or milestone:
+
+1. Record the exact candidate commit before generating or changing any evidence file.
+2. Record `git status --short` before verification and require a clean candidate tree.
+3. Record the repository root, operating system, architecture, timestamp with UTC offset, Python
+   version, pytest version, and Ruff version.
+4. Write each exact command line into the durable artifact before its output.
+5. For Ruff, capture the effective repository configuration with:
+
+   ```bash
+   python -m ruff check . --config pyproject.toml --show-settings
+   ```
+
+6. Record the real exit status of every command. Do not allow `tee` or another pipeline to hide a
+   failing status.
+7. Record complete pytest pass, fail, skip, xfail, and xpass counts and give every skip or expected
+   failure an explicit disposition.
+8. Record CLI walkthrough output and exit status; absence of CLI evidence is a blocker.
+9. Distinguish an evidence file created during verification from candidate files. A dirty tree after
+   evidence generation does not replace the required clean-tree record from before verification.
+10. If implementation, tests, snapshots, goldens, content, configuration, or verification tooling
+    changes after checks begin, invalidate the candidate and select a new exact commit.
+11. Do not weaken tests, delete required fixtures, overwrite snapshots, regenerate goldens, or broaden
+    lint suppressions solely to obtain a passing result.
+
+Use `docs/PROTOTYPE_RELEASE_CHECKLIST.md` for the complete release gate and
+`docs/PROTOTYPE_RELEASE_REMEDIATION_PLAN.md` while the Day 83 software gate remains failed.
+
 ## Close procedure
 
 - Summarize the deliverable and files changed.
