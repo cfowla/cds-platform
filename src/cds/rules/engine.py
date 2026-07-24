@@ -2,10 +2,10 @@
 
 from __future__ import annotations
 
-from cds.app.context import RenalDoseEvaluationContext
 from cds.domain.enums import ResultStatus
 from cds.domain.outputs import RenalFunctionResult, RuleResult
 from cds.repositories.renal_content import RenalDoseContent
+from cds.rules.context import RenalDoseEvaluationContext
 from cds.rules.registry import RenalDoseRuleRegistry
 
 __all__ = ["RenalDoseRuleEngine"]
