@@ -36,7 +36,8 @@ py -3.11 -m venv .venv
 python -m pip install --upgrade pip
 python -m pip install -e ".[dev]"
 python -m pytest -q
-python -m cds.interfaces.cli
+$env:PYTHONPATH = "src"
+python examples/cli_walkthrough.py --verify
 ```
 
 ### macOS or Linux
@@ -47,7 +48,7 @@ source .venv/bin/activate
 python -m pip install --upgrade pip
 python -m pip install -e ".[dev]"
 python -m pytest -q
-python -m cds.interfaces.cli
+PYTHONPATH=src python examples/cli_walkthrough.py --verify
 ```
 
-The CLI module is currently a scaffold and exits without output. Reuse the environment in later sessions by activating `.venv` and beginning with the test command.
+The renal-dose CLI is a dependency-injected interface boundary rather than a standalone composition root. See [`docs/CLI_WALKTHROUGH.md`](docs/CLI_WALKTHROUGH.md) for saved synthetic commands, canonical-output snapshots, exit behavior, and current limitations. Reuse the environment in later sessions by activating `.venv` and beginning with the test command.
