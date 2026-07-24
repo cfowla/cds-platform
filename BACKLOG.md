@@ -90,6 +90,63 @@ versions, review states, reviewer fields, sources, and validation invariants are
   `draft`; a named independent clinical-content reviewer is required before any may be marked
   `reviewed` or become eligible for rule matching.
 
+## Release-gate remediation backlog
+
+Candidate `73c3fcfd10548db31c2bf6707e73f65c5e7f2eb0` failed the Day 83 software gate. The durable
+record is `artifacts/verification/full-verification-20260724T082921Z.txt`. The ordered execution plan
+is maintained in
+[`docs/PROTOTYPE_RELEASE_REMEDIATION_PLAN.md`](docs/PROTOTYPE_RELEASE_REMEDIATION_PLAN.md).
+
+### Immediate verification repairs
+
+- **Open — Integration order coding systems:** add explicit synthetic route and indication coding
+  systems to the `_order()` helpers in `tests/integration/test_renal_dose_matrix.py` and
+  `tests/integration/test_renal_safety_invariants.py`. Do not weaken the validator.
+- **Open — Strict-xfail validity:** after fixture repair, prove that the declared-weight-type conflict
+  and famotidine minimum-weight cases return to strict XFAIL. An XPASS caused by an unrelated earlier
+  validation error is not evidence of limitation resolution.
+- **Open — Decimal-context test method:** replace `Context == Context.copy()` assertions with explicit
+  comparisons of precision, rounding, traps, flags, exponent bounds, capitalization, and clamp.
+  Preserve the requirement that the calculator not mutate the caller's global Decimal context.
+
+### Snapshot and golden review decisions
+
+- **Decision required — Synthetic content in the review snapshot:** decide whether
+  `tests/contract/test_renal_content_snapshots.py` intentionally snapshots every YAML file in the
+  renal-content directory or an explicit selected clinical-content set. Keep
+  `cefepime_synthetic_fixture.yaml` if it remains required for tests; do not delete it solely to make
+  the snapshot pass.
+- **Review required — Cefepime golden change:** inspect the semantic canonical-output diff caused by
+  the shared exact-matcher refactor. Regenerate the committed golden JSON only after the changed
+  output is judged intended and reviewable.
+
+### Ruff policy and cleanup
+
+- **Decision required — Intended Ruff ruleset:** record the exact command and effective settings from
+  `python -m ruff check . --config pyproject.toml --show-settings` before treating the 284-diagnostic
+  artifact as the repository lint baseline.
+- **Open — Legitimate diagnostics:** resolve diagnostics such as unused imports under the selected
+  ruleset with focused edits.
+- **Open — Intentional negative-test diagnostics:** use narrow, documented suppressions when a lint
+  rule conflicts with a test that deliberately constructs invalid input, such as timezone-naive
+  datetimes. Do not alter the invalid input and destroy the behavior under test.
+- **Constraint — No broad automatic rewrite:** do not use repository-wide `--fix` or
+  `--unsafe-fixes` until the intended ruleset is explicit and diagnostics have been classified.
+
+### Release evidence completeness
+
+- **Open — Command and environment capture:** the next evidence artifact must include the exact pytest,
+  Ruff, and CLI commands; Python, pytest, and Ruff versions; operating system and architecture;
+  timestamps; clean-tree status before verification; and every exit status.
+- **Open — CLI walkthrough evidence:** run and retain the seven-scenario synthetic CLI walkthrough
+  output and exit status.
+- **Disposition required — Placeholder skips:** all 16 placeholder skips must be removed, replaced,
+  or explicitly accepted by the release custodian with rationale. They do not silently count as
+  passing evidence.
+- **Open — Candidate identity:** any repair invalidates candidate
+  `73c3fcfd10548db31c2bf6707e73f65c5e7f2eb0`. Select and record a new exact candidate only after all
+  remediation changes are committed and the working tree is clean.
+
 ## Later decisions
 
 These decisions do not define the current task and must not be pulled into the first vertical

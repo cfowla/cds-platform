@@ -99,6 +99,49 @@ Expected result: `<specific passing tests, output, or invariant>`.
 
 Run the full suite only when the task changes shared behavior, public contracts, package structure, or when the task explicitly requires a checkpoint. Do not claim tests or CI passed unless they were actually run.
 
+### Release or checkpoint verification
+
+Include this subsection only when verifying a release candidate, checkpoint, or milestone.
+
+Before running checks, record:
+
+```bash
+git rev-parse HEAD
+git status --short
+python --version
+python -m pytest --version
+python -m ruff --version
+python -m ruff check . --config pyproject.toml --show-settings
+```
+
+Also record the repository root, operating system, architecture, verification timestamp with UTC
+offset, and release custodian.
+
+The durable artifact must contain each exact command line before its output and must record the real
+exit status, timestamps, counts, warnings, and evidence location for:
+
+```bash
+python -m pytest -q
+python -m ruff check . --config pyproject.toml
+PYTHONPATH=src python examples/cli_walkthrough.py --verify
+```
+
+Requirements:
+
+- The candidate tree is clean before verification.
+- Every skip, xfail, and xpass has an explicit disposition.
+- The CLI output and exit status are retained.
+- A pipeline such as `tee` must not hide a failing command status.
+- Evidence generated after verification is distinguished from candidate files.
+- Any later change to code, tests, snapshots, goldens, content, configuration, or verification
+  tooling invalidates the candidate and requires a new exact commit.
+- Do not weaken tests, delete required fixtures, overwrite snapshots, regenerate goldens, or add
+  broad suppressions solely to produce a pass.
+
+For a failed Day 83 release gate, follow
+[`docs/PROTOTYPE_RELEASE_REMEDIATION_PLAN.md`](PROTOTYPE_RELEASE_REMEDIATION_PLAN.md) and keep one work
+package per task.
+
 ## Close procedure
 
 1. Summarize the files created, edited, and deleted.
