@@ -21,33 +21,32 @@ Use only the named files and task-specified commands. Do not install missing tes
 
 ## Roadmap position
 
-- Days 1–69 are complete.
-- **Day 69 — Add CLI error handling** is complete.
-- The next sequential task is **Day 70 — Weekly review: manual CLI walkthrough**.
+- Days 1–70 are complete.
+- **Day 70 — Weekly review: manual CLI walkthrough** is complete.
+- The next sequential task is **Day 71 — Create the integration test matrix**.
 
 ## Current state
 
-- `src/cds/interfaces/cli.py` retains canonical JSON as the authoritative renal-dose command output.
-- The CLI exports stable exit-code constants for success, system failure, input error, unsupported
-  request, and content failure.
-- `main()` converts unreadable input, malformed JSON, request-mapping failures, structured incomplete
-  or not-applicable outcomes, exact-content absence, content-repository failures, failed application
-  results, output-write failures, and unexpected interface exceptions into explicit exit behavior.
-- Malformed input and unexpected failures produce sanitized stderr diagnostics without stack traces,
-  raw exception text, source payloads, patient identifiers, or invented recommendations.
-- Structured incomplete, unsupported, content-failure, and system-failure results still preserve the
-  canonical JSON response on stdout or at the exact `--output` path before returning nonzero.
-- Missing or unsupported units remain validation issues and map to the input-error exit without unit
-  inference or conversion.
-- Exact absent medication, regimen, and content-version combinations map to the unsupported exit;
-  unexpected repository or content-validation failures map to the content-failure exit.
-- `--summary` remains presentation-only and isolated from canonical JSON; structured error text is
-  appended to stderr without duplicating the prototype warning.
-- The interface still does not select or load content, configure repositories or rules, validate
-  clinical sufficiency, calculate renal function, match rules, choose recommendations, normalize
-  units or identifiers, or add clinical interpretation.
-- No clinical scope, supported medication or population, content, calculator, validation, rule,
-  use-case, domain-model, mapper, or canonical serialization contract changed.
+- `examples/cli_walkthrough.py` provides one reproducible synthetic harness around the existing
+  dependency-injected renal-dose CLI boundary.
+- `examples/cli_walkthrough_cases.json` saves exact request overrides, canned structured use-case
+  results, canonical-output snapshots, expected exit codes, and sanitized stderr fragments for
+  cefepime, piperacillin–tazobactam, famotidine, incomplete, unsupported, content-failure, and
+  system-failure scenarios.
+- The three medication walkthroughs exercise the interface contract with clearly labeled synthetic
+  recommendations and evidence; the saved results do not validate clinical content or dosing logic.
+- Incomplete, unsupported, content-failure, and system-failure scenarios remain fail-closed and
+  contain no recommendation.
+- Verification compares deterministic canonical JSON byte-for-byte, confirms the expected exit
+  code and stderr fragment, and requires exactly one configured use-case invocation per scenario.
+- `--summary` remains presentation-only on stderr, and `--output` writes canonical JSON exclusively
+  to the requested path.
+- `docs/CLI_WALKTHROUGH.md` records macOS, Linux, and Windows commands, expected outcomes, the
+  dependency-injected composition limitation, and the non-clinical status of canned results.
+- `README.md` now points to the saved walkthrough instead of describing the CLI as an empty scaffold
+  or presenting the dependency-injected module as a standalone executable.
+- No production clinical logic, clinical content, calculator, validation, rule, repository,
+  application, mapper, domain model, canonical serializer, or CLI behavior changed.
 
 ## Verification
 
@@ -56,57 +55,72 @@ Use only the named files and task-specified commands. Do not install missing tes
 - No repository clone, dependency installation, substitute runner, CI, or GitHub Actions
   investigation was attempted.
 - GitHub was authoritative for source retrieval and final repository changes.
-- A bounded verification checkout was materialized at `/tmp/cds-platform` with the CLI module,
-  focused test, existing request and response mapper surfaces, passive DTO and domain dependencies,
-  canonical serializer, required package initializers, and `pyproject.toml`.
+- A bounded verification checkout was materialized at `/tmp/cds-platform` with the new walkthrough
+  files and only the existing CLI, request/response mapper, DTO, passive domain, and canonical
+  serializer imports concretely required for execution.
+- Git blob hashes for the new walkthrough files and all connector-fetched source dependencies matched
+  their GitHub blob SHAs before execution.
+- The environment supplied pytest 9.0.2.
+- Walkthrough verification command:
+  `PYTHONPATH=src python examples/cli_walkthrough.py --verify`
+- Walkthrough result: `7 synthetic CLI walkthrough scenarios verified.`
 - Focused collection command:
-  `PYTHONPATH=src python -m pytest tests/unit/interfaces/test_cli.py --collect-only -q`
-- Collection result: `14 tests collected in 0.05s`.
+  `PYTHONPATH=src python -m pytest tests/unit/interfaces/test_cli_walkthrough.py --collect-only -q`
+- Collection result: `2 tests collected in 0.00s`.
 - Focused test command:
-  `PYTHONPATH=src python -m pytest tests/unit/interfaces/test_cli.py -q`
-- Test result: `14 passed in 0.08s`.
+  `PYTHONPATH=src python -m pytest tests/unit/interfaces/test_cli_walkthrough.py -q`
+- Test result: `2 passed in 0.57s`.
 - Compile command:
-  `python -m compileall -q src/cds/interfaces/cli.py tests/unit/interfaces/test_cli.py`
+  `python -m compileall -q examples/cli_walkthrough.py tests/unit/interfaces/test_cli_walkthrough.py src/cds/interfaces/cli.py src/cds/mappers/renal_dose_request.py src/cds/mappers/renal_dose_response.py src/cds/utils/serialization.py`
 - Compile result: completed with no output or error.
+- Manual success, incomplete, summary, and output-path checks confirmed exit codes `0` and `2`,
+  canonical statuses `success` and `incomplete`, prototype warning text, no recommendation in the
+  incomplete summary, no stdout when `--output` was used, and successful canonical file output.
+- The changed Python files contain no lines over the configured 100-character limit.
 - Ruff was not installed in the supplied environment, so no lint passing claim is made.
 - No full-suite, type-check, CI, or GitHub Actions passing claim is made.
 
 ## Files changed
 
-- `src/cds/interfaces/cli.py` — added explicit exit codes, sanitized exception handling, and
-  structured-result-to-exit classification while preserving canonical JSON and summary behavior.
-- `tests/unit/interfaces/test_cli.py` — added focused malformed-input, mapping, unit, unsupported,
-  content-failure, system-failure, no-stack-trace, and nonzero structured-result coverage.
-- `CURRENT.md` — replaced with the Day 69 state and Day 70 next action.
+- `examples/cli_walkthrough.py` — added the reproducible dependency-injected scenario runner and
+  deterministic snapshot verifier.
+- `examples/cli_walkthrough_cases.json` — added seven synthetic request/result/exit snapshots.
+- `docs/CLI_WALKTHROUGH.md` — documented commands, outcomes, limitations, and prototype warnings.
+- `tests/unit/interfaces/test_cli_walkthrough.py` — added focused execution, scenario-coverage, and
+  fail-closed checks.
+- `README.md` — replaced stale scaffold commands with the saved walkthrough command and limitations.
+- `CURRENT.md` — replaced with the Day 70 state and Day 71 next action.
 
 ## Additional files inspected
 
-- `docs/TASK_TEMPLATE.md` and `CDS_12_Week_Daily_Project_Plan.html` — task structure and Day 69
-  roadmap wording.
-- `AGENTS.md` and `docs/SAFETY_INVARIANTS.md` — bounded execution, architecture, prototype warning,
-  fail-closed, no-inference, sensitive-data, and verification constraints.
-- `src/cds/mappers/renal_dose_request.py` — request-mapping error contract and exact wire conversion.
-- `src/cds/mappers/renal_dose_response.py` and `src/cds/utils/serialization.py` — canonical response
-  and serialization boundaries used by CLI classification and output.
-- `src/cds/app/renal_dose.py`, `src/cds/domain/outputs.py`, and `src/cds/domain/enums.py` — structured
-  status, validation, supporting-data, failure-code, and failure-stage contracts.
-- `src/cds/domain/exceptions.py`, `src/cds/repositories/renal_content.py`, and
-  `tests/unit/app/test_renal_dose.py` — exact-content absence and unexpected repository/system failure
-  semantics needed to distinguish unsupported, content, and system exits.
-- `src/cds/validation/lab.py` — exact missing and unsupported unit issue codes.
-- `src/cds/app/dto.py`, `src/cds/domain/clinical.py`, `src/cds/domain/support.py`, and
-  `src/cds/domain/value_objects.py` — direct imports required for focused test collection.
-- `pyproject.toml` — Python, pytest, and line-length configuration for focused verification.
+- `docs/TASK_TEMPLATE.md` and `CDS_12_Week_Daily_Project_Plan.html` — task structure, Day 70 scope,
+  and Day 71 roadmap wording.
+- `AGENTS.md` and `docs/SAFETY_INVARIANTS.md` — bounded execution, prototype, fail-closed,
+  no-inference, sensitive-data, architecture, and verification constraints.
+- `src/cds/interfaces/cli.py` and `tests/unit/interfaces/test_cli.py` — dependency injection,
+  canonical output, summary, sanitized diagnostics, and explicit exit-code contracts.
+- `src/cds/mappers/renal_dose_request.py`, `src/cds/mappers/renal_dose_response.py`,
+  `src/cds/app/dto.py`, and `src/cds/utils/serialization.py` — exact request and canonical response
+  boundaries used by the walkthrough.
+- `src/cds/domain/clinical.py`, `src/cds/domain/enums.py`, `src/cds/domain/support.py`, and
+  `src/cds/domain/value_objects.py` — direct passive dependencies required for bounded execution.
+- `src/cds/app/renal_dose.py`, `tests/unit/app/test_renal_dose.py`,
+  `src/cds/repositories/renal_content.py`, `src/cds/rules/engine.py`, and
+  `src/cds/rules/registry.py` — configured-use-case and exact rule/content boundary conventions.
+- Existing piperacillin–tazobactam and famotidine content/rule commits — exact synthetic request
+  identifiers and regimen shapes used in the saved walkthrough inputs.
+- `pyproject.toml` and `README.md` — configured verification and user-facing command conventions.
 
 ## Active constraints
 
 - Preserve the prototype warning and use only synthetic or properly de-identified data.
+- Canned walkthrough results verify interface behavior only and must not be represented as clinical
+  calculation, content, dosing, or independent-review validation.
 - Validate structure and task sufficiency before calculation or rule matching.
 - Unsupported or insufficient cases remain fail-closed and produce no recommendation.
 - Keep identifiers and units exact and case-sensitive; do not normalize, infer, alias, or fall back.
-- JSON clinical numerics must remain strings at the request boundary and exact `Decimal` strings at
-  the response and summary presentation boundaries; do not convert them through binary floating
-  point.
+- JSON clinical numerics remain strings at request boundaries and exact Decimal strings at response
+  boundaries; do not convert them through binary floating point.
 - Missing numerics remain `None`; missing enum categories use explicit `UNKNOWN` members.
 - Datetimes crossing mapper and interface boundaries must include a usable UTC offset and serialize
   in UTC; do not assign a timezone to naive input.
@@ -118,11 +132,12 @@ Use only the named files and task-specified commands. Do not install missing tes
 ## Blockers
 
 - A named independent content reviewer has not been identified.
-- Content review eligibility remains separate from this CLI interface task.
+- Draft content review eligibility remains separate from this synthetic interface walkthrough.
+- The production CLI remains a dependency-injected boundary without a standalone composition root.
 - Full-repository verification was not available in the supplied execution context.
 
 ## Next exact action
 
-> Day 70 — save and verify reproducible synthetic CLI commands and canonical outputs for cefepime,
-> piperacillin–tazobactam, and famotidine plus incomplete, unsupported, content-failure, and system-
-> failure walkthrough cases without changing clinical logic or content.
+> Day 71 — create the integration test matrix by listing data-completeness states, all three
+> medications, regimen variants, renal boundaries, unsupported contexts, and system-failure
+> combinations before implementing the full-flow parameterized tests.
