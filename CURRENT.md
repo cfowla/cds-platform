@@ -22,75 +22,74 @@ Use only the named files and task-specified commands. Do not install missing tes
 
 ## Roadmap position
 
-- Days 1-81 are complete.
-- **Day 81 - Create the model and interface reference** is implemented.
-- The next sequential task is **Day 82 - Create the prototype release checklist**.
+- Days 1-82 are complete.
+- **Day 82 - Create the prototype release checklist** is implemented.
+- The next sequential task is **Day 83 - Tag the prototype milestone**.
 
 ## Current state
 
-- `docs/MODEL_INTERFACE_REFERENCE.md` now documents the implemented domain, validation, and renal
-  CLI boundary without changing any model or interface contract.
-- The reference distinguishes permissive keyword-only dataclass construction from the stricter
-  facts required for a successful renal-dose evaluation.
-- Shared value objects, traceability models, clinical truth models, output models, and validation
-  result models are documented with current field names, types, safe defaults, and first-slice unit
-  requirements.
-- Focused import paths and the exact `cds.domain.models` compatibility exports are documented.
-- Canonical serialization behavior is documented for dataclasses, enums, `None`, dates, aware
-  datetimes, `Decimal`, collections, string-keyed mappings, and unsupported values.
-- The flat renal CLI request fields are grouped into required, conditionally required, and optional
-  audit-link facts, with exact wire-type and timezone rules.
-- The response retains the fixed top-level `validation` and `rule_result` objects and the current
-  fail-closed result-state semantics.
-- CLI arguments, output streams, exit codes, sanitized diagnostics, dependency injection, and the
-  absence of a standalone composition root, console entry point, API, or EHR interface are explicit.
-- No Python behavior, model field, enum value, compatibility import, mapper, CLI behavior,
-  serialized contract, dependency, clinical content, calculation, validation, or rule behavior
-  changed.
+- `docs/PROTOTYPE_RELEASE_CHECKLIST.md` now defines the evidence and decision record required before
+  creating a nonclinical prototype milestone tag.
+- The checklist begins with the prototype-only and synthetic or properly de-identified data warning.
+- It records the exact candidate commit, package and environment versions, release custodian, and
+  verification timestamps.
+- Full verification includes the configured pytest, Ruff, and synthetic CLI walkthrough commands,
+  with exact result and evidence recording requirements.
+- Independent calculation review is separated from software self-test and uses the renal calculator
+  specification and existing arithmetic verification record as supporting evidence.
+- Clinical-content review is recorded independently for cefepime, piperacillin-tazobactam, and
+  famotidine by exact medication, regimen, content, and rule identifiers.
+- Draft and retired content remain ineligible, and a missing qualified independent reviewer remains
+  a blocking no-go condition.
+- The checklist covers fail-closed behavior, PHI and diagnostic controls, provenance, version
+  capture, known limitations, and an explicit go or no-go decision.
+- Tag creation is explicitly deferred to a separate bounded task and is permitted only after the
+  checklist records an explicit go decision for the unchanged candidate commit.
+- No Python behavior, test, content document, content review status, release eligibility, version,
+  tag, dependency, interface, public contract, or clinical scope changed.
 
 ## Verification
 
 - The required `git rev-parse --show-toplevel` probe was run once from `/mnt/data` and did not
   identify a repository checkout.
-- No repository clone, dependency installation, substitute runner, CI, or GitHub Actions
-  investigation was attempted.
+- No repository clone, dependency installation, substitute runner, CI, GitHub Actions investigation,
+  or tag operation was attempted.
 - GitHub was authoritative for source retrieval and final repository changes.
-- A bounded verification checkout was created at `/tmp/cds-platform` containing the new reference,
+- A bounded verification checkout was created at `/tmp/cds-platform` containing the new checklist,
   updated active-state note, and a task-specific documentation checker.
 - Documentation command:
-  `python /tmp/cds-platform/verify_model_interface_reference.py`
-- Documentation result: passed; required sections, model names, compatibility exports, exact units,
-  request and response contracts, CLI limitations, prototype warning, and 100-character line limits
-  were present.
+  `python /tmp/cds-platform/verify_prototype_release_checklist.py`
+- Documentation result: passed; required safety, verification, calculation-review, content-review,
+  PHI-control, provenance, version-capture, limitation, decision, and tagging-handoff sections were
+  present, configured commands were exact, prohibited completion claims were absent, and lines did
+  not exceed 100 characters.
 - Pytest was not required or run because the task changed documentation only and did not change
-  executable behavior or a serialized software contract.
-- No full-suite, lint, type-check, CI, or GitHub Actions passing claim is made.
+  executable behavior, clinical content, content eligibility, or a serialized software contract.
+- No full-suite, lint, type-check, CI, GitHub Actions, release-readiness, or tag passing claim is
+  made.
 
 ## Files changed
 
-- `docs/MODEL_INTERFACE_REFERENCE.md` - added the implemented model, serialization, request,
-  response, CLI, compatibility, and limitation reference.
-- `CURRENT.md` - replaced with the Day 81 state and Day 82 next action.
+- `docs/PROTOTYPE_RELEASE_CHECKLIST.md` - added the reusable evidence, no-go, and tagging-handoff
+  checklist for one exact nonclinical prototype candidate.
+- `CURRENT.md` - replaced with the Day 82 state and Day 83 next action.
 
 ## Additional files inspected
 
-- `docs/TASK_TEMPLATE.md` and `CDS_12_Week_Daily_Project_Plan.html` - task structure and exact
-  Day 81 and Day 82 roadmap wording.
-- `docs/SAFETY_INVARIANTS.md` and `docs/DOMAIN_CONVENTIONS.md` - safety, missing-data, validation,
-  unit, traceability, result-state, and serialization policy.
-- `src/cds/domain/enums.py`, `support.py`, `value_objects.py`, `clinical.py`, `outputs.py`, and
-  `models.py` - exact model fields, defaults, wire values, and compatibility exports.
-- `src/cds/validation/models.py`, `patient.py`, `lab.py`, `renal.py`, and `medication.py` -
-  validation result shape and actual structural and workflow requiredness.
-- `src/cds/app/dto.py` and `src/cds/app/renal_dose.py` - request DTO fields, application result
-  shape, identity checks, exact-selection requirements, and result mapping.
-- `src/cds/mappers/renal_dose_request.py` and `renal_dose_response.py` - request wire types, mapping
-  failures, fixed response keys, and canonical boundary conversion.
-- `src/cds/utils/serialization.py` - exact canonical serialization behavior.
-- `src/cds/interfaces/cli.py`, `docs/CLI_WALKTHROUGH.md`, `README.md`, and `pyproject.toml` - CLI
-  arguments, streams, exit codes, diagnostics, walkthrough behavior, packaging, and limitations.
-- `src/cds/domain/__init__.py` and `src/cds/interfaces/__init__.py` - current package-level export
-  behavior.
+- `AGENTS.md`, `docs/TASK_TEMPLATE.md`, and `CDS_12_Week_Daily_Project_Plan.html` - repository
+  workflow, task structure, and exact Day 82 and Day 83 roadmap wording.
+- `docs/SAFETY_INVARIANTS.md` and `docs/DOMAIN_CONVENTIONS.md` - prototype warning, PHI boundary,
+  validation order, fail-closed behavior, units, result states, provenance, and serialization rules.
+- `docs/CLINICAL_CONTENT_WORKFLOW.md` - content lifecycle, independent reviewer requirements,
+  exact-version eligibility, supersession, rollback, and review-record requirements.
+- `docs/RENAL_CALCULATOR_SPEC.md` and `docs/RENAL_CALCULATOR_VERIFICATION.md` - normative equation,
+  Decimal and unrounded-value contract, independent arithmetic method, evidence, and limitations.
+- `docs/MODEL_INTERFACE_REFERENCE.md` - request and response contracts, CLI behavior, canonical
+  serialization, current interface limitations, and reproducible walkthrough command.
+- `README.md` and `pyproject.toml` - configured development commands, package version, Python
+  support, dependencies, pytest settings, Ruff settings, and prototype warning.
+- `src/cds/utils/logging.py` was inspected through its introducing commit because the PHI section
+  needed the implemented allowlisted diagnostic boundary and its current wiring limitation.
 
 ## Active constraints
 
@@ -112,6 +111,8 @@ Use only the named files and task-specified commands. Do not install missing tes
 - Preserve unrounded calculated values for matching and auditability.
 - Do not place patient identifiers, clinical payloads, exception messages, or tracebacks in
   diagnostic logs or CLI diagnostics.
+- Do not create a prototype tag unless the release checklist has an explicit go decision for the
+  exact unchanged candidate commit and selected content versions.
 
 ## Blockers
 
@@ -126,9 +127,12 @@ Use only the named files and task-specified commands. Do not install missing tes
 - Focused Day 77 pytest execution remains unverified in this environment because no complete
   checkout or materialized application import graph was available.
 - Full-repository verification was not available in the supplied execution context.
+- These blockers prevent an honest release-readiness or tag claim until the checklist records their
+  resolution or explicit accepted nonclinical disposition.
 
 ## Next exact action
 
-> Day 82 - create a prototype release checklist covering full verification, independent calculation
-> review, clinical-content review status, limitations, PHI controls, provenance, version capture,
-> and prototype warnings without tagging or changing release eligibility.
+> Day 83 - execute `docs/PROTOTYPE_RELEASE_CHECKLIST.md` in a complete development environment,
+> capture the exact software and content versions, update the release record, and create the
+> prototype milestone tag only if every required item is complete and the decision is explicitly
+> `go`; otherwise stop without tagging and record the blocking evidence.
