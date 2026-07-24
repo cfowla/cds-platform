@@ -8,8 +8,10 @@ from typing import cast
 from cds.app.context import RenalDoseEvaluationContext
 from cds.domain.clinical import LabResult, MedicationOrder, Patient
 from cds.domain.enums import ResultStatus, WeightType
-from cds.domain.outputs import RuleResult
+from cds.domain.exceptions import CalculationError, ContentNotFound, ValidationError
+from cds.domain.outputs import RenalFunctionResult, RuleResult
 from cds.repositories.renal_content import (
+    RenalDoseContent,
     RenalDoseContentKey,
     RenalDoseContentRepository,
 )
@@ -35,9 +37,9 @@ class RenalDoseUseCaseResult:
 class RenalDoseUseCase:
     """Coordinate validation, exact content retrieval, calculation, and rule evaluation.
 
-    Expected validation gaps return an incomplete result before calculation or matching.
-    Unexpected repository, calculation, or rule failures are intentionally not mapped here;
-    structured exception mapping is the next bounded task.
+    Expected clinical gaps remain explicit incomplete or unsupported outcomes. Typed internal
+    failures and unexpected application failures are converted to structured failed results without
+    exposing exception text, stack traces, or source payloads.
     """
 
     def __init__(
@@ -71,110 +73,180 @@ class RenalDoseUseCase:
     ) -> RenalDoseUseCaseResult:
         """Run one fail-closed renal-dose workflow using exact supplied identifiers."""
 
-        validation = _initial_validation(
-            patient=patient,
-            serum_creatinine_result=serum_creatinine_result,
-            medication_order=medication_order,
-            weight_type=weight_type,
-            regimen_id=regimen_id,
-            renal_function_stable=renal_function_stable,
-            renal_replacement_therapy=renal_replacement_therapy,
-            pregnant_or_lactating=pregnant_or_lactating,
-            requested_content_version=requested_content_version,
-            evaluation_date=evaluation_date,
-            evaluated_at=evaluated_at,
-            expected_medication_system=self._medication_identifier_system,
-        )
-        if validation.is_valid is not True:
-            return RenalDoseUseCaseResult(
-                validation=validation,
-                rule_result=_incomplete_result(
-                    patient=patient,
-                    order=medication_order,
-                    evaluated_at=evaluated_at,
+        validation = ValidationResult()
+        content: RenalDoseContent | None = None
+        renal_function: RenalFunctionResult | None = None
+        failure_stage = "initial_validation"
+
+        try:
+            validation = _initial_validation(
+                patient=patient,
+                serum_creatinine_result=serum_creatinine_result,
+                medication_order=medication_order,
+                weight_type=weight_type,
+                regimen_id=regimen_id,
+                renal_function_stable=renal_function_stable,
+                renal_replacement_therapy=renal_replacement_therapy,
+                pregnant_or_lactating=pregnant_or_lactating,
+                requested_content_version=requested_content_version,
+                evaluation_date=evaluation_date,
+                evaluated_at=evaluated_at,
+                expected_medication_system=self._medication_identifier_system,
+            )
+            if validation.is_valid is not True:
+                return RenalDoseUseCaseResult(
                     validation=validation,
-                ),
-            )
+                    rule_result=_incomplete_result(
+                        patient=patient,
+                        order=medication_order,
+                        evaluated_at=evaluated_at,
+                        validation=validation,
+                    ),
+                )
 
-        medication_id = cast(str, medication_order.medication.code)
-        exact_regimen_id = cast(str, regimen_id)
-        exact_content_version = cast(str, requested_content_version)
+            medication_id = cast(str, medication_order.medication.code)
+            exact_regimen_id = cast(str, regimen_id)
+            exact_content_version = cast(str, requested_content_version)
 
-        content = self._content_repository.get(
-            RenalDoseContentKey(
-                medication_id=medication_id,
-                regimen_id=exact_regimen_id,
-                content_version=exact_content_version,
-            )
-        )
-
-        medication_validation = validate_medication_order_sufficiency(
-            order=medication_order,
-            regimen_identifier=regimen_id,
-            expected_medication_system=self._medication_identifier_system,
-            expected_medication_code=content.medication.id,
-            expected_regimen_identifier=content.regimen.id,
-            require_route=True,
-            require_dose=True,
-            require_frequency=True,
-            require_indication=bool(content.regimen.indication_ids),
-            require_infusion_duration=content.regimen.infusion_duration is not None,
-        )
-        validation = _combine_validation(validation, medication_validation)
-        if content.regimen.formulation_id is not None and formulation_id is None:
-            validation.issues.append(
-                _error(
-                    code="missing_required_formulation_identifier",
-                    message="A formulation identifier is required for the selected regimen.",
-                    field_path="formulation_id",
+            failure_stage = "content_repository"
+            content = self._content_repository.get(
+                RenalDoseContentKey(
+                    medication_id=medication_id,
+                    regimen_id=exact_regimen_id,
+                    content_version=exact_content_version,
                 )
             )
-            validation.is_valid = False
 
-        if validation.is_valid is not True:
-            return RenalDoseUseCaseResult(
-                validation=validation,
-                rule_result=_incomplete_result(
-                    patient=patient,
-                    order=medication_order,
-                    evaluated_at=evaluated_at,
+            failure_stage = "content_validation"
+            medication_validation = validate_medication_order_sufficiency(
+                order=medication_order,
+                regimen_identifier=regimen_id,
+                expected_medication_system=self._medication_identifier_system,
+                expected_medication_code=content.medication.id,
+                expected_regimen_identifier=content.regimen.id,
+                require_route=True,
+                require_dose=True,
+                require_frequency=True,
+                require_indication=bool(content.regimen.indication_ids),
+                require_infusion_duration=content.regimen.infusion_duration is not None,
+            )
+            validation = _combine_validation(validation, medication_validation)
+            if content.regimen.formulation_id is not None and formulation_id is None:
+                validation.issues.append(
+                    _error(
+                        code="missing_required_formulation_identifier",
+                        message="A formulation identifier is required for the selected regimen.",
+                        field_path="formulation_id",
+                    )
+                )
+                validation.is_valid = False
+
+            if validation.is_valid is not True:
+                return RenalDoseUseCaseResult(
                     validation=validation,
-                ),
+                    rule_result=_incomplete_result(
+                        patient=patient,
+                        order=medication_order,
+                        evaluated_at=evaluated_at,
+                        validation=validation,
+                    ),
+                )
+
+            failure_stage = "context_assembly"
+            context = RenalDoseEvaluationContext(
+                patient=patient,
+                serum_creatinine_result=serum_creatinine_result,
+                supplied_weight=patient.actual_body_weight,
+                weight_type=weight_type,
+                medication_order=medication_order,
+                regimen_id=regimen_id,
+                formulation_id=formulation_id,
+                renal_function_stable=renal_function_stable,
+                renal_replacement_therapy=renal_replacement_therapy,
+                requested_content_version=requested_content_version,
+                evaluation_date=evaluation_date,
+                evaluated_at=evaluated_at,
             )
 
-        context = RenalDoseEvaluationContext(
-            patient=patient,
-            serum_creatinine_result=serum_creatinine_result,
-            supplied_weight=patient.actual_body_weight,
-            weight_type=weight_type,
-            medication_order=medication_order,
-            regimen_id=regimen_id,
-            formulation_id=formulation_id,
-            renal_function_stable=renal_function_stable,
-            renal_replacement_therapy=renal_replacement_therapy,
-            requested_content_version=requested_content_version,
-            evaluation_date=evaluation_date,
-            evaluated_at=evaluated_at,
-        )
-        renal_function = calculate_cockcroft_gault(
-            patient=patient,
-            serum_creatinine_result=serum_creatinine_result,
-            weight=context.supplied_weight,
-            weight_type=weight_type,
-            evaluation_date=evaluation_date,
-            calculated_at=evaluated_at,
-        )
-        rule_result = self._rule_engine.evaluate(context, renal_function, content)
-        if rule_result.renal_function_result is None:
-            rule_result.renal_function_result = renal_function
-        if rule_result.patient_id is None:
-            rule_result.patient_id = medication_order.patient_id or patient.patient_id
-        if rule_result.encounter_id is None:
-            rule_result.encounter_id = medication_order.encounter_id
-        if rule_result.evaluated_at is None:
-            rule_result.evaluated_at = evaluated_at
+            failure_stage = "renal_calculation"
+            renal_function = calculate_cockcroft_gault(
+                patient=patient,
+                serum_creatinine_result=serum_creatinine_result,
+                weight=context.supplied_weight,
+                weight_type=weight_type,
+                evaluation_date=evaluation_date,
+                calculated_at=evaluated_at,
+            )
 
-        return RenalDoseUseCaseResult(validation=validation, rule_result=rule_result)
+            failure_stage = "rule_evaluation"
+            rule_result = self._rule_engine.evaluate(context, renal_function, content)
+            if rule_result.renal_function_result is None:
+                rule_result.renal_function_result = renal_function
+            if rule_result.patient_id is None:
+                rule_result.patient_id = medication_order.patient_id or patient.patient_id
+            if rule_result.encounter_id is None:
+                rule_result.encounter_id = medication_order.encounter_id
+            if rule_result.evaluated_at is None:
+                rule_result.evaluated_at = evaluated_at
+
+            return RenalDoseUseCaseResult(validation=validation, rule_result=rule_result)
+        except ValidationError:
+            return _failed_use_case_result(
+                patient=patient,
+                order=medication_order,
+                regimen_id=regimen_id,
+                requested_content_version=requested_content_version,
+                evaluated_at=evaluated_at,
+                validation=validation,
+                failure_stage=failure_stage,
+                failure_code="validation_boundary_failure",
+                summary="An internal validation boundary failed.",
+                content=content,
+                renal_function=renal_function,
+            )
+        except ContentNotFound:
+            return _failed_use_case_result(
+                patient=patient,
+                order=medication_order,
+                regimen_id=regimen_id,
+                requested_content_version=requested_content_version,
+                evaluated_at=evaluated_at,
+                validation=validation,
+                failure_stage=failure_stage,
+                failure_code="content_not_found",
+                summary="Required renal-dose content could not be retrieved.",
+                content=content,
+                renal_function=renal_function,
+            )
+        except CalculationError:
+            return _failed_use_case_result(
+                patient=patient,
+                order=medication_order,
+                regimen_id=regimen_id,
+                requested_content_version=requested_content_version,
+                evaluated_at=evaluated_at,
+                validation=validation,
+                failure_stage=failure_stage,
+                failure_code="calculation_failure",
+                summary="Renal calculation failed after validation.",
+                content=content,
+                renal_function=renal_function,
+            )
+        except Exception:
+            failure_code, summary = _unexpected_failure(failure_stage)
+            return _failed_use_case_result(
+                patient=patient,
+                order=medication_order,
+                regimen_id=regimen_id,
+                requested_content_version=requested_content_version,
+                evaluated_at=evaluated_at,
+                validation=validation,
+                failure_stage=failure_stage,
+                failure_code=failure_code,
+                summary=summary,
+                content=content,
+                renal_function=renal_function,
+            )
 
 
 def _initial_validation(
@@ -362,6 +434,88 @@ def _incomplete_result(
             "validation_issue_count": len(validation.issues),
             "validation_issue_codes": codes,
         },
+    )
+
+
+def _failed_use_case_result(
+    *,
+    patient: Patient,
+    order: MedicationOrder,
+    regimen_id: object,
+    requested_content_version: object,
+    evaluated_at: object,
+    validation: ValidationResult,
+    failure_stage: str,
+    failure_code: str,
+    summary: str,
+    content: RenalDoseContent | None,
+    renal_function: RenalFunctionResult | None,
+) -> RenalDoseUseCaseResult:
+    medication = getattr(order, "medication", None)
+    medication_id = _safe_nonblank_string(getattr(medication, "code", None))
+    content_version = (
+        _safe_nonblank_string(content.content_version) if content is not None else None
+    )
+    rule_id = _safe_nonblank_string(content.rule_id) if content is not None else None
+
+    return RenalDoseUseCaseResult(
+        validation=validation,
+        rule_result=RuleResult(
+            rule_id=rule_id,
+            patient_id=(
+                _safe_nonblank_string(getattr(order, "patient_id", None))
+                or _safe_nonblank_string(getattr(patient, "patient_id", None))
+            ),
+            encounter_id=_safe_nonblank_string(getattr(order, "encounter_id", None)),
+            status=ResultStatus.FAILED,
+            applied=False,
+            passed=None,
+            summary=summary,
+            renal_function_result=renal_function,
+            evaluated_at=evaluated_at if isinstance(evaluated_at, datetime) else None,
+            supporting_data={
+                "outcome_category": "failed",
+                "failure_code": failure_code,
+                "failure_stage": failure_stage,
+                "medication_id": medication_id,
+                "regimen_id": _safe_nonblank_string(regimen_id),
+                "requested_content_version": _safe_nonblank_string(
+                    requested_content_version
+                ),
+                "content_version": content_version,
+            },
+        ),
+    )
+
+
+def _safe_nonblank_string(value: object) -> str | None:
+    return value if isinstance(value, str) and bool(value) else None
+
+
+def _unexpected_failure(failure_stage: str) -> tuple[str, str]:
+    if failure_stage in {"initial_validation", "content_validation"}:
+        return (
+            "unexpected_validation_failure",
+            "An unexpected internal validation failure occurred.",
+        )
+    if failure_stage == "content_repository":
+        return (
+            "unexpected_content_repository_failure",
+            "The renal-dose content repository failed unexpectedly.",
+        )
+    if failure_stage == "renal_calculation":
+        return (
+            "unexpected_calculation_failure",
+            "Renal calculation failed unexpectedly.",
+        )
+    if failure_stage == "rule_evaluation":
+        return (
+            "unexpected_rule_failure",
+            "Renal-dose rule evaluation failed unexpectedly.",
+        )
+    return (
+        "unexpected_application_failure",
+        "The renal-dose evaluation failed because of an internal application error.",
     )
 
 
