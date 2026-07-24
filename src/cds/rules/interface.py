@@ -4,9 +4,9 @@ from __future__ import annotations
 
 from typing import Protocol, runtime_checkable
 
-from cds.app.context import RenalDoseEvaluationContext
 from cds.domain.outputs import RenalFunctionResult, RuleResult
 from cds.repositories.renal_content import RenalDoseContent
+from cds.rules.context import RenalDoseEvaluationContext
 
 __all__ = ["RenalDoseRule"]
 
