@@ -234,14 +234,16 @@ def _response_exit_behavior(response: dict[str, JsonValue]) -> tuple[int, str | 
     if status == "not_applicable":
         return (
             CLI_EXIT_UNSUPPORTED,
-            "Unsupported request: the structured result was not applicable to the supplied context.",
+            "Unsupported request: the structured result was not applicable to the supplied "
+            "context.",
         )
     if status == "incomplete":
         issue_codes = _validation_issue_codes(response)
         if any("unit" in code for code in issue_codes):
             return (
                 CLI_EXIT_INPUT_ERROR,
-                "Input error: structured validation rejected a missing, unsupported, or ambiguous unit.",
+                "Input error: structured validation rejected a missing, unsupported, or "
+                "ambiguous unit.",
             )
         if "unsupported_medication_system" in issue_codes:
             return (
@@ -259,7 +261,8 @@ def _response_exit_behavior(response: dict[str, JsonValue]) -> tuple[int, str | 
         if failure_code == "content_not_found":
             return (
                 CLI_EXIT_UNSUPPORTED,
-                "Unsupported request: no exact medication, regimen, and content-version match was available.",
+                "Unsupported request: no exact medication, regimen, and content-version match "
+                "was available.",
             )
         if failure_stage in {"content_repository", "content_validation"}:
             return (
