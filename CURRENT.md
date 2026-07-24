@@ -21,27 +21,29 @@ Use only the named files and task-specified commands. Do not install missing tes
 
 ## Roadmap position
 
-- Days 1–77 are complete.
-- **Day 77 — Weekly review: run a safety failure drill** is implemented.
-- The next sequential task is **Day 78 — Review the architecture overview**.
+- Days 1–78 are complete.
+- **Day 78 — Review the architecture overview** is implemented.
+- The next sequential task is **Day 79 — Write the clinical-content workflow**.
 
 ## Current state
 
-- `tests/integration/test_safety_failure_drill.py` exercises the existing CLI and application
-  failure boundaries as one bounded synthetic safety drill.
-- Corrupted JSON is rejected before mapping or application invocation and emits no canonical output.
-- An unsupported medication coding system fails closed before content access or rule evaluation and
-  produces an incomplete result with no recommendation.
-- A corrupted-content repository failure is converted to a structured failed result and the CLI
-  content-failure exit path.
-- An unexpected rule failure is converted to a structured failed result and the CLI system-failure
-  exit path while preserving the existing renal audit result behavior.
-- The drill asserts that failed or unsupported paths contain no dosing recommendation and that CLI
-  diagnostics expose no traceback, synthetic patient identifier, or injected sensitive payload
-  detail.
-- The canonical structured response contract was not changed; identifiers already included in that
-  contract remain separate from sanitized diagnostic output.
-- No clinical calculation, validation behavior, content, recommendation behavior, public interface,
+- `ARCHITECTURE.md` now describes the implemented package map and the executable dependency
+  allowlist enforced by `tests/contract/test_architecture_boundaries.py`.
+- The dependency section distinguishes the practical inward flow from the exact
+  layer-to-layer import permissions used by the current prototype.
+- The processing flow now follows the implemented CLI request DTO, request mapper, structural and
+  sufficiency validation, exact repository lookup, context assembly, pure renal calculation, rule
+  engine, application result wrapper, response mapper, canonical serializer, and presentation-only
+  summary.
+- The standard result shape is documented as `RenalDoseUseCaseResult` with top-level
+  `validation` and `rule_result` objects, exact result statuses, tri-state fields, audit links, and
+  canonical JSON behavior.
+- Current prototype placements are explicit: typed content models live at the repository boundary,
+  the canonical evaluation context lives in `rules.context`, and `app.context` is a compatibility
+  export. The CLI DTO lives in `app.dto`, and the CLI remains dependency injected.
+- The architecture overview contains no implementation diary, feature history, clinical-content
+  expansion, public-contract change, or new abstraction.
+- No clinical calculation, validation behavior, content, recommendation behavior, interface,
   serialization contract, dependency, or logging configuration changed.
 
 ## Verification
@@ -51,44 +53,46 @@ Use only the named files and task-specified commands. Do not install missing tes
 - No repository clone, dependency installation, substitute runner, CI, or GitHub Actions
   investigation was attempted.
 - GitHub was authoritative for source retrieval and final repository changes.
-- A bounded verification checkout was created at `/tmp/cds-platform` containing the new focused test
-  module.
+- A bounded verification checkout was created at `/tmp/cds-platform` containing `ARCHITECTURE.md`,
+  `CURRENT.md`, and the focused architecture contract test.
 - Pytest was available in the supplied environment.
-- Syntax verification command:
-  `python -m py_compile /tmp/cds-platform/tests/integration/test_safety_failure_drill.py`
-- Syntax verification result: passed.
-- Structural line-length check result: no lines exceeded the configured 100-character limit.
+- Documentation structure command:
+  `python /tmp/cds-platform/verify_architecture_doc.py`
+- Documentation structure result: passed; required sections, implemented result keys, approved
+  deviations, prototype warning, and 100-character line-length limit were present.
 - Focused collection command:
-  `PYTHONPATH=src python -m pytest tests/integration/test_safety_failure_drill.py --collect-only -q`
-- Focused collection result: blocked because the supplied environment had no repository checkout and
-  the bounded checkout did not contain the imported `cds` package (`ModuleNotFoundError: cds`).
-- No focused execution, full-suite, lint, type-check, CI, or GitHub Actions passing claim is made.
+  `PYTHONPATH=src python -m pytest tests/contract/test_architecture_boundaries.py --collect-only -q`
+- Focused collection result: 3 tests collected.
+- Focused execution was not run because the bounded checkout intentionally did not reconstruct the
+  full `src/cds` package required by the contract test.
+- No full-suite, lint, type-check, CI, or GitHub Actions passing claim is made.
 
 ## Files changed
 
-- `tests/integration/test_safety_failure_drill.py` — added four collected test cases covering corrupt
-  input, unsupported context, corrupted content access, and unexpected rule failure through the CLI
-  and application boundaries.
-- `CURRENT.md` — replaced with the Day 77 state and Day 78 next action.
+- `ARCHITECTURE.md` — reconciled stable boundaries with implemented modules, dependency permissions,
+  processing flow, result shape, and approved prototype deviations.
+- `CURRENT.md` — replaced with the Day 78 state and Day 79 next action.
 
 ## Additional files inspected
 
-- `docs/TASK_TEMPLATE.md` and `CDS_12_Week_Daily_Project_Plan.html` — task structure and exact Day 77
-  and Day 78 roadmap wording.
-- `AGENTS.md`, `docs/SAFETY_INVARIANTS.md`, and the prior `CURRENT.md` — bounded execution, prototype,
-  PHI exclusion, fail-closed, verification, and close-procedure requirements.
-- `tests/integration/test_renal_safety_invariants.py` — existing integration fixture conventions and
-  adjacent Day 75 safety assertions.
-- `src/cds/app/renal_dose.py` and `tests/unit/app/test_renal_dose.py` — structured application failure
-  mapping, failure stages, and established unit coverage.
-- `src/cds/interfaces/cli.py` and `tests/unit/interfaces/test_cli.py` — sanitized CLI diagnostics,
-  exit-code mapping, and existing interface-level failure behavior.
-- `src/cds/mappers/renal_dose_request.py` and `src/cds/mappers/renal_dose_response.py` — exact request
-  wire fields and canonical response serialization used by the integration drill.
-- `src/cds/repositories/yaml_renal_content.py` and
-  `src/cds/content/renal/cefepime_iv_2_g_every_8_hours_over_30_minutes.yaml` — repository-boundary and
-  exact content-field conventions needed to model corrupted content access without changing clinical
-  content.
+- `docs/TASK_TEMPLATE.md` and `CDS_12_Week_Daily_Project_Plan.html` — task structure and exact
+  Day 78 and Day 79 roadmap wording.
+- `AGENTS.md`, `docs/SAFETY_INVARIANTS.md`, and the prior `CURRENT.md` — source hierarchy, bounded
+  execution, safety constraints, verification rules, and close procedure.
+- `tests/contract/test_architecture_boundaries.py` — executable layer allowlist and pure-layer I/O
+  restrictions that the architecture overview must describe.
+- `src/cds/app/dto.py`, `src/cds/app/context.py`, and `src/cds/app/renal_dose.py` — request DTO,
+  compatibility context export, orchestration order, result wrapper, and structured failure mapping.
+- `src/cds/domain/enums.py`, `src/cds/domain/outputs.py`, and `src/cds/validation/models.py` — exact
+  status values, standard result fields, and validation result shape.
+- `src/cds/services/renal.py`, `src/cds/rules/context.py`, and `src/cds/rules/engine.py` — pure
+  calculation boundary, canonical evaluation context, and deterministic exact-rule evaluation.
+- `src/cds/repositories/renal_content.py` and `src/cds/repositories/yaml_renal_content.py` — typed
+  content ownership, exact-key repository contract, file boundary, schema conversion, and lookup
+  behavior.
+- `src/cds/mappers/renal_dose_request.py`, `src/cds/mappers/renal_dose_response.py`,
+  `src/cds/interfaces/cli.py`, and `src/cds/utils/serialization.py` — external mapping, top-level
+  response keys, CLI responsibilities, and canonical serialization behavior.
 
 ## Active constraints
 
@@ -120,12 +124,12 @@ Use only the named files and task-specified commands. Do not install missing tes
 - The famotidine adult minimum-weight boundary is not currently enforced in the full flow.
 - The production CLI remains a dependency-injected boundary without a standalone composition root.
 - The logging policy is not yet wired into application or interface failure paths.
-- Focused Day 77 pytest execution remains unverified in this environment because no complete checkout
-  or materialized application import graph was available.
+- Focused Day 77 pytest execution remains unverified in this environment because no complete
+  checkout or materialized application import graph was available.
 - Full-repository verification was not available in the supplied execution context.
 
 ## Next exact action
 
-> Day 78 — reconcile `ARCHITECTURE.md` with the implemented modules, dependency direction,
-> processing flow, standard result shape, and approved deviations without adding implementation
-> history.
+> Day 79 — document clinical-content source selection, extraction, review, versioning, approval
+> status, supersession, rollback, and independent verification without changing content eligibility
+> or clinical scope.
