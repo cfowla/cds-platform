@@ -166,6 +166,8 @@ These blockers prevent an honest `go`, changelog update, or prototype milestone 
   classes, evidence gaps, remediation order, and next action.
 - `BACKLOG.md` - records unresolved release-gate decisions and verification work.
 - `docs/PROTOTYPE_RELEASE_REMEDIATION_PLAN.md` - defines bounded repair packages and acceptance gates.
+- `docs/PROTOTYPE_RELEASE_CHECKLIST.md` - records the latest failed candidate as an informational
+  no-go without completing any unchecked gate.
 - `AGENTS.md` - adds mandatory release-gate evidence capture rules.
 - `docs/TASK_TEMPLATE.md` - adds release/checkpoint verification evidence requirements.
 
