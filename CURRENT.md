@@ -4,9 +4,9 @@ This file is replaced after every task. It is not an append-only diary.
 
 ## Repository execution mode
 
-Use the repository checkout supplied by the execution environment. If no checkout is available,
-use the GitHub connector to materialize only the named files and concretely required imports in a
-bounded verification checkout.
+Use the repository checkout supplied by the execution environment. If no checkout is available, use
+the GitHub connector to materialize only named files and concretely required imports in a bounded
+verification checkout.
 
 GitHub is the authoritative source and destination for repository files.
 
@@ -23,73 +23,57 @@ Use only the named files and task-specified commands. Do not install missing tes
 ## Roadmap position
 
 - Days 1-82 are complete.
-- **Day 82 - Create the prototype release checklist** is implemented.
-- The next sequential task is **Day 83 - Tag the prototype milestone**.
+- **Day 83 - Tag the prototype milestone** was attempted against candidate commit
+  `ffbe2e507df76d23425371755945aa9c442a0300`.
+- Day 83 is not complete because the prototype release checklist does not record an explicit `go`.
+- No changelog, release tag, release metadata, clinical content, code, tests, or public contract
+  changed.
 
 ## Current state
 
-- `docs/PROTOTYPE_RELEASE_CHECKLIST.md` now defines the evidence and decision record required before
-  creating a nonclinical prototype milestone tag.
-- The checklist begins with the prototype-only and synthetic or properly de-identified data warning.
-- It records the exact candidate commit, package and environment versions, release custodian, and
-  verification timestamps.
-- Full verification includes the configured pytest, Ruff, and synthetic CLI walkthrough commands,
-  with exact result and evidence recording requirements.
-- Independent calculation review is separated from software self-test and uses the renal calculator
-  specification and existing arithmetic verification record as supporting evidence.
-- Clinical-content review is recorded independently for cefepime, piperacillin-tazobactam, and
-  famotidine by exact medication, regimen, content, and rule identifiers.
-- Draft and retired content remain ineligible, and a missing qualified independent reviewer remains
-  a blocking no-go condition.
-- The checklist covers fail-closed behavior, PHI and diagnostic controls, provenance, version
-  capture, known limitations, and an explicit go or no-go decision.
-- Tag creation is explicitly deferred to a separate bounded task and is permitted only after the
-  checklist records an explicit go decision for the unchanged candidate commit.
-- No Python behavior, test, content document, content review status, release eligibility, version,
-  tag, dependency, interface, public contract, or clinical scope changed.
+- Package version `0.1.0` was confirmed from `pyproject.toml`.
+- The release checklist remains an unexecuted template with unchecked required items and placeholder
+  candidate, reviewer, evidence, content-version, limitation-disposition, and decision fields.
+- Independent calculation approval is not recorded for the exact candidate.
+- Independent clinical-content review is not recorded for every selected exact content version.
+- A named qualified independent content reviewer remains unavailable.
+- The exact full-suite, Ruff, and CLI walkthrough evidence required by the checklist is not
+  available.
+- The release decision is therefore `no-go`.
+- The checklist requires an explicit `go` before a changelog or release record is updated and before
+  a prototype milestone tag is created.
+- No tag operation was attempted.
 
 ## Verification
 
-- The required `git rev-parse --show-toplevel` probe was run once from `/mnt/data` and did not
-  identify a repository checkout.
-- No repository clone, dependency installation, substitute runner, CI, GitHub Actions investigation,
-  or tag operation was attempted.
-- GitHub was authoritative for source retrieval and final repository changes.
-- A bounded verification checkout was created at `/tmp/cds-platform` containing the new checklist,
-  updated active-state note, and a task-specific documentation checker.
-- Documentation command:
-  `python /tmp/cds-platform/verify_prototype_release_checklist.py`
-- Documentation result: passed; required safety, verification, calculation-review, content-review,
-  PHI-control, provenance, version-capture, limitation, decision, and tagging-handoff sections were
-  present, configured commands were exact, prohibited completion claims were absent, and lines did
-  not exceed 100 characters.
-- Pytest was not required or run because the task changed documentation only and did not change
-  executable behavior, clinical content, content eligibility, or a serialized software contract.
-- No full-suite, lint, type-check, CI, GitHub Actions, release-readiness, or tag passing claim is
-  made.
+- `git rev-parse --show-toplevel` was run once from `/mnt/data`; no repository checkout was present.
+- No repository clone, broad filesystem search, dependency installation, CI investigation, or
+  GitHub Actions investigation was attempted.
+- `python --version` reported `Python 3.13.5`.
+- `python -m pytest --version` reported `pytest 9.0.2`.
+- The full pytest suite was not run because no complete repository checkout was available.
+- `python -m ruff --version` failed because Ruff is not installed in the supplied environment.
+- Ruff was not installed because the repository instructions prohibit installing missing
+  dependencies in this constrained environment.
+- The synthetic CLI walkthrough was not run because the complete repository and import graph were
+  unavailable.
+- No full-suite, lint, CLI, release-readiness, checklist-completion, or tag passing claim is made.
 
 ## Files changed
 
-- `docs/PROTOTYPE_RELEASE_CHECKLIST.md` - added the reusable evidence, no-go, and tagging-handoff
-  checklist for one exact nonclinical prototype candidate.
-- `CURRENT.md` - replaced with the Day 82 state and Day 83 next action.
+- `CURRENT.md` - replaced with the Day 83 no-go outcome, exact attempted candidate, verification
+  limitations, and the next release-gate action.
 
 ## Additional files inspected
 
-- `AGENTS.md`, `docs/TASK_TEMPLATE.md`, and `CDS_12_Week_Daily_Project_Plan.html` - repository
-  workflow, task structure, and exact Day 82 and Day 83 roadmap wording.
-- `docs/SAFETY_INVARIANTS.md` and `docs/DOMAIN_CONVENTIONS.md` - prototype warning, PHI boundary,
-  validation order, fail-closed behavior, units, result states, provenance, and serialization rules.
-- `docs/CLINICAL_CONTENT_WORKFLOW.md` - content lifecycle, independent reviewer requirements,
-  exact-version eligibility, supersession, rollback, and review-record requirements.
-- `docs/RENAL_CALCULATOR_SPEC.md` and `docs/RENAL_CALCULATOR_VERIFICATION.md` - normative equation,
-  Decimal and unrounded-value contract, independent arithmetic method, evidence, and limitations.
-- `docs/MODEL_INTERFACE_REFERENCE.md` - request and response contracts, CLI behavior, canonical
-  serialization, current interface limitations, and reproducible walkthrough command.
-- `README.md` and `pyproject.toml` - configured development commands, package version, Python
-  support, dependencies, pytest settings, Ruff settings, and prototype warning.
-- `src/cds/utils/logging.py` was inspected through its introducing commit because the PHI section
-  needed the implemented allowlisted diagnostic boundary and its current wiring limitation.
+- `AGENTS.md` - repository execution, bounded-checkout, verification, and close procedures.
+- `docs/TASK_TEMPLATE.md` - bounded task structure and release-task close requirements.
+- `CDS_12_Week_Daily_Project_Plan.html` - exact Day 83 roadmap wording.
+- `docs/SAFETY_INVARIANTS.md` - prototype warning, PHI boundary, and fail-closed constraints.
+- `docs/PROTOTYPE_RELEASE_CHECKLIST.md` - required evidence, reviewer, decision, and tagging gates.
+- `pyproject.toml` - package version, Python requirement, pytest configuration, and Ruff
+  configuration.
+- Recent repository commits - exact candidate commit at the start of this release-gate attempt.
 
 ## Active constraints
 
@@ -111,28 +95,32 @@ Use only the named files and task-specified commands. Do not install missing tes
 - Preserve unrounded calculated values for matching and auditability.
 - Do not place patient identifiers, clinical payloads, exception messages, or tracebacks in
   diagnostic logs or CLI diagnostics.
-- Do not create a prototype tag unless the release checklist has an explicit go decision for the
+- Do not create a prototype tag unless the release checklist has an explicit `go` decision for the
   exact unchanged candidate commit and selected content versions.
 
 ## Blockers
 
-- A named independent content reviewer has not been identified.
-- Draft content review eligibility remains separate from software contract-test eligibility.
+- No complete development checkout was available for the required full verification commands.
+- Ruff is not installed in the supplied environment.
+- The full pytest suite and synthetic CLI walkthrough remain unverified for this candidate.
+- A named independent calculation reviewer and approved exact-candidate record are not present.
+- A named qualified independent clinical-content reviewer has not been identified.
+- Exact reviewed content versions and reviewer metadata are not recorded in the release checklist.
+- PHI review, limitation dispositions, release custodian approval, and the final decision record are
+  incomplete.
 - The current schema has no explicit supersession relationship or automatic active-version registry.
 - Conflicting supplied versus declared body-weight type is not currently rejected before
   calculation.
 - The famotidine adult minimum-weight boundary is not currently enforced in the full flow.
 - The production CLI remains a dependency-injected boundary without a standalone composition root.
 - The logging policy is not yet wired into application or interface failure paths.
-- Focused Day 77 pytest execution remains unverified in this environment because no complete
-  checkout or materialized application import graph was available.
-- Full-repository verification was not available in the supplied execution context.
-- These blockers prevent an honest release-readiness or tag claim until the checklist records their
-  resolution or explicit accepted nonclinical disposition.
+
+These blockers prevent an honest `go`, changelog update, or prototype milestone tag.
 
 ## Next exact action
 
-> Day 83 - execute `docs/PROTOTYPE_RELEASE_CHECKLIST.md` in a complete development environment,
-> capture the exact software and content versions, update the release record, and create the
-> prototype milestone tag only if every required item is complete and the decision is explicitly
-> `go`; otherwise stop without tagging and record the blocking evidence.
+> In a complete development checkout, select the exact candidate commit, run the configured pytest,
+> Ruff, and synthetic CLI walkthrough commands, complete independent calculation and
+> clinical-content review for exact versions, record PHI and limitation dispositions in
+> `docs/PROTOTYPE_RELEASE_CHECKLIST.md`, and create and verify the prototype milestone tag only if
+> the unchanged candidate receives an explicit `go`.
