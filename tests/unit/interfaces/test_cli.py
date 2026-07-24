@@ -12,7 +12,15 @@ from pathlib import Path
 import pytest
 
 from cds.domain.enums import Sex, WeightType
-from cds.interfaces.cli import main, run_renal_dose_cli
+from cds.interfaces.cli import (
+    CLI_EXIT_CONTENT_FAILURE,
+    CLI_EXIT_INPUT_ERROR,
+    CLI_EXIT_SUCCESS,
+    CLI_EXIT_SYSTEM_FAILURE,
+    CLI_EXIT_UNSUPPORTED,
+    main,
+    run_renal_dose_cli,
+)
 from cds.mappers.renal_dose_request import RequestMappingError
 
 
@@ -37,6 +45,11 @@ class _ConfiguredUseCase:
     def evaluate(self, **kwargs: object) -> _UseCaseResult:
         self.calls.append(kwargs)
         return self.result
+
+
+class _RaisingUseCase:
+    def evaluate(self, **kwargs: object) -> _UseCaseResult:
+        raise RuntimeError("sensitive synthetic payload detail")
 
 
 def _payload() -> dict[str, object]:
@@ -116,7 +129,7 @@ def test_main_writes_optional_output_path_without_writing_stdout(tmp_path: Path)
         stdout=stdout,
     )
 
-    assert exit_code == 0
+    assert exit_code == CLI_EXIT_SUCCESS
     assert len(use_case.calls) == 1
     assert stdout.getvalue() == ""
     assert output_path.read_text(encoding="utf-8").endswith("\n")
@@ -170,7 +183,7 @@ def test_main_writes_optional_summary_to_stderr_without_contaminating_json(
         stderr=stderr,
     )
 
-    assert exit_code == 0
+    assert exit_code == CLI_EXIT_SUCCESS
     response = json.loads(stdout.getvalue())
     assert response["rule_result"]["status"] == "success_with_warnings"
     assert response["rule_result"]["renal_function_result"]["value"]["value"] == (
@@ -211,7 +224,7 @@ def test_summary_marks_missing_result_fields_without_inventing_values(tmp_path: 
         stderr=stderr,
     )
 
-    assert exit_code == 0
+    assert exit_code == CLI_EXIT_INPUT_ERROR
     assert json.loads(stdout.getvalue())["rule_result"]["status"] == "incomplete"
     assert stderr.getvalue() == (
         "PROTOTYPE — not for direct clinical use; use synthetic or properly de-identified data "
@@ -221,6 +234,7 @@ def test_summary_marks_missing_result_fields_without_inventing_values(tmp_path: 
         "Recommendation: not present in structured result.\n"
         "Warnings: none recorded.\n"
         "Evidence: none recorded.\n"
+        "Input error: structured validation did not permit renal-dose evaluation.\n"
     )
 
 
@@ -237,3 +251,196 @@ def test_command_requires_application_times_before_use_case_invocation(
         run_renal_dose_cli(_write_input(tmp_path, payload), use_case=use_case, stdout=StringIO())
 
     assert use_case.calls == []
+
+
+def test_main_maps_malformed_json_to_sanitized_input_error(tmp_path: Path) -> None:
+    input_path = tmp_path / "invalid.json"
+    input_path.write_text('{"patient_id":"sensitive-synthetic-id",', encoding="utf-8")
+    use_case = _ConfiguredUseCase()
+    stdout = StringIO()
+    stderr = StringIO()
+
+    exit_code = main([str(input_path)], use_case=use_case, stdout=stdout, stderr=stderr)
+
+    assert exit_code == CLI_EXIT_INPUT_ERROR
+    assert use_case.calls == []
+    assert stdout.getvalue() == ""
+    assert "valid JSON object" in stderr.getvalue()
+    assert "sensitive-synthetic-id" not in stderr.getvalue()
+    assert "Traceback" not in stderr.getvalue()
+
+
+def test_main_maps_request_mapping_error_without_exception_details(tmp_path: Path) -> None:
+    payload = _payload()
+    payload["weight_value"] = 70.0
+    use_case = _ConfiguredUseCase()
+    stdout = StringIO()
+    stderr = StringIO()
+
+    exit_code = main(
+        [str(_write_input(tmp_path, payload))],
+        use_case=use_case,
+        stdout=stdout,
+        stderr=stderr,
+    )
+
+    assert exit_code == CLI_EXIT_INPUT_ERROR
+    assert use_case.calls == []
+    assert stdout.getvalue() == ""
+    assert "could not be mapped safely" in stderr.getvalue()
+    assert "weight_value" not in stderr.getvalue()
+    assert "Traceback" not in stderr.getvalue()
+
+
+def test_main_maps_ambiguous_unit_result_to_input_exit_and_keeps_json(tmp_path: Path) -> None:
+    use_case = _ConfiguredUseCase()
+    use_case.result = _UseCaseResult(
+        validation={
+            "is_valid": False,
+            "issues": [
+                {
+                    "code": "unsupported_serum_creatinine_unit",
+                    "severity": "error",
+                    "message": "Only exact mg/dL is supported.",
+                }
+            ],
+        },
+        rule_result={"status": "incomplete", "recommendations": []},
+    )
+    stdout = StringIO()
+    stderr = StringIO()
+
+    exit_code = main(
+        [str(_write_input(tmp_path))],
+        use_case=use_case,
+        stdout=stdout,
+        stderr=stderr,
+    )
+
+    assert exit_code == CLI_EXIT_INPUT_ERROR
+    assert json.loads(stdout.getvalue())["rule_result"]["status"] == "incomplete"
+    assert "ambiguous unit" in stderr.getvalue()
+    assert "Only exact mg/dL" not in stderr.getvalue()
+
+
+def test_main_maps_absent_exact_content_to_unsupported_exit(tmp_path: Path) -> None:
+    use_case = _ConfiguredUseCase()
+    use_case.result = _UseCaseResult(
+        validation={"is_valid": True, "issues": []},
+        rule_result={
+            "status": "failed",
+            "recommendations": [],
+            "supporting_data": {
+                "failure_code": "content_not_found",
+                "failure_stage": "content_repository",
+            },
+        },
+    )
+    stdout = StringIO()
+    stderr = StringIO()
+
+    exit_code = main(
+        [str(_write_input(tmp_path))],
+        use_case=use_case,
+        stdout=stdout,
+        stderr=stderr,
+    )
+
+    assert exit_code == CLI_EXIT_UNSUPPORTED
+    assert json.loads(stdout.getvalue())["rule_result"]["recommendations"] == []
+    assert "no exact medication, regimen, and content-version match" in stderr.getvalue()
+
+
+def test_main_maps_content_repository_failure_to_content_exit(tmp_path: Path) -> None:
+    use_case = _ConfiguredUseCase()
+    use_case.result = _UseCaseResult(
+        validation={"is_valid": True, "issues": []},
+        rule_result={
+            "status": "failed",
+            "recommendations": [],
+            "supporting_data": {
+                "failure_code": "unexpected_content_repository_failure",
+                "failure_stage": "content_repository",
+            },
+        },
+    )
+    stdout = StringIO()
+    stderr = StringIO()
+
+    exit_code = main(
+        [str(_write_input(tmp_path))],
+        use_case=use_case,
+        stdout=stdout,
+        stderr=stderr,
+    )
+
+    assert exit_code == CLI_EXIT_CONTENT_FAILURE
+    assert json.loads(stdout.getvalue())["rule_result"]["recommendations"] == []
+    assert "Content failure" in stderr.getvalue()
+
+
+def test_main_maps_structured_system_failure_to_system_exit(tmp_path: Path) -> None:
+    use_case = _ConfiguredUseCase()
+    use_case.result = _UseCaseResult(
+        validation={"is_valid": True, "issues": []},
+        rule_result={
+            "status": "failed",
+            "recommendations": [],
+            "supporting_data": {
+                "failure_code": "calculation_failure",
+                "failure_stage": "renal_calculation",
+            },
+        },
+    )
+    stdout = StringIO()
+    stderr = StringIO()
+
+    exit_code = main(
+        [str(_write_input(tmp_path))],
+        use_case=use_case,
+        stdout=stdout,
+        stderr=stderr,
+    )
+
+    assert exit_code == CLI_EXIT_SYSTEM_FAILURE
+    assert json.loads(stdout.getvalue())["rule_result"]["recommendations"] == []
+    assert "returned a failed result" in stderr.getvalue()
+
+
+def test_main_sanitizes_unexpected_interface_failure(tmp_path: Path) -> None:
+    stdout = StringIO()
+    stderr = StringIO()
+
+    exit_code = main(
+        [str(_write_input(tmp_path))],
+        use_case=_RaisingUseCase(),
+        stdout=stdout,
+        stderr=stderr,
+    )
+
+    assert exit_code == CLI_EXIT_SYSTEM_FAILURE
+    assert stdout.getvalue() == ""
+    assert "did not complete safely" in stderr.getvalue()
+    assert "sensitive synthetic payload detail" not in stderr.getvalue()
+    assert "Traceback" not in stderr.getvalue()
+
+
+def test_main_maps_not_applicable_result_to_unsupported_exit(tmp_path: Path) -> None:
+    use_case = _ConfiguredUseCase()
+    use_case.result = _UseCaseResult(
+        validation={"is_valid": True, "issues": []},
+        rule_result={"status": "not_applicable", "recommendations": []},
+    )
+    stdout = StringIO()
+    stderr = StringIO()
+
+    exit_code = main(
+        [str(_write_input(tmp_path))],
+        use_case=use_case,
+        stdout=stdout,
+        stderr=stderr,
+    )
+
+    assert exit_code == CLI_EXIT_UNSUPPORTED
+    assert json.loads(stdout.getvalue())["rule_result"]["status"] == "not_applicable"
+    assert "not applicable" in stderr.getvalue()

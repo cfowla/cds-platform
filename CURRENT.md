@@ -21,29 +21,31 @@ Use only the named files and task-specified commands. Do not install missing tes
 
 ## Roadmap position
 
-- Days 1–68 are complete.
-- **Day 68 — Add human-readable CLI summary** is complete.
-- The next sequential task is **Day 69 — Add CLI error handling**.
+- Days 1–69 are complete.
+- **Day 69 — Add CLI error handling** is complete.
+- The next sequential task is **Day 70 — Weekly review: manual CLI walkthrough**.
 
 ## Current state
 
 - `src/cds/interfaces/cli.py` retains canonical JSON as the authoritative renal-dose command output.
-- `main()` adds an optional `--summary` flag.
-- When requested, the human-readable summary is written only to stderr or the caller-supplied
-  summary stream; canonical JSON remains isolated on stdout or at the exact `--output` path.
-- The summary preserves the prototype warning and synthetic or properly de-identified data
-  requirement.
-- The summary presents the existing structured result status, exact unrounded renal value and unit,
-  recommendation text, warning text, and evidence text without calculation, rounding, normalization,
-  fallback selection, or clinical inference.
-- Missing renal or recommendation data is described as absent from the structured result rather than
-  replaced with an invented value or recommendation.
-- Warning and evidence text is selected from the existing canonical validation, rule-result, renal,
-  recommendation, and dose-recommendation structures; duplicate text is suppressed only for display.
+- The CLI exports stable exit-code constants for success, system failure, input error, unsupported
+  request, and content failure.
+- `main()` converts unreadable input, malformed JSON, request-mapping failures, structured incomplete
+  or not-applicable outcomes, exact-content absence, content-repository failures, failed application
+  results, output-write failures, and unexpected interface exceptions into explicit exit behavior.
+- Malformed input and unexpected failures produce sanitized stderr diagnostics without stack traces,
+  raw exception text, source payloads, patient identifiers, or invented recommendations.
+- Structured incomplete, unsupported, content-failure, and system-failure results still preserve the
+  canonical JSON response on stdout or at the exact `--output` path before returning nonzero.
+- Missing or unsupported units remain validation issues and map to the input-error exit without unit
+  inference or conversion.
+- Exact absent medication, regimen, and content-version combinations map to the unsupported exit;
+  unexpected repository or content-validation failures map to the content-failure exit.
+- `--summary` remains presentation-only and isolated from canonical JSON; structured error text is
+  appended to stderr without duplicating the prototype warning.
 - The interface still does not select or load content, configure repositories or rules, validate
   clinical sufficiency, calculate renal function, match rules, choose recommendations, normalize
   units or identifiers, or add clinical interpretation.
-- Comprehensive CLI error-to-exit-code handling remains deferred to Day 69.
 - No clinical scope, supported medication or population, content, calculator, validation, rule,
   use-case, domain-model, mapper, or canonical serialization contract changed.
 
@@ -57,13 +59,12 @@ Use only the named files and task-specified commands. Do not install missing tes
 - A bounded verification checkout was materialized at `/tmp/cds-platform` with the CLI module,
   focused test, existing request and response mapper surfaces, passive DTO and domain dependencies,
   canonical serializer, required package initializers, and `pyproject.toml`.
-- The environment supplied pytest 9.0.2.
 - Focused collection command:
   `PYTHONPATH=src python -m pytest tests/unit/interfaces/test_cli.py --collect-only -q`
-- Collection result: `6 tests collected in 0.02s`.
+- Collection result: `14 tests collected in 0.05s`.
 - Focused test command:
   `PYTHONPATH=src python -m pytest tests/unit/interfaces/test_cli.py -q`
-- Test result: `6 passed in 0.04s`.
+- Test result: `14 passed in 0.08s`.
 - Compile command:
   `python -m compileall -q src/cds/interfaces/cli.py tests/unit/interfaces/test_cli.py`
 - Compile result: completed with no output or error.
@@ -72,32 +73,29 @@ Use only the named files and task-specified commands. Do not install missing tes
 
 ## Files changed
 
-- `src/cds/interfaces/cli.py` — added optional presentation-only summary output on a separate stream
-  while preserving canonical JSON output behavior.
-- `tests/unit/interfaces/test_cli.py` — added focused summary, exact Decimal text, prototype warning,
-  structured-field presentation, missing-result handling, and JSON-stream-separation coverage.
-- `CURRENT.md` — replaced with the Day 68 state and Day 69 next action.
+- `src/cds/interfaces/cli.py` — added explicit exit codes, sanitized exception handling, and
+  structured-result-to-exit classification while preserving canonical JSON and summary behavior.
+- `tests/unit/interfaces/test_cli.py` — added focused malformed-input, mapping, unit, unsupported,
+  content-failure, system-failure, no-stack-trace, and nonzero structured-result coverage.
+- `CURRENT.md` — replaced with the Day 69 state and Day 70 next action.
 
 ## Additional files inspected
 
-- `docs/TASK_TEMPLATE.md` and `CDS_12_Week_Daily_Project_Plan.html` — task structure and Day 68
+- `docs/TASK_TEMPLATE.md` and `CDS_12_Week_Daily_Project_Plan.html` — task structure and Day 69
   roadmap wording.
-- `AGENTS.md` — source hierarchy, bounded-checkout rules, architecture boundaries, verification, and
-  close procedure.
-- `PROJECT_CHARTER.md` and `docs/SAFETY_INVARIANTS.md` — user-facing prototype warning,
-  synthetic-data, traceability, no-inference, and fail-closed constraints.
-- `src/cds/app/renal_dose.py` — exact use-case result structure and application responsibilities.
-- `src/cds/app/dto.py` and `src/cds/mappers/renal_dose_request.py` — existing CLI request and mapping
-  boundaries required by focused test collection and execution.
+- `AGENTS.md` and `docs/SAFETY_INVARIANTS.md` — bounded execution, architecture, prototype warning,
+  fail-closed, no-inference, sensitive-data, and verification constraints.
+- `src/cds/mappers/renal_dose_request.py` — request-mapping error contract and exact wire conversion.
 - `src/cds/mappers/renal_dose_response.py` and `src/cds/utils/serialization.py` — canonical response
-  mapping, exact Decimal strings, deterministic JSON, and presentation input shape.
-- `src/cds/domain/outputs.py`, `src/cds/domain/support.py`, and
-  `src/cds/domain/value_objects.py` — renal, recommendation, warning, evidence, and unit-bearing field
-  names used by the summary presentation.
-- `src/cds/domain/clinical.py` and `src/cds/domain/enums.py` — direct request-mapper dependencies
-  required for focused test collection and execution.
-- `src/cds/interfaces/__init__.py`, `src/cds/interfaces/cli.py`, and
-  `tests/unit/interfaces/test_cli.py` — package convention and focused implementation and tests.
+  and serialization boundaries used by CLI classification and output.
+- `src/cds/app/renal_dose.py`, `src/cds/domain/outputs.py`, and `src/cds/domain/enums.py` — structured
+  status, validation, supporting-data, failure-code, and failure-stage contracts.
+- `src/cds/domain/exceptions.py`, `src/cds/repositories/renal_content.py`, and
+  `tests/unit/app/test_renal_dose.py` — exact-content absence and unexpected repository/system failure
+  semantics needed to distinguish unsupported, content, and system exits.
+- `src/cds/validation/lab.py` — exact missing and unsupported unit issue codes.
+- `src/cds/app/dto.py`, `src/cds/domain/clinical.py`, `src/cds/domain/support.py`, and
+  `src/cds/domain/value_objects.py` — direct imports required for focused test collection.
 - `pyproject.toml` — Python, pytest, and line-length configuration for focused verification.
 
 ## Active constraints
@@ -120,11 +118,11 @@ Use only the named files and task-specified commands. Do not install missing tes
 ## Blockers
 
 - A named independent content reviewer has not been identified.
-- Content review eligibility remains separate from this CLI presentation task.
+- Content review eligibility remains separate from this CLI interface task.
 - Full-repository verification was not available in the supplied execution context.
 
 ## Next exact action
 
-> Day 69 — add focused CLI error handling that maps malformed input, unsupported medication or
-> regimen, ambiguous units, content failure, and system failure to explicit exit behavior without
-> stack traces, sensitive payload disclosure, or invented recommendations.
+> Day 70 — save and verify reproducible synthetic CLI commands and canonical outputs for cefepime,
+> piperacillin–tazobactam, and famotidine plus incomplete, unsupported, content-failure, and system-
+> failure walkthrough cases without changing clinical logic or content.
