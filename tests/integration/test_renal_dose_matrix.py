@@ -37,6 +37,8 @@ from cds.utils.serialization import to_jsonable
 AT = datetime(2026, 7, 24, 12, 0, tzinfo=timezone.utc)
 COLLECTED = AT - timedelta(hours=2)
 MED_SYSTEM = "cds-medication-id"
+ROUTE_SYSTEM = "cds-route-id"
+INDICATION_SYSTEM = "cds-indication-id"
 DELTA = Decimal("0.0001")
 CONTENT_DIR = Path(__file__).parents[2] / "src/cds/content/renal"
 
@@ -254,12 +256,15 @@ def _order(content: RenalDoseContent) -> MedicationOrder:
         encounter_id="synthetic-day-72-encounter",
         medication=CodeableConcept(system=MED_SYSTEM, code=content.medication.id),
         dose=ValueWithUnit(value=regimen.base_dose.value, unit=regimen.base_dose.unit),
-        route=CodeableConcept(code=regimen.route_id),
+        route=CodeableConcept(system=ROUTE_SYSTEM, code=regimen.route_id),
         frequency_interval=ValueWithUnit(
             value=regimen.frequency_interval.value,
             unit=regimen.frequency_interval.unit,
         ),
-        indication=CodeableConcept(code=regimen.indication_ids[0]),
+        indication=CodeableConcept(
+            system=INDICATION_SYSTEM,
+            code=regimen.indication_ids[0],
+        ),
         infusion_duration=(
             ValueWithUnit(value=infusion.value, unit=infusion.unit)
             if infusion
