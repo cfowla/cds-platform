@@ -34,7 +34,7 @@ Use only the named files and task-specified commands. Do not install missing tes
 
 ## Current state
 
-The durable evidence is:
+The durable failed-candidate evidence remains:
 
 `artifacts/verification/full-verification-20260724T082921Z.txt`
 
@@ -43,59 +43,70 @@ Recorded results for candidate `73c3fcfd10548db31c2bf6707e73f65c5e7f2eb0`:
 - Pytest: 63 failed, 869 passed, 16 skipped; exit status 1.
 - Ruff: 284 diagnostics, 261 reported fixable; exit status 1.
 - CLI walkthrough: not recorded in the artifact.
-- Working tree: ended with untracked `artifacts/` because the evidence file was being created.
 
-The 63 pytest failures reduce to four principal repair areas:
+Work package 1 from
+[`docs/PROTOTYPE_RELEASE_REMEDIATION_PLAN.md`](docs/PROTOTYPE_RELEASE_REMEDIATION_PLAN.md) is now
+implemented on `agent/repair-integration-order-systems`:
 
-1. **Stale integration fixtures.** The `_order()` helpers in
-   `tests/integration/test_renal_dose_matrix.py` and
-   `tests/integration/test_renal_safety_invariants.py` construct route and indication concepts with
-   codes but no coding systems. Current validation requires both systems, so the workflows stop
-   before calculation, repository, rule-engine, failure-handling, and provenance behavior is tested.
-   This accounts for 57 listed integration failures.
-2. **Stale content review snapshot.** The contract snapshot does not include
-   `cefepime_synthetic_fixture.yaml`. The repository must deliberately decide whether the review
-   snapshot includes every renal YAML document or only an explicit selected clinical-content set.
-3. **Stale cefepime golden JSON.** Canonical regeneration differs from the committed golden at one
-   reported byte after the cefepime rule was refactored to the shared exact matcher. The semantic
-   difference must be reviewed before any golden regeneration.
-4. **Invalid Decimal-context assertions.** Two unit failures compare `decimal.Context` objects with
-   `==`. The displayed contexts are equivalent, but object equality is not a useful value comparison
-   for this test. Relevant context properties must be compared individually.
+- `tests/integration/test_renal_dose_matrix.py` defines stable synthetic route and indication coding
+  systems and supplies them from `_order()`.
+- `tests/integration/test_renal_safety_invariants.py` defines the same stable synthetic systems and
+  supplies them from `_order()`.
+- Existing route and indication codes remain unchanged and continue to come from the selected renal
+  content.
+- `src/cds/validation/medication.py` was not changed; its requirement for explicit route and indication
+  systems remains intact.
 
-Two strict xfails produced misleading XPASS failures because the stale order fixtures already fail
-validation for missing route and indication systems:
+The focused integration verification is still pending. The fixture repair must not be treated as a
+completed release-remediation gate until the prescribed tests run in a complete development checkout.
 
-- conflicting supplied versus declared body-weight type; and
-- the famotidine adult minimum-weight limitation.
+## Verification
 
-They do not demonstrate that either known limitation was resolved.
+Repository probe:
 
-The Ruff result is not yet an actionable repository baseline. `pyproject.toml` declares only the
-Ruff target version and line length, while the artifact contains broad rule families such as `UP`,
-`FURB`, `DTZ`, `SIM`, `TRY`, `BLE`, `ISC`, and `RUF`. The artifact does not record the exact command
-or effective settings. Some diagnostics are legitimate; others flag intentional negative tests,
-such as timezone-naive datetimes used to prove rejection.
+```bash
+git rev-parse --show-toplevel
+```
 
-The evidence record also omits:
+Result: exit status 128 from `/mnt/data`; no repository checkout was supplied.
 
-- exact pytest and Ruff command lines;
-- pytest and Ruff versions;
-- operating system and architecture;
-- clean-tree status before verification;
-- CLI walkthrough output and exit status; and
-- an accepted disposition for all 16 placeholder skips.
+Test-runner probe:
+
+```bash
+python -m pytest --version
+```
+
+Result: `pytest 9.0.2`.
+
+Required focused command:
+
+```bash
+python -m pytest tests/integration/test_renal_dose_matrix.py \
+  tests/integration/test_renal_safety_invariants.py -q
+```
+
+This command was not run because no complete repository checkout or local connector-to-filesystem
+materialization path was available. No dependency was installed, no substitute test runner was used,
+and no pytest passing claim is made.
+
+GitHub branch comparison against `main` reports only:
+
+- `tests/integration/test_renal_dose_matrix.py`: 7 additions, 2 deletions.
+- `tests/integration/test_renal_safety_invariants.py`: 7 additions, 2 deletions.
+
+The inspected commit patches contain only the two test-only constants and their use in the route and
+indication `CodeableConcept` constructors.
 
 ## Active remediation plan
 
-The controlling plan is
+The controlling plan remains
 [`docs/PROTOTYPE_RELEASE_REMEDIATION_PLAN.md`](docs/PROTOTYPE_RELEASE_REMEDIATION_PLAN.md).
 Execute it as separate bounded tasks in this order:
 
-1. Repair only the two integration `_order()` helpers by adding explicit synthetic route and
-   indication coding systems.
-2. Run only the two affected integration files and confirm the two strict xfails return to their
-   intended expected-failure state rather than XPASS.
+1. Run the two focused integration files and confirm the repaired fixtures reach their intended test
+   stages without `missing_required_route_system` or `missing_required_indication_system` failures.
+2. Confirm `test_declared_weight_type_conflict_fails_closed` and `UNSUP-FAM-WEIGHT` are strict XFAIL,
+   not XPASS.
 3. Resolve the synthetic-content snapshot policy intentionally and rerun its contract test.
 4. Inspect the semantic cefepime golden diff, then regenerate only if the changed canonical output is
    approved.
@@ -136,9 +147,8 @@ Execute it as separate bounded tasks in this order:
 
 ## Blockers
 
-- Candidate `73c3fcfd10548db31c2bf6707e73f65c5e7f2eb0` failed pytest and Ruff verification.
-- Fifty-seven integration failures prevent meaningful full-flow and safety-invariant verification.
-- The two strict xfails are currently masked by an earlier validation failure.
+- The focused integration command has not yet run against the repaired fixtures.
+- The two strict xfail outcomes have not yet been re-established with executable evidence.
 - The renal-content snapshot policy is unresolved for synthetic fixtures.
 - The cefepime golden semantic change has not been reviewed.
 - The Decimal-context tests contain an invalid equality assertion.
@@ -162,39 +172,35 @@ These blockers prevent an honest `go`, changelog update, or prototype milestone 
 
 ## Files changed
 
-- `CURRENT.md` - replaced the stale Day 83 pre-verification state with the recorded no-go, failure
-  classes, evidence gaps, remediation order, and next action.
-- `BACKLOG.md` - records unresolved release-gate decisions and verification work.
-- `docs/PROTOTYPE_RELEASE_REMEDIATION_PLAN.md` - defines bounded repair packages and acceptance gates.
-- `docs/PROTOTYPE_RELEASE_CHECKLIST.md` - records the latest failed candidate as an informational
-  no-go without completing any unchecked gate.
-- `AGENTS.md` - adds mandatory release-gate evidence capture rules.
-- `docs/TASK_TEMPLATE.md` - adds release/checkpoint verification evidence requirements.
+- `tests/integration/test_renal_dose_matrix.py` - adds explicit synthetic route and indication coding
+  systems to the integration `_order()` fixture.
+- `tests/integration/test_renal_safety_invariants.py` - adds the same explicit synthetic systems to the
+  safety-invariant `_order()` fixture.
+- `CURRENT.md` - replaces the stale next-action state with the implemented fixture repair, honest
+  verification limitation, and focused rerun action.
 
 ## Additional files inspected
 
-- `AGENTS.md` - repository source hierarchy, verification workflow, and close procedure.
-- `BACKLOG.md` - unresolved-work placement rules and existing vertical-slice decisions.
-- `docs/TASK_TEMPLATE.md` - bounded task and verification prompt requirements.
-- `docs/PROTOTYPE_RELEASE_CHECKLIST.md` - software, reviewer, evidence, and tagging gates.
-- `pyproject.toml` - package, pytest, and Ruff configuration.
-- `tests/integration/test_renal_dose_matrix.py` - stale `_order()` fixture and strict xfails.
-- `tests/integration/test_renal_safety_invariants.py` - stale `_order()` fixture.
-- `src/cds/validation/medication.py` - route and indication system sufficiency requirements.
-- `artifacts/verification/full-verification-20260724T082921Z.txt` - committed verification output.
-- PR #53 metadata - tested candidate, evidence-only change, and merge commit.
+- `docs/TASK_TEMPLATE.md` - bounded task structure, execution context, verification, and close
+  procedure.
+- `docs/SAFETY_INVARIANTS.md` - prototype, synthetic-data, validation, fail-closed, and scope
+  constraints.
+- `docs/PROTOTYPE_RELEASE_REMEDIATION_PLAN.md` - work package 1 scope and acceptance gate.
+- `src/cds/validation/medication.py` - confirms explicit route and indication systems are required and
+  that the validator should not be weakened.
+- The two focused GitHub commit patches - confirms no unrelated file content changed.
 
 ## Next exact action
 
-> In a complete development checkout, add explicit synthetic coding systems to `route` and
-> `indication` in the `_order()` helpers in `tests/integration/test_renal_dose_matrix.py` and
-> `tests/integration/test_renal_safety_invariants.py`. Then run:
+> In a complete development checkout at the branch containing this repair, run:
 >
 > ```bash
 > python -m pytest tests/integration/test_renal_dose_matrix.py \
 >   tests/integration/test_renal_safety_invariants.py -q
 > ```
 >
-> Confirm the missing-system failures are gone and the declared-weight-type conflict and famotidine
-> minimum-weight cases are strict XFAIL rather than XPASS. Do not change implementation, snapshots,
-> goldens, Ruff configuration, or unrelated tests in that task.
+> Confirm there are no valid-fixture failures for `missing_required_route_system` or
+> `missing_required_indication_system`, and confirm
+> `test_declared_weight_type_conflict_fails_closed` and `UNSUP-FAM-WEIGHT` are strict XFAIL rather
+> than XPASS. Do not change implementation, content, snapshots, goldens, Ruff configuration, or
+> unrelated tests during that verification.
