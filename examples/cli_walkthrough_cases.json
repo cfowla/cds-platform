@@ -1,0 +1,265 @@
+{
+  "prototype_warning": "Prototype only; synthetic walkthrough data; not for direct clinical use.",
+  "base_request": {
+    "patient_id": "synthetic-cli-walkthrough",
+    "birth_date": "1980-01-01",
+    "sex": "female",
+    "weight_value": "70.0",
+    "weight_unit": "kg",
+    "weight_type": "actual",
+    "serum_creatinine_result_id": "synthetic-lab-cli-walkthrough",
+    "serum_creatinine_value": "1.20",
+    "serum_creatinine_unit": "mg/dL",
+    "serum_creatinine_collected_at": "2026-07-23T08:00:00-04:00",
+    "serum_creatinine_status": "final",
+    "renal_function_stable": true,
+    "renal_replacement_therapy": false,
+    "pregnant_or_lactating": false,
+    "medication_order_id": "synthetic-order-cli-walkthrough",
+    "medication_system": "cds-medication-id",
+    "medication_code": "cefepime",
+    "regimen_id": "cefepime_severe_infection_iv_2g_q8h_30min",
+    "formulation_id": "cefepime_injection",
+    "dose_value": "2.00",
+    "dose_unit": "g",
+    "route_system": "cds-route-id",
+    "route_code": "iv",
+    "frequency_interval_value": "8",
+    "frequency_interval_unit": "h",
+    "indication_system": "cds-indication-id",
+    "indication_code": "severe_infection",
+    "infusion_duration_value": "30",
+    "infusion_duration_unit": "min",
+    "requested_content_version": "cefepime-1",
+    "evaluation_date": "2026-07-23",
+    "evaluated_at": "2026-07-23T12:05:00+00:00"
+  },
+  "scenarios": {
+    "cefepime": {
+      "request_overrides": {},
+      "response": {
+        "validation": {"is_valid": true, "issues": []},
+        "rule_result": {
+          "status": "success",
+          "applied": true,
+          "passed": true,
+          "rule_id": "synthetic_cefepime_walkthrough_rule",
+          "patient_id": "synthetic-cli-walkthrough",
+          "evaluated_at": "2026-07-23T12:05:00Z",
+          "renal_function_result": {
+            "value": {"value": "64.73379629629629629629629630", "unit": "mL/min"},
+            "warnings": [],
+            "evidence": [{"summary": "Synthetic walkthrough renal result; not clinical evidence."}]
+          },
+          "recommendations": [{
+            "title": "Synthetic cefepime walkthrough recommendation.",
+            "summary": "Synthetic interface walkthrough recommendation.",
+            "warnings": [],
+            "evidence": [{"summary": "Synthetic walkthrough content; not clinically reviewed."}],
+            "content_version": "cefepime-walkthrough-1"
+          }],
+          "alerts": [],
+          "warnings": [],
+          "evidence": [{"summary": "Synthetic walkthrough rule result."}],
+          "supporting_data": {
+            "outcome_category": "matched",
+            "medication_id": "cefepime",
+            "content_version": "cefepime-walkthrough-1"
+          }
+        }
+      },
+      "expected_exit": 0,
+      "stderr_contains": []
+    },
+    "piperacillin_tazobactam": {
+      "request_overrides": {
+        "medication_code": "piperacillin_tazobactam",
+        "regimen_id": "extended_infusion_iv_3_375_g_every_8_hours_over_240_minutes",
+        "formulation_id": null,
+        "dose_value": "3.375",
+        "indication_code": "hospitalized_serious_gram_negative_infection",
+        "infusion_duration_value": "240",
+        "requested_content_version": "1.0.0-draft"
+      },
+      "response": {
+        "validation": {"is_valid": true, "issues": []},
+        "rule_result": {
+          "status": "success",
+          "applied": true,
+          "passed": true,
+          "rule_id": "synthetic_piperacillin_tazobactam_walkthrough_rule",
+          "patient_id": "synthetic-cli-walkthrough",
+          "evaluated_at": "2026-07-23T12:05:00Z",
+          "renal_function_result": {
+            "value": {"value": "64.73379629629629629629629630", "unit": "mL/min"},
+            "warnings": [],
+            "evidence": [{"summary": "Synthetic walkthrough renal result; not clinical evidence."}]
+          },
+          "recommendations": [{
+            "title": "Synthetic piperacillin-tazobactam walkthrough recommendation.",
+            "summary": "Synthetic interface walkthrough recommendation.",
+            "warnings": [],
+            "evidence": [{"summary": "Synthetic walkthrough content; not clinically reviewed."}],
+            "content_version": "piperacillin-tazobactam-walkthrough-1"
+          }],
+          "alerts": [],
+          "warnings": [],
+          "evidence": [{"summary": "Synthetic walkthrough rule result."}],
+          "supporting_data": {
+            "outcome_category": "matched",
+            "medication_id": "piperacillin_tazobactam",
+            "content_version": "piperacillin-tazobactam-walkthrough-1"
+          }
+        }
+      },
+      "expected_exit": 0,
+      "stderr_contains": []
+    },
+    "famotidine": {
+      "request_overrides": {
+        "medication_code": "famotidine",
+        "regimen_id": "oral_film_coated_tablet_20_mg_every_12_hours",
+        "formulation_id": "film_coated_tablet",
+        "dose_value": "20",
+        "dose_unit": "mg",
+        "route_code": "po",
+        "frequency_interval_value": "12",
+        "indication_code": "adult_symptomatic_nonerosive_gerd",
+        "infusion_duration_value": null,
+        "infusion_duration_unit": null,
+        "requested_content_version": "1.0.0-draft"
+      },
+      "response": {
+        "validation": {"is_valid": true, "issues": []},
+        "rule_result": {
+          "status": "success",
+          "applied": true,
+          "passed": true,
+          "rule_id": "synthetic_famotidine_walkthrough_rule",
+          "patient_id": "synthetic-cli-walkthrough",
+          "evaluated_at": "2026-07-23T12:05:00Z",
+          "renal_function_result": {
+            "value": {"value": "64.73379629629629629629629630", "unit": "mL/min"},
+            "warnings": [],
+            "evidence": [{"summary": "Synthetic walkthrough renal result; not clinical evidence."}]
+          },
+          "recommendations": [{
+            "title": "Synthetic famotidine walkthrough recommendation.",
+            "summary": "Synthetic interface walkthrough recommendation.",
+            "warnings": [],
+            "evidence": [{"summary": "Synthetic walkthrough content; not clinically reviewed."}],
+            "content_version": "famotidine-walkthrough-1"
+          }],
+          "alerts": [],
+          "warnings": [],
+          "evidence": [{"summary": "Synthetic walkthrough rule result."}],
+          "supporting_data": {
+            "outcome_category": "matched",
+            "medication_id": "famotidine",
+            "content_version": "famotidine-walkthrough-1"
+          }
+        }
+      },
+      "expected_exit": 0,
+      "stderr_contains": []
+    },
+    "incomplete": {
+      "request_overrides": {"weight_value": null},
+      "response": {
+        "validation": {
+          "is_valid": false,
+          "issues": [{
+            "code": "missing_weight_value",
+            "severity": "error",
+            "message": "A supplied weight value is required."
+          }]
+        },
+        "rule_result": {
+          "status": "incomplete",
+          "applied": false,
+          "passed": null,
+          "patient_id": "synthetic-cli-walkthrough",
+          "evaluated_at": "2026-07-23T12:05:00Z",
+          "recommendations": [],
+          "alerts": [],
+          "supporting_data": {
+            "outcome_category": "incomplete",
+            "validation_issue_codes": ["missing_weight_value"]
+          }
+        }
+      },
+      "expected_exit": 2,
+      "stderr_contains": ["structured validation did not permit renal-dose evaluation"]
+    },
+    "unsupported": {
+      "request_overrides": {
+        "medication_code": "unsupported_medication",
+        "regimen_id": "unsupported_regimen",
+        "requested_content_version": "missing-version"
+      },
+      "response": {
+        "validation": {"is_valid": true, "issues": []},
+        "rule_result": {
+          "status": "failed",
+          "applied": false,
+          "passed": null,
+          "patient_id": "synthetic-cli-walkthrough",
+          "evaluated_at": "2026-07-23T12:05:00Z",
+          "recommendations": [],
+          "alerts": [],
+          "supporting_data": {
+            "failure_code": "content_not_found",
+            "failure_stage": "content_repository",
+            "medication_id": "unsupported_medication",
+            "regimen_id": "unsupported_regimen",
+            "requested_content_version": "missing-version"
+          }
+        }
+      },
+      "expected_exit": 3,
+      "stderr_contains": ["no exact medication, regimen, and content-version match"]
+    },
+    "content_failure": {
+      "request_overrides": {},
+      "response": {
+        "validation": {"is_valid": true, "issues": []},
+        "rule_result": {
+          "status": "failed",
+          "applied": false,
+          "passed": null,
+          "patient_id": "synthetic-cli-walkthrough",
+          "evaluated_at": "2026-07-23T12:05:00Z",
+          "recommendations": [],
+          "alerts": [],
+          "supporting_data": {
+            "failure_code": "content_repository_failure",
+            "failure_stage": "content_repository"
+          }
+        }
+      },
+      "expected_exit": 4,
+      "stderr_contains": ["Content failure: renal-dose content could not be evaluated safely"]
+    },
+    "system_failure": {
+      "request_overrides": {},
+      "response": {
+        "validation": {"is_valid": true, "issues": []},
+        "rule_result": {
+          "status": "failed",
+          "applied": false,
+          "passed": null,
+          "patient_id": "synthetic-cli-walkthrough",
+          "evaluated_at": "2026-07-23T12:05:00Z",
+          "recommendations": [],
+          "alerts": [],
+          "supporting_data": {
+            "failure_code": "unexpected_system_failure",
+            "failure_stage": "context_assembly"
+          }
+        }
+      },
+      "expected_exit": 1,
+      "stderr_contains": ["System failure: the renal-dose evaluation returned a failed result"]
+    }
+  }
+}
