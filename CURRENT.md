@@ -22,76 +22,75 @@ Use only the named files and task-specified commands. Do not install missing tes
 
 ## Roadmap position
 
-- Days 1-80 are complete.
-- **Day 80 - Write the validation and missing-data policy** is implemented.
-- The next sequential task is **Day 81 - Create the model and interface reference**.
+- Days 1-81 are complete.
+- **Day 81 - Create the model and interface reference** is implemented.
+- The next sequential task is **Day 82 - Create the prototype release checklist**.
 
 ## Current state
 
-- `docs/DOMAIN_CONVENTIONS.md` now defines structural validation, task-sufficiency validation,
-  combined tri-state validity, validation issue severity, and the requirement to validate before
-  calculation, content matching, or rule evaluation.
-- The policy documents exact first-slice units: body weight in `kg`, serum creatinine in `mg/dL`,
-  and unindexed Cockcroft-Gault output in `mL/min`.
-- Medication dose, frequency, and infusion quantities remain content-defined and must exactly match
-  the selected reviewed content value and unit; no conversion, normalization, or alias matching was
-  added.
-- Missing numerics remain `None`; unknown categories remain explicit; missing and unsupported units
-  remain separate blocking findings.
-- The result-state policy maps exact supported recommendations to `success`, pre-computation
-  validation failures to `incomplete`, post-validation exact nonmatches to `not_applicable`, and
-  internal, content, or calculation failures to `failed`.
-- `success_with_warnings` remains a defined enum value but is not currently emitted by the renal use
-  case.
-- `applied` and `passed` retain tri-state semantics, including the distinction between an
-  unevaluated rule and an applied no-recommendation band.
-- Unsupported causes are documented by detection stage rather than collapsed into one status. Every
-  non-success outcome remains fail-closed and produces no dosing recommendation.
-- `docs/SAFETY_INVARIANTS.md` now carries the concise working rules for the same validation layers,
-  severity handling, units, state mapping, and unsupported-context behavior.
-- No validation code, clinical content, calculation behavior, rule behavior, public import,
-  serialized contract, dependency, interface, or logging configuration changed.
+- `docs/MODEL_INTERFACE_REFERENCE.md` now documents the implemented domain, validation, and renal
+  CLI boundary without changing any model or interface contract.
+- The reference distinguishes permissive keyword-only dataclass construction from the stricter
+  facts required for a successful renal-dose evaluation.
+- Shared value objects, traceability models, clinical truth models, output models, and validation
+  result models are documented with current field names, types, safe defaults, and first-slice unit
+  requirements.
+- Focused import paths and the exact `cds.domain.models` compatibility exports are documented.
+- Canonical serialization behavior is documented for dataclasses, enums, `None`, dates, aware
+  datetimes, `Decimal`, collections, string-keyed mappings, and unsupported values.
+- The flat renal CLI request fields are grouped into required, conditionally required, and optional
+  audit-link facts, with exact wire-type and timezone rules.
+- The response retains the fixed top-level `validation` and `rule_result` objects and the current
+  fail-closed result-state semantics.
+- CLI arguments, output streams, exit codes, sanitized diagnostics, dependency injection, and the
+  absence of a standalone composition root, console entry point, API, or EHR interface are explicit.
+- No Python behavior, model field, enum value, compatibility import, mapper, CLI behavior,
+  serialized contract, dependency, clinical content, calculation, validation, or rule behavior
+  changed.
 
 ## Verification
 
-- The required `git rev-parse --show-toplevel` probe was run once from `/` and did not identify a
-  repository checkout.
+- The required `git rev-parse --show-toplevel` probe was run once from `/mnt/data` and did not
+  identify a repository checkout.
 - No repository clone, dependency installation, substitute runner, CI, or GitHub Actions
   investigation was attempted.
 - GitHub was authoritative for source retrieval and final repository changes.
-- A bounded verification checkout was created at `/tmp/cds-platform` containing the edited
-  documentation and a task-specific documentation checker.
-- Documentation structure command:
-  `python /tmp/cds-platform/verify_validation_policy.py`
-- Documentation structure result: passed; required policy sections, validation severities, all five
-  result states, accepted units, fail-closed language, and 100-character line limits were present.
-- Pytest was not required because the task changed documentation only and did not change executable
-  behavior or a serialized software contract.
+- A bounded verification checkout was created at `/tmp/cds-platform` containing the new reference,
+  updated active-state note, and a task-specific documentation checker.
+- Documentation command:
+  `python /tmp/cds-platform/verify_model_interface_reference.py`
+- Documentation result: passed; required sections, model names, compatibility exports, exact units,
+  request and response contracts, CLI limitations, prototype warning, and 100-character line limits
+  were present.
+- Pytest was not required or run because the task changed documentation only and did not change
+  executable behavior or a serialized software contract.
 - No full-suite, lint, type-check, CI, or GitHub Actions passing claim is made.
 
 ## Files changed
 
-- `docs/DOMAIN_CONVENTIONS.md` - added the validation, missing-data, accepted-unit, severity,
-  result-state, and unsupported-context policy.
-- `docs/SAFETY_INVARIANTS.md` - added the concise corresponding safety rules.
-- `CURRENT.md` - replaced with the Day 80 state and Day 81 next action.
+- `docs/MODEL_INTERFACE_REFERENCE.md` - added the implemented model, serialization, request,
+  response, CLI, compatibility, and limitation reference.
+- `CURRENT.md` - replaced with the Day 81 state and Day 82 next action.
 
 ## Additional files inspected
 
 - `docs/TASK_TEMPLATE.md` and `CDS_12_Week_Daily_Project_Plan.html` - task structure and exact
-  Day 80 and Day 81 roadmap wording.
-- `AGENTS.md`, `PROJECT_CHARTER.md`, and `FIRST_VERTICAL_SLICE.md` - source hierarchy, validation
-  requirements, scope, expected states, and fail-closed behavior.
+  Day 81 and Day 82 roadmap wording.
+- `docs/SAFETY_INVARIANTS.md` and `docs/DOMAIN_CONVENTIONS.md` - safety, missing-data, validation,
+  unit, traceability, result-state, and serialization policy.
+- `src/cds/domain/enums.py`, `support.py`, `value_objects.py`, `clinical.py`, `outputs.py`, and
+  `models.py` - exact model fields, defaults, wire values, and compatibility exports.
 - `src/cds/validation/models.py`, `patient.py`, `lab.py`, `renal.py`, and `medication.py` -
-  implemented validation result shape, severity values, structural checks, sufficiency checks,
-  exact units, and current error behavior.
-- `src/cds/domain/enums.py` and `src/cds/domain/outputs.py` - result statuses and tri-state
-  rule-result defaults.
-- `src/cds/app/renal_dose.py` - validation combination, incomplete mapping, and structured failure
-  mapping.
-- `src/cds/services/renal.py` - validated-service boundary and exact renal input and output units.
-- `src/cds/rules/engine.py` and `src/cds/rules/exact_renal_dose.py` - exact nonmatch, unsupported,
-  no-recommendation, incomplete, and successful result mappings.
+  validation result shape and actual structural and workflow requiredness.
+- `src/cds/app/dto.py` and `src/cds/app/renal_dose.py` - request DTO fields, application result
+  shape, identity checks, exact-selection requirements, and result mapping.
+- `src/cds/mappers/renal_dose_request.py` and `renal_dose_response.py` - request wire types, mapping
+  failures, fixed response keys, and canonical boundary conversion.
+- `src/cds/utils/serialization.py` - exact canonical serialization behavior.
+- `src/cds/interfaces/cli.py`, `docs/CLI_WALKTHROUGH.md`, `README.md`, and `pyproject.toml` - CLI
+  arguments, streams, exit codes, diagnostics, walkthrough behavior, packaging, and limitations.
+- `src/cds/domain/__init__.py` and `src/cds/interfaces/__init__.py` - current package-level export
+  behavior.
 
 ## Active constraints
 
@@ -130,6 +129,6 @@ Use only the named files and task-specified commands. Do not install missing tes
 
 ## Next exact action
 
-> Day 81 - document required versus optional fields, units, safe defaults, compatibility imports,
-> canonical serialization, CLI request and response shapes, and current interface limitations
-> without changing model, mapper, interface, or serialized contracts.
+> Day 82 - create a prototype release checklist covering full verification, independent calculation
+> review, clinical-content review status, limitations, PHI controls, provenance, version capture,
+> and prototype warnings without tagging or changing release eligibility.
