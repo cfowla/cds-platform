@@ -25,98 +25,79 @@ Use only the named files and task-specified commands. Do not install missing tes
 
 ## Roadmap position
 
-- Days 1–61 are complete.
-- **Day 61 — Create the renal-dose use case** is complete.
-- The next sequential task is **Day 62 — Map exceptions to structured failures**.
+- Days 1–62 are complete.
+- **Day 62 — Map exceptions to structured failures** is complete.
+- The next sequential task is **Day 63 — Weekly review: architecture boundary test**.
 
 ## Current state
 
-- `src/cds/app/renal_dose.py` defines `RenalDoseUseCase`, which coordinates the existing structural
-  validators, renal and medication task-sufficiency validators, exact typed content repository,
-  pure Cockcroft–Gault calculator, and `RenalDoseRuleEngine`.
-- The use case accepts typed patient, serum-creatinine, medication-order, weight, population,
-  exact regimen, formulation, content-version, and evaluation-time facts. It performs no mapping,
-  serialization, interface rendering, content parsing, formula implementation, or rule matching.
-- Initial validation failures return `RenalDoseUseCaseResult` with the complete typed
-  `ValidationResult` and an explicit `INCOMPLETE` `RuleResult`; repository retrieval, renal
-  calculation, and rule evaluation are not invoked and no recommendation is produced.
-- Exact content retrieval uses the case-sensitive `(medication_id, regimen_id, content_version)`
-  key without trimming, normalization, aliases, version fallback, or inference.
-- After content retrieval, medication-order sufficiency is validated against the exact content
-  medication and regimen requirements before renal calculation or rule evaluation.
-- Successful validation constructs the frozen `RenalDoseEvaluationContext`, calculates the
-  unrounded unindexed Cockcroft–Gault result through `calculate_cockcroft_gault`, passes that exact
-  `RenalFunctionResult` to the engine, and assembles the standard structured result with renal,
-  patient, encounter, and evaluation-time audit fields when the rule did not already provide them.
-- `RenalDoseRule` and `RenalDoseRuleEngine` now receive the calculated `RenalFunctionResult`
-  explicitly. The engine neither recalculates renal function nor obtains it through hidden state.
-- Engine unmatched and unsupported outcomes preserve the supplied renal result while remaining
-  fail closed with no recommendation.
-- `ContentNotFound`, `CalculationError`, and unexpected rule failures are still allowed to propagate;
-  converting them to structured failed results is intentionally reserved for Day 62.
+- `src/cds/app/renal_dose.py` preserves expected clinical gaps as existing `INCOMPLETE` or
+  `NOT_APPLICABLE` outcomes while converting internal failures to fail-closed `FAILED`
+  `RuleResult` objects.
+- `ValidationError`, `ContentNotFound`, and `CalculationError` have stable failure codes distinct
+  from stage-specific unexpected repository, validation, application, calculation, and rule
+  failures.
+- Structured failures retain safe patient, encounter, medication, regimen, requested-content,
+  content-version, rule, renal-result, and evaluation-time audit fields only when those values were
+  safely available before the failure.
+- Failed results set `applied=False`, `passed=None`, and contain no recommendation or alert.
+- Exception messages, exception class representations, stack traces, and source payloads are not
+  included in summaries or supporting data.
+- A successful renal calculation is retained on an unexpected rule failure so the completed
+  calculation remains auditable; failures before calculation leave the renal result absent.
+- Exact medication, regimen, and content-version identifiers remain case-sensitive and are not
+  normalized before repository lookup or failure mapping.
 
 ## Verification
 
 - The execution environment did not supply a repository checkout; the required
   `git rev-parse --show-toplevel` probe reported that `/mnt/data` is not inside a Git repository.
-- No filesystem search, clone, dependency installation, substitute runner, CI, or GitHub Actions
-  investigation was attempted.
-- The environment supplied pytest 9.0.2, so the focused pytest verification was executed.
-- Because `/tmp` did not persist across connector/tool invocations, an import-compatible bounded
-  verification harness was maintained at `/mnt/data/cds-platform-work`; GitHub remained authoritative
-  for the source files and final changes.
+- No filesystem search, repository clone, dependency installation, substitute runner, CI, or
+  GitHub Actions investigation was attempted.
+- GitHub was authoritative for source retrieval and final repository changes.
+- An import-compatible bounded verification harness was materialized at
+  `/mnt/data/cds-platform-work` for the focused app module and tests. Unchanged dependencies were
+  represented only as needed to satisfy the focused imports, so this is not a full-repository
+  verification claim.
+- The environment supplied pytest 9.0.2.
 - Focused collection command:
-  `python -m pytest tests/unit/app/test_renal_dose.py tests/unit/rules/test_interface.py tests/unit/rules/test_engine.py --collect-only -q`
-- Collection result: `14 tests collected in 0.02s`.
+  `python -m pytest tests/unit/app/test_renal_dose.py --collect-only -q`
+- Collection result: `12 tests collected in 0.05s`.
 - Focused test command:
-  `python -m pytest tests/unit/app/test_renal_dose.py tests/unit/rules/test_interface.py tests/unit/rules/test_engine.py -q`
-- Test result: `14 passed in 0.06s` under Python 3.13.5 and pytest 9.0.2.
+  `python -m pytest tests/unit/app/test_renal_dose.py -q`
+- Test result: `12 passed in 0.04s`.
 - Compile command:
-  `python -m compileall -q src/cds/app/renal_dose.py src/cds/rules/interface.py src/cds/rules/engine.py tests/unit/app/test_renal_dose.py tests/unit/rules/test_interface.py tests/unit/rules/test_engine.py`
+  `python -m compileall -q src/cds/app/renal_dose.py tests/unit/app/test_renal_dose.py`
 - Compile result: completed with no output or error.
 - No full-suite, lint, type-check, CI, or GitHub Actions passing claim is made.
 
 ## Files changed
 
-- `src/cds/app/renal_dose.py` — added the bounded renal-dose application use case and passive app
-  result carrying validation beside the standard rule result.
-- `tests/unit/app/test_renal_dose.py` — added focused ordered-flow, fail-closed, exact-key,
-  unrounded-result, date-consistency, and deferred-exception-mapping tests.
-- `src/cds/rules/interface.py` — added the explicit calculated renal result to the minimal rule
-  contract.
-- `src/cds/rules/engine.py` — passed the explicit calculated renal result to the selected rule and
-  preserved it on fail-closed non-match results.
-- `tests/unit/rules/test_interface.py` — updated the rule-contract signature tests.
-- `tests/unit/rules/test_engine.py` — updated exact-selection and non-match tests to verify explicit
-  renal-result propagation.
-- `CURRENT.md` — replaced with the Day 61 state and Day 62 next action.
+- `src/cds/app/renal_dose.py` — mapped typed and unexpected internal exceptions to structured,
+  fail-closed results without exposing exception details.
+- `tests/unit/app/test_renal_dose.py` — replaced deferred exception expectations with focused typed,
+  unexpected, non-disclosure, audit-preservation, exact-identifier, and expected-outcome tests.
+- `CURRENT.md` — replaced with the Day 62 state and Day 63 next action.
 
 ## Additional files inspected
 
 - `docs/TASK_TEMPLATE.md` and `CDS_12_Week_Daily_Project_Plan.html` — bounded-task structure and the
-  exact Day 61 deliverable.
-- `AGENTS.md` — source hierarchy, bounded-checkout workflow, implementation boundaries, and close
-  procedure.
-- `docs/SAFETY_INVARIANTS.md` — validation-before-calculation, exact identifiers, fail-closed behavior,
-  repository boundaries, purity, and auditability constraints.
-- `CURRENT.md` — authoritative Day 60 state and Day 61 next action.
-- `ARCHITECTURE.md` — application-layer orchestration sequence and dependency boundaries.
-- `FIRST_VERTICAL_SLICE.md` — stable adult Cockcroft–Gault input, output, and exclusion contract.
-- `src/cds/app/context.py` — validated context fields assembled by the use case.
-- `src/cds/validation/models.py`, `patient.py`, `lab.py`, `renal.py`, and `medication.py` — existing
-  structural and task-sufficiency contracts invoked before calculation and matching.
-- `src/cds/repositories/renal_content.py` — exact typed repository key and retrieval contract.
-- `src/cds/services/renal.py` — pure unrounded Cockcroft–Gault calculation contract.
-- `src/cds/domain/clinical.py`, `enums.py`, `outputs.py`, `support.py`, `value_objects.py`, and
-  `exceptions.py` — typed inputs, standard result fields, traceability, and deferred exception types.
-- `src/cds/rules/interface.py`, `registry.py`, `engine.py`, `exact_renal_dose.py`, `cefepime.py`, and
-  `piperacillin_tazobactam.py` — rule contract, registration, orchestration, and explicit renal-result
-  requirements exposed by existing exact medication rules.
-- `tests/unit/app/test_context.py`, `tests/unit/rules/test_interface.py`,
-  `tests/unit/rules/test_registry.py`, `tests/unit/rules/test_engine.py`,
-  `tests/unit/rules/test_cefepime.py`, and `tests/unit/validation/test_medication.py` — existing focused
-  conventions and regression expectations.
-- `pyproject.toml` — declared pytest configuration and optional development dependencies.
+  exact Day 62 deliverable.
+- `docs/SAFETY_INVARIANTS.md` — validation-before-calculation, fail-closed behavior, exact identifiers,
+  content defects, purity, repository boundaries, and auditability constraints.
+- `CURRENT.md` — authoritative Day 61 state and exact Day 62 action.
+- `src/cds/domain/exceptions.py` — typed internal failure classes to map.
+- `src/cds/domain/outputs.py` and `src/cds/validation/models.py` — standard failed-result and
+  validation-state fields.
+- `src/cds/app/context.py`, `src/cds/repositories/renal_content.py`, `src/cds/services/renal.py`, and
+  `src/cds/rules/engine.py` — orchestration-stage contracts and available audit fields.
+- `src/cds/domain/clinical.py`, `src/cds/domain/enums.py`, `src/cds/domain/support.py`, and
+  `src/cds/domain/value_objects.py` — typed source objects, explicit result status, and traceability
+  conventions.
+- `src/cds/validation/patient.py`, `src/cds/validation/lab.py`, `src/cds/validation/renal.py`, and
+  `src/cds/validation/medication.py` — expected clinical-gap behavior that must remain distinct from
+  system failures.
+- `src/cds/rules/registry.py` — deterministic exact-rule selection dependency imported by the engine.
 
 ## Active constraints
 
@@ -126,6 +107,8 @@ Use only the named files and task-specified commands. Do not install missing tes
   no dosing recommendation.
 - Medication, rule, regimen, formulation, and content-version identifiers remain exact and
   case-sensitive. Do not trim, normalize, alias, fuzzy-match, infer, or fall back.
+- Do not expose exception messages, stack traces, source payloads, or unnecessary identifiers in
+  structured failures.
 - The use case coordinates existing components but does not duplicate validation rules, repository
   parsing, calculator formulas, rule predicates, serialization, logging, or interface behavior.
 - The calculated renal result remains unrounded for rule matching and auditability.
@@ -141,7 +124,6 @@ Use only the named files and task-specified commands. Do not install missing tes
 
 ## Next exact action
 
-> Day 62 — map `ContentNotFound`, `CalculationError`, validation-boundary failures, and unexpected
-> application or rule exceptions to structured failed results that preserve safe identifiers and
-> evaluation time, expose no stack trace or sensitive payload, and remain distinct from expected
-> incomplete or unsupported clinical gaps.
+> Day 63 — confirm import direction and verify that domain, services, rules, repositories, app,
+> mappers, and interfaces retain their assigned responsibilities without introducing new clinical
+> behavior or speculative restructuring.
