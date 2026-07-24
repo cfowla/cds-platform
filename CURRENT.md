@@ -21,28 +21,36 @@ Use only the named files and task-specified commands. Do not install missing tes
 
 ## Roadmap position
 
-- Days 1–71 are complete.
-- **Day 71 — Create the integration test matrix** is complete.
-- The next sequential task is **Day 72 — Add full-flow parameterized tests**.
+- Days 1–72 are complete.
+- **Day 72 — Add full-flow parameterized tests** is implemented.
+- The next sequential task is **Day 73 — Extend contract tests**.
 
 ## Current state
 
-- `docs/INTEGRATION_TEST_MATRIX.md` defines the Day 72 full-flow coverage before test implementation.
-- The matrix inventories all six exact supported regimen variants: two cefepime, three
-  piperacillin–tazobactam, and one famotidine regimen.
-- Thirteen threshold rows expand to 39 immediately-below, exact-boundary, and immediately-above
-  cases using unrounded Cockcroft–Gault `Decimal` values.
-- Data-completeness cases distinguish initial validation failures from content-specific medication
-  validation failures and state the expected stop point.
-- Unsupported-context cases require exact identifiers and prohibit normalization, inference,
-  conversion, interpolation, or adjacent-regimen fallback.
-- Content and system-failure cases identify validation, repository, context, calculation, and rule
-  failure injection points with fail-closed output requirements.
-- Cross-case invariants require zero recommendations on every non-success outcome and preserve
-  Decimal, UTC datetime, evidence, provenance, rule, content-version, and order-linkage contracts.
-- Draft YAML remains ineligible; successful integration cases must use clearly labeled test-only
-  reviewed in-memory copies without implying clinical review.
-- No production code, clinical content, content review status, renal boundary, supported population,
+- `tests/integration/test_renal_dose_matrix.py` implements the Day 72 full-flow matrix through the
+  production `RenalDoseUseCase` boundary.
+- Six exact regimen variants are represented: two cefepime, three piperacillin–tazobactam, and one
+  famotidine regimen.
+- Thirteen renal-threshold families expand to 39 stable-ID cases immediately below, exactly at, and
+  immediately above each boundary using unrounded Cockcroft–Gault `Decimal` values.
+- Successful cases assert exact content lookup, one calculation, one engine invocation, exact band
+  selection, structured dose fields, rule and content versions, evidence, provenance, order linkage,
+  and canonical Decimal and UTC serialization.
+- Initial-validation cases prove repository, calculator, and rule-engine stop behavior for missing,
+  mismatched, unsupported, or insufficient patient, laboratory, medication, and context facts.
+- Content-specific missing-order cases prove exact repository lookup occurs before calculation and
+  rule evaluation stop.
+- Unsupported exact-context cases cover medication, casing, regimen, version, route, formulation,
+  dose, interval, infusion, indication, pediatric scope, renal replacement therapy, and unstable
+  renal function without normalization, conversion, inference, or fallback.
+- Structured failure cases cover typed validation, missing and unexpected content, context assembly,
+  typed and unexpected calculation, and unexpected rule failures without exposing exception text.
+- Draft YAML remains ineligible. The suite copies each document into an explicitly labeled test-only
+  reviewed in-memory fixture without altering or clinically approving repository content.
+- Two strict expected-failure tests document existing behavior gaps: conflicting supplied versus
+  declared weight type is not rejected, and the famotidine adult minimum-weight boundary is not
+  enforced. Neither gap was hidden by changing the test expectation or expanding production scope.
+- No production code, clinical content, content review status, renal boundary, supported medication,
   public interface, or serialized contract changed.
 
 ## Verification
@@ -52,38 +60,41 @@ Use only the named files and task-specified commands. Do not install missing tes
 - No repository clone, dependency installation, substitute runner, CI, or GitHub Actions
   investigation was attempted.
 - GitHub was authoritative for source retrieval and final repository changes.
-- A bounded documentation checkout was materialized at `/tmp/cds-platform` with only the new matrix
-  and replacement active-state note.
-- Structural matrix verification command:
-  `python - <<'PY' ... PY` as recorded in the Day 71 task result.
-- Structural verification result: all required regimen identifiers, 13 boundary families, 39
-  expanded boundary cases, completeness, unsupported-context, failure, invariant, and Day 72 target
-  sections were present.
-- Pytest was not needed because Day 71 changes documentation only and does not alter executable
-  behavior.
-- No full-suite, lint, type-check, CI, or GitHub Actions passing claim is made.
+- A bounded verification path was used at `/tmp/cds-platform` for the new test module only.
+- Syntax verification command:
+  `python -m py_compile tests/integration/test_renal_dose_matrix.py`
+- Syntax verification result: passed.
+- Line-length structural check found no lines longer than the configured 100-character limit.
+- Focused collection command:
+  `PYTHONPATH=src python -m pytest tests/integration/test_renal_dose_matrix.py --collect-only -q`
+- Pytest was installed, but collection could not complete because the supplied environment did not
+  contain the repository source package: `ModuleNotFoundError: No module named 'cds.app.renal_dose'`.
+- No focused execution, full-suite, lint, type-check, CI, or GitHub Actions passing claim is made.
 
 ## Files changed
 
-- `docs/INTEGRATION_TEST_MATRIX.md` — added the exact-regimen, renal-boundary, data-completeness,
-  unsupported-context, failure-injection, and cross-case coverage plan for Day 72.
-- `CURRENT.md` — replaced with the Day 71 state and Day 72 next action.
+- `tests/integration/test_renal_dose_matrix.py` — added the six-regimen full-flow harness, 39 renal
+  boundary cases, validation and exact-context partitions, structured failure injection, draft
+  ineligibility coverage, and reusable fail-closed assertions.
+- `CURRENT.md` — replaced with the Day 72 state and Day 73 next action.
 
 ## Additional files inspected
 
-- `docs/TASK_TEMPLATE.md` and `CDS_12_Week_Daily_Project_Plan.html` — task structure and exact Day 71
-  and Day 72 roadmap wording.
-- `AGENTS.md` and `docs/SAFETY_INVARIANTS.md` — bounded execution, prototype, exact-input,
-  fail-closed, auditability, and verification constraints.
+- `docs/TASK_TEMPLATE.md` and `CDS_12_Week_Daily_Project_Plan.html` — task structure and exact Day 72
+  and Day 73 roadmap wording.
+- `AGENTS.md`, `docs/SAFETY_INVARIANTS.md`, and `docs/INTEGRATION_TEST_MATRIX.md` — bounded execution,
+  prototype, exact-input, fail-closed, auditability, and matrix acceptance criteria.
 - `src/cds/app/renal_dose.py` and `tests/unit/app/test_renal_dose.py` — orchestration order,
   validation stop points, exact repository lookup, and structured failure mappings.
-- `tests/integration/test_cefepime_end_to_end.py` — existing test-only reviewed-content override and
-  full-flow integration convention.
-- `examples/cli_walkthrough_cases.json` — exact request-boundary identifiers and incomplete,
-  unsupported, content-failure, and system-failure output conventions.
-- The six current renal-content YAML files — exact regimen identifiers, formulations, renal bands,
-  and threshold inclusivity for the supported cefepime, piperacillin–tazobactam, and famotidine
-  variants.
+- `tests/integration/test_cefepime_end_to_end.py` — existing reviewed-test-copy and canonical-output
+  integration convention.
+- The renal rule engine, registry, shared exact matcher, and cefepime, piperacillin–tazobactam, and
+  famotidine rule adapters — production full-flow registration and evaluation contracts.
+- Patient, laboratory, and renal validators — exact issue codes and pre-calculation stop behavior.
+- The six current renal-content YAML files — exact identifiers, formulations, source contexts,
+  review status, renal bands, and threshold inclusivity.
+- `src/cds/utils/serialization.py` was referenced through the established canonical serializer used
+  by the focused integration assertion.
 
 ## Active constraints
 
@@ -108,12 +119,14 @@ Use only the named files and task-specified commands. Do not install missing tes
 
 - A named independent content reviewer has not been identified.
 - Draft content review eligibility remains separate from software integration-test eligibility.
+- Conflicting supplied versus declared body-weight type is not currently rejected before calculation.
+- The famotidine adult minimum-weight boundary is not currently enforced in the full flow.
 - The production CLI remains a dependency-injected boundary without a standalone composition root.
 - Full-repository verification was not available in the supplied execution context.
 
 ## Next exact action
 
-> Day 72 — implement `tests/integration/test_renal_dose_matrix.py` with parameterized full-flow cases
-> for all six exact regimen variants, the 39 below/at/above renal-boundary cases, incomplete data,
-> unsupported exact contexts, and structured content, calculation, and rule failures defined in
-> `docs/INTEGRATION_TEST_MATRIX.md`.
+> Day 73 — extend contract tests to protect end-to-end output fields, enum wire values, Decimal
+> formatting, UTC datetime behavior, provenance, rule IDs, content versions, and compatibility
+> imports beyond the existing domain-level contracts. Preserve the two Day 72 strict expected-failure
+> cases until separately bounded fixes enforce their documented safety boundaries.
