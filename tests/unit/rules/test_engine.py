@@ -8,7 +8,7 @@ from decimal import Decimal
 from cds.app.context import RenalDoseEvaluationContext
 from cds.domain.clinical import LabResult, MedicationOrder, Patient
 from cds.domain.enums import ResultStatus, WeightType
-from cds.domain.outputs import RuleResult
+from cds.domain.outputs import RenalFunctionResult, RuleResult
 from cds.domain.value_objects import CodeableConcept, ValueWithUnit
 from cds.repositories.renal_content import (
     RenalContentInterval,
@@ -28,15 +28,18 @@ _EVALUATED_AT = datetime(2026, 7, 23, 12, 0, tzinfo=timezone.utc)
 class _SyntheticRule:
     def __init__(self, result: RuleResult) -> None:
         self.result = result
-        self.calls: list[tuple[RenalDoseEvaluationContext, RenalDoseContent]] = []
+        self.calls: list[
+            tuple[RenalDoseEvaluationContext, RenalFunctionResult, RenalDoseContent]
+        ] = []
 
     def evaluate(
         self,
         context: RenalDoseEvaluationContext,
+        renal_function: RenalFunctionResult,
         content: RenalDoseContent,
         /,
     ) -> RuleResult:
-        self.calls.append((context, content))
+        self.calls.append((context, renal_function, content))
         return self.result
 
 
@@ -61,6 +64,16 @@ def _context(*, medication_id: str | None = "cefepime") -> RenalDoseEvaluationCo
         requested_content_version="2026.1",
         evaluation_date=date(2026, 7, 23),
         evaluated_at=_EVALUATED_AT,
+    )
+
+
+def _renal() -> RenalFunctionResult:
+    return RenalFunctionResult(
+        patient_id="synthetic-patient",
+        encounter_id="synthetic-encounter",
+        value=ValueWithUnit(value=Decimal("42.125"), unit="mL/min"),
+        normalized_to_bsa=False,
+        calculated_at=_EVALUATED_AT,
     )
 
 
@@ -117,8 +130,9 @@ def _registration(*, rule_id: str, rule: _SyntheticRule) -> RenalDoseRuleRegistr
     )
 
 
-def test_engine_evaluates_only_the_exact_content_rule_registration() -> None:
+def test_engine_evaluates_only_exact_registration_with_supplied_renal_result() -> None:
     context = _context()
+    renal_function = _renal()
     content = _content(rule_id="rule-z")
     earlier_rule = _SyntheticRule(RuleResult(rule_id="rule-a"))
     exact_result = RuleResult(
@@ -134,19 +148,21 @@ def test_engine_evaluates_only_the_exact_content_rule_registration() -> None:
         ]
     )
 
-    result = RenalDoseRuleEngine(registry).evaluate(context, content)
+    result = RenalDoseRuleEngine(registry).evaluate(context, renal_function, content)
 
     assert result is exact_result
     assert earlier_rule.calls == []
-    assert exact_rule.calls == [(context, content)]
+    assert exact_rule.calls == [(context, renal_function, content)]
 
 
 def test_engine_preserves_rule_result_identifiers_and_content_version() -> None:
     context = _context()
+    renal_function = _renal()
     content = _content()
     rule_result = RuleResult(
         rule_id=content.rule_id,
         patient_id="synthetic-patient",
+        renal_function_result=renal_function,
         supporting_data={"content_version": content.content_version, "marker": "preserved"},
     )
     rule = _SyntheticRule(rule_result)
@@ -154,30 +170,33 @@ def test_engine_preserves_rule_result_identifiers_and_content_version() -> None:
         [_registration(rule_id=content.rule_id, rule=rule)]
     )
 
-    result = RenalDoseRuleEngine(registry).evaluate(context, content)
+    result = RenalDoseRuleEngine(registry).evaluate(context, renal_function, content)
 
     assert result is rule_result
     assert result.rule_id == content.rule_id
+    assert result.renal_function_result is renal_function
     assert result.supporting_data == {
         "content_version": content.content_version,
         "marker": "preserved",
     }
 
 
-def test_engine_returns_explicit_unmatched_result_without_evaluating_other_rules() -> None:
+def test_engine_returns_unmatched_result_without_evaluating_other_rules() -> None:
     context = _context()
+    renal_function = _renal()
     content = _content(rule_id="unregistered-content-rule")
     rule = _SyntheticRule(RuleResult(rule_id="registered-rule"))
     registry = RenalDoseRuleRegistry(
         [_registration(rule_id="registered-rule", rule=rule)]
     )
 
-    result = RenalDoseRuleEngine(registry).evaluate(context, content)
+    result = RenalDoseRuleEngine(registry).evaluate(context, renal_function, content)
 
     assert result.status is ResultStatus.NOT_APPLICABLE
     assert result.applied is False
     assert result.passed is None
     assert result.rule_id == content.rule_id
+    assert result.renal_function_result is renal_function
     assert result.recommendations == []
     assert result.supporting_data == {
         "outcome_category": "unmatched",
@@ -191,15 +210,16 @@ def test_engine_returns_explicit_unmatched_result_without_evaluating_other_rules
     assert rule.calls == []
 
 
-def test_engine_returns_explicit_unsupported_result_for_unknown_exact_medication() -> None:
+def test_engine_returns_unsupported_result_for_unknown_exact_medication() -> None:
     context = _context(medication_id="CEFEPIME")
+    renal_function = _renal()
     content = _content()
     rule = _SyntheticRule(RuleResult(rule_id=content.rule_id))
     registry = RenalDoseRuleRegistry(
         [_registration(rule_id=content.rule_id, rule=rule)]
     )
 
-    result = RenalDoseRuleEngine(registry).evaluate(context, content)
+    result = RenalDoseRuleEngine(registry).evaluate(context, renal_function, content)
 
     assert result.status is ResultStatus.NOT_APPLICABLE
     assert result.applied is False
@@ -207,6 +227,7 @@ def test_engine_returns_explicit_unsupported_result_for_unknown_exact_medication
     assert result.rule_id == content.rule_id
     assert result.patient_id == "synthetic-patient"
     assert result.encounter_id == "synthetic-encounter"
+    assert result.renal_function_result is renal_function
     assert result.evaluated_at == _EVALUATED_AT
     assert result.recommendations == []
     assert result.supporting_data["outcome_category"] == "unsupported"
@@ -216,15 +237,21 @@ def test_engine_returns_explicit_unsupported_result_for_unknown_exact_medication
     assert rule.calls == []
 
 
-def test_engine_fails_closed_when_validated_context_lacks_a_medication_identifier() -> None:
+def test_engine_fails_closed_when_context_lacks_medication_identifier() -> None:
     context = _context(medication_id=None)
+    renal_function = _renal()
     content = _content()
 
-    result = RenalDoseRuleEngine(RenalDoseRuleRegistry()).evaluate(context, content)
+    result = RenalDoseRuleEngine(RenalDoseRuleRegistry()).evaluate(
+        context,
+        renal_function,
+        content,
+    )
 
     assert result.status is ResultStatus.NOT_APPLICABLE
     assert result.applied is False
     assert result.passed is None
+    assert result.renal_function_result is renal_function
     assert result.recommendations == []
     assert result.supporting_data["outcome_category"] == "unsupported"
     assert result.supporting_data["medication_id"] is None
