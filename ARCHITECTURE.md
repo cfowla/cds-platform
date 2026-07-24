@@ -1,144 +1,198 @@
 # CDS Platform Architecture
 
-This document defines the stable architectural boundaries of the CDS Platform. It describes how components may interact, not the current implementation status or feature schedule. `PROJECT_CHARTER.md` remains authoritative for safety and scope, and `FIRST_VERTICAL_SLICE.md` defines the supported clinical workflow.
+This document defines the stable component boundaries and implemented prototype shape of the CDS
+Platform. It describes permitted dependencies, processing flow, and result contracts rather than
+feature history or roadmap status.
+
+`PROJECT_CHARTER.md` remains authoritative for safety and scope. `FIRST_VERTICAL_SLICE.md` defines
+the supported clinical workflow. This prototype is for research, education, and software development
+only; it is not for direct clinical use and must use synthetic or properly de-identified data.
 
 ## Architectural principles
 
-1. **Validate before computation.** Structural validity, clinical task sufficiency, explicit units, supported context, and internal consistency are checked before any calculation or rule matching occurs.
-2. **Use typed domain objects.** Clinical facts and results cross internal boundaries as typed objects rather than unstructured dictionaries or interface-specific payloads.
-3. **Keep domain models passive.** Domain models represent facts, concepts, and result structures. They contain no file access, network access, persistence, workflow orchestration, or clinical calculations.
-4. **Keep services pure and deterministic.** Calculators and evaluators receive typed inputs and return typed outputs. They do not read files, call APIs, depend on hidden mutable state, or silently obtain the current time.
-5. **Separate clinical content from logic.** Medication rules, thresholds, citations, versions, and review metadata are data. They are not embedded throughout calculation or orchestration code.
-6. **Access content through repositories.** Repositories are the boundary for loading and validating clinical content. Services and rules do not read YAML or other files directly.
-7. **Keep interfaces free of clinical logic.** CLI and other interface adapters collect input, invoke application use cases, and render output. They do not calculate, validate clinical sufficiency, or select recommendations.
-8. **Return a standard structured result.** Every workflow produces an auditable result shape that distinguishes success, warnings, incomplete evaluation, unsupported context, and system failure.
+1. Validate structural integrity and task sufficiency before calculation or rule matching.
+2. Pass typed objects across internal boundaries; keep external dictionaries at mapper boundaries.
+3. Keep domain models passive and free of validation, calculation, orchestration, serialization,
+   persistence, network access, and file I/O.
+4. Keep services and rule evaluators pure, deterministic, and explicit about time and assumptions.
+5. Keep medication guidance, thresholds, sources, versions, review metadata, and limitations as
+   inspectable clinical-content data.
+6. Load and validate content only through repository implementations.
+7. Keep mappers and interfaces free of clinical recommendation logic.
+8. Return one structured result that distinguishes success, warnings, incomplete evaluation,
+   unsupported context, and system failure.
+
+## Implemented package map
+
+```text
+src/cds/
+  app/           request DTOs, use-case orchestration, compatibility exports
+  content/       versioned YAML clinical-content documents
+  domain/        passive clinical, support, value, exception, and output types
+  interfaces/    CLI I/O, arguments, presentation, diagnostics, and exit behavior
+  mappers/       request and response representation conversion
+  repositories/  typed content contracts, schema validation, and storage adapters
+  rules/         evaluation context, predicates, medication rules, registry, and engine
+  services/      pure renal calculation helpers
+  utils/         generic serialization and diagnostic logging helpers
+  validation/    structural and task-sufficiency validators and passive findings
+```
+
+`tests/contract/test_architecture_boundaries.py` enforces layer-directory presence, permitted
+internal imports, and the absence of I/O imports from the pure `domain`, `services`, and `rules`
+layers.
 
 ## Dependency direction
 
-Dependencies point inward toward stable domain types and pure logic:
+The implementation uses an explicit allowlist rather than a single linear dependency chain. A layer
+may import only the internal layers shown below, including itself for package-local composition.
+
+| Source | Permitted internal dependencies |
+| --- | --- |
+| `domain` | `domain` |
+| `validation` | `domain`, `utils`, `validation` |
+| `services` | `domain`, `services`, `utils` |
+| `rules` | `domain`, `repositories`, `rules`, `utils` |
+| `content` | `content`, `domain` |
+| `repositories` | `domain`, `repositories`, `utils` |
+| `app` | `app`, `domain`, `repositories`, `rules`, `services`, `utils`, `validation` |
+| `mappers` | `app`, `domain`, `mappers`, `utils` |
+| `interfaces` | `app`, `domain`, `interfaces`, `mappers`, `utils` |
+| `utils` | `utils` |
+
+The practical inward flow is:
 
 ```text
-interfaces
-  -> mappers
-  -> app use cases
-       -> validation
-       -> repositories
-       -> services
-       -> rules
-  -> domain
+interfaces -> mappers -> app DTOs and domain inputs
+interfaces -> injected app use case
+app -> validation + repositories + services + rules
+validation -> domain
+services -> domain
+rules -> domain + typed repository content
+repositories -> domain and storage-specific helpers
+content -> versioned data only
 ```
 
-Lower-level modules must not import interface or application orchestration code. Domain modules must not import services, repositories, mappers, or interfaces.
+Lower-level packages do not import application orchestration or interface code. Domain modules do
+not import validation, services, rules, repositories, mappers, interfaces, or storage libraries.
 
 ## Processing flow
 
 ```text
-external input
-  -> input mapper
-  -> typed input or domain objects
-  -> structural and task-sufficiency validation
-  -> application use case
-       -> repository supplies versioned content
-       -> service performs calculation
-       -> rule matcher evaluates supported content
-  -> structured evaluation result
-  -> output mapper
-  -> interface output
+synthetic JSON file
+  -> CLI reads and parses JSON
+  -> request mapper creates a passive app DTO
+  -> request mapper converts wire values to typed domain and application inputs
+  -> CLI requires explicit evaluation date and timezone-aware evaluation time
+  -> use case performs structural and task-sufficiency validation
+       -> invalid or insufficient input returns incomplete with no recommendation
+  -> repository retrieves exact medication + regimen + content-version content
+  -> content-specific medication and regimen sufficiency checks run
+  -> app assembles the validated rule-evaluation context
+  -> pure service calculates unrounded Cockcroft-Gault creatinine clearance
+  -> rule engine selects one exact registered rule and evaluates typed content
+  -> app returns RenalDoseUseCaseResult(validation, rule_result)
+  -> response mapper fixes the top-level response shape
+  -> canonical serializer emits deterministic JSON
+  -> CLI may render a non-authoritative human-readable summary
 ```
 
-A critical validation issue stops the workflow before calculation or rule matching. Unsupported or insufficient cases return a structured non-success result and no dosing recommendation.
+Repository lookup is exact and case-sensitive. It does not trim, normalize, alias, fuzzy-match,
+fall back to another regimen, or select a content version. Critical validation issues stop the flow
+before calculation or matching. Unsupported or insufficient cases fail closed with no dosing
+recommendation.
 
 ## Module responsibilities
 
-### `domain`
+| Module | Responsibility |
+| --- | --- |
+| `domain` | Passive clinical facts, enums, value objects, traceability, exceptions, and outputs. |
+| `validation` | Structural and task-sufficiency checks returning typed findings. |
+| `services` | Pure calculations using validated typed inputs and unrounded values. |
+| `rules` | Validated context, predicates, medication rules, registry, and deterministic engine. |
+| `content` | Non-executable, versioned YAML guidance and review metadata. |
+| `repositories` | Content contracts, schema validation, typed conversion, storage access, lookup. |
+| `app` | DTOs, workflow order, component coordination, result assembly, failure mapping. |
+| `mappers` | Exact wire-to-internal conversion and canonical response shaping. |
+| `interfaces` | I/O, invocation, presentation, sanitized diagnostics, and exit behavior. |
+| `utils` | Generic serialization and controlled diagnostic logging only. |
 
-Defines the stable vocabulary shared across the system:
+Important implemented details:
 
-- enums and constants;
-- clinical fact models;
-- shared value objects;
-- traceability objects;
-- recommendation, alert, and rule-result models; and
-- typed domain exceptions when needed.
-
-Domain objects preserve missing data explicitly. Unknown numeric values are `None`, not zero. Unknown categories use explicit unknown values where the distinction is clinically meaningful. Units, assumptions, warnings, evidence, and provenance remain visible.
-
-### `validation`
-
-Performs two kinds of checks:
-
-- **structural validation:** required fields, types, units, ranges, timestamps, and internal consistency;
-- **task-sufficiency validation:** whether the supplied information and context are adequate for the requested CDS operation.
-
-Validation returns typed issues and results. Expected clinical gaps are represented as validation findings, warnings, incomplete results, or unsupported results rather than unhandled exceptions.
-
-### `services`
-
-Implements clinical calculations and deterministic evaluation logic. A service:
-
-- accepts typed input;
-- returns typed output;
-- has no direct I/O;
-- does not load content;
-- does not mutate shared global state; and
-- exposes all assumptions through inputs or results.
-
-Rounding for display must not replace the unrounded value needed for reproducibility.
-
-### `rules`
-
-Performs simple, inspectable matching against validated, versioned content. Rule behavior must make boundary inclusivity explicit and detect missing, overlapping, or unreachable ranges. Prefer straightforward composition over a domain-specific language, metaclasses, or implicit magic.
-
-### `content`
-
-Stores versioned clinical guidance as data. Content records include the supported context, boundaries, recommendation, rationale, source citation, source version or publication date, content version, review metadata, and important limitations.
-
-Content files do not execute logic.
-
-### `repositories`
-
-Load, parse, and validate clinical content and expose it through typed repository interfaces. Repositories isolate storage details from application and service code. File reads and future storage substitutions occur behind this boundary.
-
-### `app`
-
-Application use cases orchestrate a complete workflow. They control the sequence:
-
-```text
-validate -> load content -> calculate -> match rules -> assemble result
-```
-
-Use cases coordinate components but do not duplicate calculator formulas, rule predicates, repository parsing, or interface rendering.
-
-### `mappers`
-
-Convert between external representations and internal typed objects. Mappers make unit handling, missing-data behavior, identifiers, and serialization decisions explicit. They do not determine clinical recommendations.
-
-### `interfaces`
-
-Interfaces handle user or system interaction only. They gather input, call one application use case, and present the structured result. Clinical validation, calculations, rule matching, and content selection remain outside the interface layer.
+- Unknown numerics are `None`, never zero; unknown categories use explicit unknown states.
+- `ValidationResult` has tri-state `is_valid` and structured `ValidationIssue` entries.
+- The renal service requires explicit dates, supplied weight, declared weight type, exact supported
+  units, and timezone-aware timestamps.
+- Rules receive validated context, calculated renal function, and typed content; they perform no
+  loading, normalization, calculation, logging, or I/O.
+- The YAML repository reads only explicit paths during construction, validates the closed schema,
+  converts documents to immutable typed content, and rejects duplicate exact keys.
+- Request mapping rejects unknown fields and unsafe wire types before explicit conversion to
+  `Decimal`, dates, datetimes, enums, value objects, and domain models.
+- The CLI invokes an already configured use case and contains no clinical validation, calculation,
+  content selection, or rule matching.
+- Canonical serialization preserves declared field names, enum wire values, exact decimal strings,
+  ISO dates, UTC datetimes, lists, tuples, and string-keyed mappings.
 
 ## Structured output contract
 
-A workflow result must preserve enough information to reproduce and audit the outcome. As applicable, it includes:
+The application returns:
 
-- outcome status;
-- validated inputs and units;
-- calculation method and implementation version;
-- unrounded calculated value and display value;
-- matched rule identifier and content version;
-- recommendation and rationale;
-- assumptions and warnings;
-- evidence and source citations;
-- provenance and evaluation timestamp; and
-- structured error or validation issues.
+```text
+RenalDoseUseCaseResult
+  validation: ValidationResult
+    is_valid: bool | None
+    issues: list[ValidationIssue]
+  rule_result: RuleResult
+```
 
-Expected clinical gaps and unsupported cases are not system crashes. System failures are converted at the application boundary into structured failed results. User-facing output must not expose stack traces.
+The response mapper fixes exactly two top-level JSON objects:
+
+```json
+{
+  "validation": {},
+  "rule_result": {}
+}
+```
+
+`RuleResult` preserves, as applicable:
+
+- rule, patient, encounter, content-version, and evaluation-time links;
+- status: `success`, `success_with_warnings`, `incomplete`, `not_applicable`, or `failed`;
+- tri-state `applied` and `passed` values;
+- summary and structured supporting data;
+- the unrounded `RenalFunctionResult` and reproducible calculation inputs;
+- recommendations, dose details, contraindications, monitoring, and alerts; and
+- assumptions, warnings, evidence, provenance, and sanitized failure stage or code.
+
+Canonical JSON is authoritative; the CLI summary is presentation only. Expected clinical gaps and
+unsupported contexts become `incomplete` or `not_applicable` without a recommendation. Internal
+failures become sanitized `failed` results. User-facing output never includes a traceback.
+
+## Approved prototype deviations and limitations
+
+1. **Typed content models live in `repositories.renal_content`.** Rules import these immutable types
+   because the repository contract currently defines the content boundary. A separate content-model
+   package is not justified until another workflow demonstrates a concrete need.
+2. **The canonical evaluation context lives in `rules.context`.** `app.context` is a compatibility
+   export and must not become a second ownership location.
+3. **The CLI request DTO lives in `app.dto`.** Mappers may depend on this passive
+   boundary type while parsing and domain conversion remain in `mappers`.
+4. **The CLI is dependency injected.** Callers provide a configured use case; a standalone
+   production composition root is outside the current prototype interface.
+5. **Only the renal-dose vertical slice is implemented.** Existing package names do not authorize an
+   additional medication, population, renal method, interface, or clinical domain.
+
+Compatibility exports preserve public imports without authorizing reverse dependencies.
 
 ## Cross-cutting constraints
 
-- No silent unit conversion, weight-method selection, indication inference, interpolation, or extrapolation.
-- No direct clinical-content reads from services or rule evaluators.
-- No clinical logic in mappers or interfaces.
-- No hidden network calls or mutable global state in deterministic logic.
-- Composition is preferred over inheritance.
-- New abstractions must be justified by the supported workflow rather than hypothetical future features.
+- Preserve the prototype warning and use only synthetic or properly de-identified data.
+- Do not fabricate missing values, convert ambiguous units, or silently infer clinical context.
+- Use unrounded values for calculation, matching, and audit; round only for presentation.
+- Do not read clinical content from services or rule evaluators.
+- Do not place clinical logic in domain models, mappers, interfaces, or generic utilities.
+- Do not expose patient identifiers, clinical payloads, exception messages, or tracebacks in
+  diagnostic output.
+- Prefer explicit composition over inheritance, metaprogramming, or a domain-specific language.
+- Add abstractions only when the supported workflow demonstrates a concrete need.
