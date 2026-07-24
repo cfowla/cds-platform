@@ -28,15 +28,16 @@ Use only the named files and task-specified commands. Do not install missing tes
   `73c3fcfd10548db31c2bf6707e73f65c5e7f2eb0` under Python 3.12.1.
 - PR #53 merged only the durable verification artifact. Its merge commit is
   `196a351eb48b30a70616d862a640190e0201c9e6`; it did not change implementation or tests.
-- The tested candidate failed software verification and remains a release `no-go`.
-- Remediation work package 1 fixture edits are implemented on branch
-  `agent/repair-integration-order-fixtures` at `e54cbcfef721ff6a03939d276983a085ce15d042`.
-- The focused integration verification has not yet been executed for that branch, so it is not a
-  selected release candidate and does not advance the Day 83 gate.
+- PR #55 merged the bounded integration fixture repair to `main`. Its merge commit is
+  `1bd7bc2a6976734b2ec74832bdb48db1bbd19322`.
+- The tested Day 83 candidate failed software verification and remains a release `no-go`.
+- Remediation work package 1 implementation is merged, but its focused acceptance gate is not yet
+  satisfied because the two-file integration run remains red for a newly exposed Decimal-text
+  mismatch.
 
 ## Current state
 
-The durable evidence remains:
+The durable Day 83 evidence remains:
 
 `artifacts/verification/full-verification-20260724T082921Z.txt`
 
@@ -47,31 +48,60 @@ Recorded results for candidate `73c3fcfd10548db31c2bf6707e73f65c5e7f2eb0`:
 - CLI walkthrough: not recorded in the artifact.
 - Working tree: ended with untracked `artifacts/` because the evidence file was being created.
 
-Remediation work package 1 now has the intended bounded fixture change:
+Remediation work package 1 fixture implementation is now merged:
 
 - `tests/integration/test_renal_dose_matrix.py` defines stable synthetic route and indication coding
   systems and supplies them in `_order()`.
 - `tests/integration/test_renal_safety_invariants.py` defines the same stable synthetic systems and
   supplies them in `_order()`.
-- The existing route and indication codes derived from selected content are unchanged.
-- No validator, implementation, content, snapshot, golden, or lint configuration was changed.
+- Existing route and indication codes derived from selected content remain unchanged.
+- No validator, implementation, content, snapshot, golden, or lint configuration changed in PR #55.
 
-Verification status for this task:
+Focused verification was attempted with the required command:
 
-- `git rev-parse --show-toplevel` found no supplied repository checkout.
-- `python -m pytest --version` reported pytest 9.0.2.
-- The exact branch diff was reviewed through the GitHub connector and contains only the intended two
-  constants and two `_order()` substitutions in each integration file.
-- The targeted pytest command was not executed because a runnable repository checkout and its source
-  dependency graph were not available in the execution environment.
-- The previous 57 missing-system integration failures remain the last durable test evidence until the
-  focused command is rerun in a complete checkout.
+```bash
+python -m pytest tests/integration/test_renal_dose_matrix.py \
+  tests/integration/test_renal_safety_invariants.py -q
+```
+
+Observed result in the bounded verification environment under Python 3.13.5 and pytest 9.0.2:
+
+- 39 failed, 78 passed, 2 xfailed; exit status 1.
+- No failure output contained `missing_required_route_system` or
+  `missing_required_indication_system`.
+- Full-flow cases reached calculation, exact content lookup, rule matching, recommendation, and
+  provenance assertions before failing at the textual `renal_value` assertion.
+- Failure-injection cases reached their intended stages and passed.
+- `test_declared_weight_type_conflict_fails_closed` was strict XFAIL, not XPASS.
+- `UNSUP-FAM-WEIGHT` was strict XFAIL, not XPASS.
+
+All 39 failures had the same shape:
+
+- the calculated `Decimal` compared numerically equal to the target;
+- `supporting_data["renal_band_id"]` matched the expected band; but
+- `supporting_data["renal_value"]` preserved arithmetic scale, such as `11.0`, `10.99990`, or
+  `60.00010`, while the test expected `11`, `10.9999`, or `60.0001` from `str(target)`.
+
+The current implementation constructs the calculated value without rounding and the shared exact
+matcher records `str(renal_value)`. The next task must decide whether the audit string is intended to
+preserve Decimal scale or use a canonical non-exponent textual form before changing either production
+code or the test assertion.
+
+Verification limitation:
+
+- No complete supplied repository checkout was available.
+- The GitHub connector was used to build a bounded checkout from the named tests, directly required
+  imports, and referenced renal content.
+- The bounded checkout is diagnostic evidence, not a hash-verified release-candidate checkout or a
+  replacement for the durable Day 83 evidence artifact.
+- The Decimal-text mismatch must be reproduced in a complete checkout before it is treated as a
+  release-candidate result or fixed.
 
 The remaining known repair areas are:
 
-1. **Focused integration verification.** Confirm valid fixtures no longer report
-   `missing_required_route_system` or `missing_required_indication_system`, and confirm the declared
-   weight-type conflict and famotidine minimum-weight cases are strict XFAIL rather than XPASS.
+1. **Renal-value Decimal text contract.** Reproduce the 39 focused boundary failures in a complete
+   checkout, decide the intended audit-string contract, and make the smallest code-or-test change that
+   preserves unrounded Decimal matching and exact JSON numeric-string requirements.
 2. **Stale content review snapshot.** The contract snapshot does not include
    `cefepime_synthetic_fixture.yaml`. The repository must deliberately decide whether the review
    snapshot includes every renal YAML document or only an explicit selected clinical-content set.
@@ -87,12 +117,13 @@ The remaining known repair areas are:
 
 The controlling plan is
 [`docs/PROTOTYPE_RELEASE_REMEDIATION_PLAN.md`](docs/PROTOTYPE_RELEASE_REMEDIATION_PLAN.md).
-Execute it as separate bounded tasks in this order:
+Continue as separate bounded tasks in this order:
 
-1. **Implemented, verification pending:** repair only the two integration `_order()` helpers by adding
-   explicit synthetic route and indication coding systems.
-2. Run only the two affected integration files and confirm the two strict xfails return to their
-   intended expected-failure state rather than XPASS.
+1. **Implemented and merged; acceptance blocked:** explicit route and indication coding systems are
+   present in both integration `_order()` helpers. The missing-system failure family is no longer the
+   observed focused blocker, and both strict xfails are restored as XFAIL.
+2. Reproduce and resolve the newly exposed `supporting_data["renal_value"]` Decimal textual-contract
+   mismatch without rounding the calculated value or weakening boundary assertions.
 3. Resolve the synthetic-content snapshot policy intentionally and rerun its contract test.
 4. Inspect the semantic cefepime golden diff, then regenerate only if the changed canonical output is
    approved.
@@ -134,9 +165,10 @@ Execute it as separate bounded tasks in this order:
 ## Blockers
 
 - Candidate `73c3fcfd10548db31c2bf6707e73f65c5e7f2eb0` failed pytest and Ruff verification.
-- The focused integration rerun has not yet proved that the fixture repair removes the 57 previously
-  listed missing-system failures.
-- The two strict xfails have not yet been observed as XFAIL after the fixture repair.
+- The focused integration suite remains red with 39 Decimal textual-representation failures in the
+  bounded verification run.
+- The Decimal textual-contract finding has not yet been reproduced in a complete hash-verified
+  checkout.
 - The renal-content snapshot policy is unresolved for synthetic fixtures.
 - The cefepime golden semantic change has not been reviewed.
 - The Decimal-context tests contain an invalid equality assertion.
@@ -160,31 +192,42 @@ These blockers prevent an honest `go`, changelog update, or prototype milestone 
 
 ## Files changed
 
-- `tests/integration/test_renal_dose_matrix.py` - adds stable synthetic route and indication coding
-  systems to the `_order()` fixture without changing the content-derived codes.
-- `tests/integration/test_renal_safety_invariants.py` - applies the same bounded fixture repair.
-- `CURRENT.md` - records the implemented fixture repair, unavailable focused verification, and exact
+- `CURRENT.md` - replaces the stale pending-verification state with the merged fixture status, focused
+  run outcome, newly exposed Decimal textual-contract blocker, verification limitation, and exact
   next action.
 
 ## Additional files inspected
 
 - `docs/TASK_TEMPLATE.md` - bounded-task, verification, and close-procedure requirements.
-- `docs/SAFETY_INVARIANTS.md` - validation-before-computation and fail-closed constraints.
+- `docs/SAFETY_INVARIANTS.md` - validation-before-computation, exact Decimal, and fail-closed
+  constraints.
 - `docs/PROTOTYPE_RELEASE_REMEDIATION_PLAN.md` - work package 1 scope and acceptance gate.
-- `src/cds/validation/medication.py` - confirms required route and indication systems are sufficiency
-  errors and that validation must not be weakened.
+- `tests/integration/test_renal_dose_matrix.py` - focused full-flow, failure-injection, boundary, and
+  strict-XFAIL assertions.
+- `tests/integration/test_renal_safety_invariants.py` - renal-band uniqueness, critical-stop, evidence,
+  and provenance assertions.
+- `src/cds/services/renal.py` - confirms the calculated Decimal remains unrounded and can retain
+  arithmetic scale.
+- `src/cds/rules/exact_renal_dose.py` - confirms supporting data currently records
+  `str(renal_value)`.
+- Directly required domain, validation, repository, rule, serialization, and renal YAML files were
+  materialized only to collect and execute the focused tests in the bounded checkout.
 
 ## Next exact action
 
-> In a complete development checkout at branch `agent/repair-integration-order-fixtures`, run:
+> In a complete development checkout of current `main`, reproduce one integer and one fractional
+> boundary failure first:
 >
 > ```bash
-> python -m pytest tests/integration/test_renal_dose_matrix.py \
->   tests/integration/test_renal_safety_invariants.py -q
+> python -m pytest \
+>   tests/integration/test_renal_dose_matrix.py::test_full_flow_boundaries \
+>   -q -k 'BND-CEF-Q8-11-at or BND-CEF-Q8-11-below'
 > ```
 >
-> Confirm no valid fixture reports `missing_required_route_system` or
-> `missing_required_indication_system`; full-flow and failure-injection tests reach their intended
-> stages; `test_declared_weight_type_conflict_fails_closed` and `UNSUP-FAM-WEIGHT` are strict XFAIL,
-> not XPASS. Do not change implementation, snapshots, goldens, Ruff configuration, or unrelated tests
-> while performing that verification.
+> If the mismatch reproduces, inspect only `src/cds/services/renal.py`,
+> `src/cds/rules/exact_renal_dose.py`, `src/cds/utils/serialization.py`, and the focused assertion in
+> `tests/integration/test_renal_dose_matrix.py`. Define whether `supporting_data["renal_value"]` must
+> preserve Decimal scale or use a canonical non-exponent string, then make the smallest coherent
+> code-or-test change. Preserve the unrounded Decimal used for band matching, do not convert through
+> `float`, and rerun both affected integration files. Do not proceed to snapshot, golden, Ruff, or
+> unrelated fixes in that task.
