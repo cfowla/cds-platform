@@ -25,7 +25,21 @@ from cds.utils.serialization import JsonValue
 if TYPE_CHECKING:
     from cds.app.renal_dose import RenalDoseUseCase
 
-__all__ = ["main", "run_renal_dose_cli"]
+CLI_EXIT_SUCCESS = 0
+CLI_EXIT_SYSTEM_FAILURE = 1
+CLI_EXIT_INPUT_ERROR = 2
+CLI_EXIT_UNSUPPORTED = 3
+CLI_EXIT_CONTENT_FAILURE = 4
+
+__all__ = [
+    "CLI_EXIT_CONTENT_FAILURE",
+    "CLI_EXIT_INPUT_ERROR",
+    "CLI_EXIT_SUCCESS",
+    "CLI_EXIT_SYSTEM_FAILURE",
+    "CLI_EXIT_UNSUPPORTED",
+    "main",
+    "run_renal_dose_cli",
+]
 
 _PROTOTYPE_DESCRIPTION = (
     "Run one prototype renal-dose evaluation using synthetic or properly de-identified JSON input. "
@@ -34,6 +48,14 @@ _PROTOTYPE_DESCRIPTION = (
 _PROTOTYPE_SUMMARY_WARNING = (
     "PROTOTYPE — not for direct clinical use; use synthetic or properly de-identified data only."
 )
+
+
+class _CLIInputReadError(Exception):
+    """Signal an unreadable input path without exposing operating-system details."""
+
+
+class _CLIOutputWriteError(Exception):
+    """Signal an unwritable output stream or path without exposing sensitive details."""
 
 
 def run_renal_dose_cli(
@@ -57,37 +79,14 @@ def run_renal_dose_cli(
     with summary text.
     """
 
-    payload = json.loads(Path(input_path).read_text(encoding="utf-8"))
-    mapped = map_renal_dose_request(dto_from_mapping(payload))
-    evaluation_date, evaluated_at = _required_application_times(mapped)
-
-    result = use_case.evaluate(
-        patient=mapped.patient,
-        serum_creatinine_result=mapped.serum_creatinine_result,
-        medication_order=mapped.medication_order,
-        weight_type=mapped.weight_type,
-        regimen_id=mapped.regimen_id,
-        formulation_id=mapped.formulation_id,
-        renal_function_stable=mapped.renal_function_stable,
-        renal_replacement_therapy=mapped.renal_replacement_therapy,
-        pregnant_or_lactating=mapped.pregnant_or_lactating,
-        requested_content_version=mapped.requested_content_version,
-        evaluation_date=evaluation_date,
-        evaluated_at=evaluated_at,
+    _run_renal_dose_cli(
+        input_path,
+        use_case=use_case,
+        output_path=output_path,
+        stdout=stdout,
+        summary=summary,
+        summary_stream=summary_stream,
     )
-    response = dumps_renal_dose_response(result)
-
-    if output_path is None:
-        stream = stdout if stdout is not None else sys.stdout
-        stream.write(response)
-        stream.write("\n")
-    else:
-        Path(output_path).write_text(f"{response}\n", encoding="utf-8")
-
-    if summary:
-        stream = summary_stream if summary_stream is not None else sys.stderr
-        stream.write(_format_summary(map_renal_dose_response(result)))
-        stream.write("\n")
 
 
 def main(
@@ -97,7 +96,7 @@ def main(
     stdout: TextIO | None = None,
     stderr: TextIO | None = None,
 ) -> int:
-    """Parse command arguments and run one configured renal-dose use case."""
+    """Parse arguments, emit sanitized diagnostics, and return an explicit exit code."""
 
     parser = argparse.ArgumentParser(prog="cds-renal-dose", description=_PROTOTYPE_DESCRIPTION)
     parser.add_argument("input", type=Path, help="Path to one synthetic renal-dose JSON request.")
@@ -116,15 +115,194 @@ def main(
         ),
     )
     arguments = parser.parse_args(argv)
-    run_renal_dose_cli(
-        arguments.input,
-        use_case=use_case,
-        output_path=arguments.output,
-        stdout=stdout,
-        summary=arguments.summary,
-        summary_stream=stderr,
+    error_stream = stderr if stderr is not None else sys.stderr
+
+    try:
+        response = _run_renal_dose_cli(
+            arguments.input,
+            use_case=use_case,
+            output_path=arguments.output,
+            stdout=stdout,
+            summary=arguments.summary,
+            summary_stream=stderr,
+        )
+    except _CLIInputReadError:
+        _write_cli_error(
+            error_stream,
+            "Input error: the request file could not be read.",
+            include_prototype_warning=True,
+        )
+        return CLI_EXIT_INPUT_ERROR
+    except json.JSONDecodeError:
+        _write_cli_error(
+            error_stream,
+            "Input error: the request file must contain one valid JSON object.",
+            include_prototype_warning=True,
+        )
+        return CLI_EXIT_INPUT_ERROR
+    except RequestMappingError:
+        _write_cli_error(
+            error_stream,
+            "Input error: request fields could not be mapped safely.",
+            include_prototype_warning=True,
+        )
+        return CLI_EXIT_INPUT_ERROR
+    except _CLIOutputWriteError:
+        _write_cli_error(
+            error_stream,
+            "System failure: canonical output could not be written safely.",
+            include_prototype_warning=True,
+        )
+        return CLI_EXIT_SYSTEM_FAILURE
+    except Exception:
+        _write_cli_error(
+            error_stream,
+            "System failure: the renal-dose evaluation did not complete safely.",
+            include_prototype_warning=True,
+        )
+        return CLI_EXIT_SYSTEM_FAILURE
+
+    exit_code, message = _response_exit_behavior(response)
+    if message is not None:
+        _write_cli_error(
+            error_stream,
+            message,
+            include_prototype_warning=not arguments.summary,
+        )
+    return exit_code
+
+
+def _run_renal_dose_cli(
+    input_path: str | Path,
+    *,
+    use_case: RenalDoseUseCase,
+    output_path: str | Path | None,
+    stdout: TextIO | None,
+    summary: bool,
+    summary_stream: TextIO | None,
+) -> dict[str, JsonValue]:
+    try:
+        request_text = Path(input_path).read_text(encoding="utf-8")
+    except (OSError, UnicodeError) as exc:
+        raise _CLIInputReadError from exc
+
+    payload = json.loads(request_text)
+    mapped = map_renal_dose_request(dto_from_mapping(payload))
+    evaluation_date, evaluated_at = _required_application_times(mapped)
+
+    result = use_case.evaluate(
+        patient=mapped.patient,
+        serum_creatinine_result=mapped.serum_creatinine_result,
+        medication_order=mapped.medication_order,
+        weight_type=mapped.weight_type,
+        regimen_id=mapped.regimen_id,
+        formulation_id=mapped.formulation_id,
+        renal_function_stable=mapped.renal_function_stable,
+        renal_replacement_therapy=mapped.renal_replacement_therapy,
+        pregnant_or_lactating=mapped.pregnant_or_lactating,
+        requested_content_version=mapped.requested_content_version,
+        evaluation_date=evaluation_date,
+        evaluated_at=evaluated_at,
     )
-    return 0
+    mapped_response = map_renal_dose_response(result)
+    response = dumps_renal_dose_response(result)
+
+    try:
+        if output_path is None:
+            stream = stdout if stdout is not None else sys.stdout
+            stream.write(response)
+            stream.write("\n")
+        else:
+            Path(output_path).write_text(f"{response}\n", encoding="utf-8")
+
+        if summary:
+            stream = summary_stream if summary_stream is not None else sys.stderr
+            stream.write(_format_summary(mapped_response))
+            stream.write("\n")
+    except (OSError, UnicodeError) as exc:
+        raise _CLIOutputWriteError from exc
+
+    return mapped_response
+
+
+def _response_exit_behavior(response: dict[str, JsonValue]) -> tuple[int, str | None]:
+    rule_result = _as_object(response.get("rule_result")) or {}
+    status = _as_text(rule_result.get("status"))
+
+    if status in {"success", "success_with_warnings"}:
+        return CLI_EXIT_SUCCESS, None
+    if status == "not_applicable":
+        return (
+            CLI_EXIT_UNSUPPORTED,
+            "Unsupported request: the structured result was not applicable to the supplied context.",
+        )
+    if status == "incomplete":
+        issue_codes = _validation_issue_codes(response)
+        if any("unit" in code for code in issue_codes):
+            return (
+                CLI_EXIT_INPUT_ERROR,
+                "Input error: structured validation rejected a missing, unsupported, or ambiguous unit.",
+            )
+        if "unsupported_medication_system" in issue_codes:
+            return (
+                CLI_EXIT_UNSUPPORTED,
+                "Unsupported request: the medication coding system is not supported.",
+            )
+        return (
+            CLI_EXIT_INPUT_ERROR,
+            "Input error: structured validation did not permit renal-dose evaluation.",
+        )
+    if status == "failed":
+        supporting_data = _as_object(rule_result.get("supporting_data")) or {}
+        failure_code = _as_text(supporting_data.get("failure_code"))
+        failure_stage = _as_text(supporting_data.get("failure_stage"))
+        if failure_code == "content_not_found":
+            return (
+                CLI_EXIT_UNSUPPORTED,
+                "Unsupported request: no exact medication, regimen, and content-version match was available.",
+            )
+        if failure_stage in {"content_repository", "content_validation"}:
+            return (
+                CLI_EXIT_CONTENT_FAILURE,
+                "Content failure: renal-dose content could not be evaluated safely.",
+            )
+        return (
+            CLI_EXIT_SYSTEM_FAILURE,
+            "System failure: the renal-dose evaluation returned a failed result.",
+        )
+    return (
+        CLI_EXIT_SYSTEM_FAILURE,
+        "System failure: the renal-dose evaluation returned an unknown status.",
+    )
+
+
+def _validation_issue_codes(response: dict[str, JsonValue]) -> set[str]:
+    validation = _as_object(response.get("validation")) or {}
+    codes: set[str] = set()
+    for issue in _as_list(validation.get("issues")) or []:
+        issue_object = _as_object(issue)
+        if issue_object is None:
+            continue
+        code = _as_text(issue_object.get("code"))
+        if code is not None:
+            codes.add(code)
+    return codes
+
+
+def _write_cli_error(
+    stream: TextIO,
+    message: str,
+    *,
+    include_prototype_warning: bool,
+) -> None:
+    try:
+        if include_prototype_warning:
+            stream.write(_PROTOTYPE_SUMMARY_WARNING)
+            stream.write("\n")
+        stream.write(message)
+        stream.write("\n")
+    except (OSError, UnicodeError):
+        return
 
 
 def _format_summary(response: dict[str, JsonValue]) -> str:
