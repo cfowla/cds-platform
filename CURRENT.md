@@ -62,7 +62,9 @@ Focused verification commands:
 
 ```bash
 python -m pytest tests/contract/test_renal_content_snapshots.py -q
-python -m pytest   tests/integration/test_cefepime_end_to_end.py::test_yaml_loaded_draft_content_remains_ineligible_after_validated_calculation   -q
+python -m pytest \
+  tests/integration/test_cefepime_end_to_end.py::test_yaml_loaded_draft_content_remains_ineligible_after_validated_calculation \
+  -q
 ```
 
 Exact results:
