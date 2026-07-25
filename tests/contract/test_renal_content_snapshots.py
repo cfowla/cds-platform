@@ -1,4 +1,4 @@
-"""Review-oriented snapshots for all versioned renal-dose content documents."""
+"""Review-oriented snapshots for explicitly selected clinical-content documents."""
 
 from __future__ import annotations
 
@@ -515,26 +515,38 @@ def _snapshot_document(document: dict[str, Any]) -> dict[str, Any]:
     }
 
 
-def _load_actual_documents() -> dict[str, Any]:
+def _load_selected_documents() -> dict[str, Any]:
     documents: dict[str, Any] = {}
-    for path in sorted(_CONTENT_DIRECTORY.glob("*.yaml")):
+
+    for filename in sorted(_EXPECTED_DOCUMENTS):
+        path = _CONTENT_DIRECTORY / filename
+        assert path.is_file(), f"Selected renal-content document is missing: {filename}"
+
         document = yaml.safe_load(path.read_text(encoding="utf-8"))
-        assert isinstance(document, dict), f"{path.name} must contain a YAML mapping"
-        documents[path.name] = _snapshot_document(document)
+        assert isinstance(document, dict), f"{filename} must contain a YAML mapping"
+        documents[filename] = _snapshot_document(document)
+
     return documents
 
 
-def test_renal_content_matches_review_snapshot() -> None:
+def test_selected_renal_content_matches_review_snapshot() -> None:
     """Any selected clinical-content change must produce an inspectable diff."""
 
-    assert _load_actual_documents() == _EXPECTED_DOCUMENTS
+    assert _load_selected_documents() == _EXPECTED_DOCUMENTS
 
 
-def test_snapshot_does_not_mark_draft_content_as_reviewed() -> None:
+def test_selected_snapshot_does_not_mark_draft_content_as_reviewed() -> None:
     """Software snapshot coverage must not imply independent clinical approval."""
 
-    documents = _load_actual_documents()
+    documents = _load_selected_documents()
     assert documents
     for document in documents.values():
         assert document["content_version"].endswith("-draft")
         assert document["review"] == _DRAFT_REVIEW
+
+
+def test_synthetic_fixture_is_outside_selected_clinical_snapshot() -> None:
+    filename = "cefepime_synthetic_fixture.yaml"
+
+    assert filename not in _EXPECTED_DOCUMENTS
+    assert (_CONTENT_DIRECTORY / filename).is_file()
