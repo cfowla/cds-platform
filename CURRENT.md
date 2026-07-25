@@ -15,74 +15,95 @@ acceptance evidence.
 - Days 1-82 are complete.
 - **Day 83 - Tag the prototype milestone** remains incomplete.
 - The original Day 83 candidate `73c3fcfd10548db31c2bf6707e73f65c5e7f2eb0` remains a release
-  `no-go`; this bounded test correction does not certify a new release candidate.
+  `no-go`; this bounded lint-baseline correction does not certify a new release candidate.
 - **INT-2 renal integration acceptance remains complete.**
 - **Work Package 2 renal-content snapshot scope remains complete.**
 - **Work Package 3 cefepime golden semantic review remains complete.**
 - **Work Package 4 Decimal-context assertion correction and focused verification are complete.**
+- **Work Package 5 Ruff-baseline selection and remediation are complete.**
 
-## Work Package 4 result
+## Work Package 5 result
 
-Implemented from current `main` base commit `f2e39ab97b4714fc01d2a2b28f30ba7453ef805a`.
+Implemented from current `main` base commit `b6226f180b23149f216af65de917ddf06f0c025a`.
 
 Root cause:
 
-- The two extreme-creatinine parameter cases copied the active Decimal `Context` and then compared the
-  copied object to `getcontext()` with object equality.
-- That assertion did not explicitly compare the context properties the test intended to preserve.
-- The production calculator already confines precision and rounding changes inside `localcontext()`; no
-  direct evidence showed that calculator code mutates the caller's global Decimal context.
+- `pyproject.toml` configured Ruff's target version and line length but left the selected lint rules
+  implicit.
+- Ruff 0.16.0 therefore enabled a broad default set and reproduced the release artifact's 284
+  diagnostics.
+- Of those diagnostics, 275 belonged to newly broad families outside the repository's previously
+  implied `E4`, `E7`, `E9`, and `F` baseline. Those included 184 `FURB157` Decimal-constructor
+  rewrites, 45 `UP017` timezone rewrites, and 12 `DTZ001` diagnostics, including deliberate
+  timezone-naive negative-test inputs.
+- The selected baseline contained nine `F401` unused-import diagnostics and one `E731` lambda
+  assignment.
 
 Approved bounded change:
 
-- Added `_decimal_context_state()` in `tests/unit/services/test_renal.py`.
-- The helper snapshots `prec`, `rounding`, `Emin`, `Emax`, `capitals`, `clamp`, `traps`, and `flags` as
-  directly comparable values.
-- Replaced the ineffective `Context` object-equality assertion with an explicit before-and-after state
-  comparison in both parameterized extreme-creatinine cases.
-- Preserved the assertions that the supplied finite positive Decimal is used exactly and retains its
-  original tuple representation.
-- Did not change `src/cds/services/renal.py` or any clinical, validation, serialization, content, or
-  public-contract behavior.
+- Added an explicit `[tool.ruff.lint]` selection of `E4`, `E7`, `E9`, and `F` in `pyproject.toml`.
+- Removed two genuinely unused test imports.
+- Added seven line-level `F401` suppressions with reasons for compatibility attributes that must remain
+  available from `cds.domain.models` while remaining intentionally excluded from `__all__`.
+- Replaced one assigned exception-throwing lambda in the integration failure test with an equivalent
+  nested function.
+- Did not use `--fix`, `--unsafe-fixes`, broad file-level ignores, or changes to Decimal construction,
+  timezone-naive negative inputs, exception boundaries, clinical behavior, or public exports.
 
 ## Verification
 
-Executed in a complete GitHub Codespace checkout:
+Baseline capture used Ruff 0.16.0:
 
 ```bash
-python -m pytest tests/unit/services/test_renal.py -q
+python -m ruff --version
+python -m ruff check . --config pyproject.toml --show-settings
+python -m ruff check . --config pyproject.toml
+```
+
+Baseline result:
+
+- Version command exit status: 0; `ruff 0.16.0`.
+- Settings command exit status: 0.
+- Initial lint exit status: 1; 284 diagnostics, 261 reported fixable, and 7 additional hidden unsafe
+  fixes.
+- Complete effective settings and baseline diagnostics were captured in the isolated verification
+  workspace. The raw files contain environment-specific absolute paths and are not published; the exact
+  commands, Ruff version, exit statuses, and diagnostic counts are recorded here.
+
+Final targeted verification:
+
+```bash
+python -m ruff check . --config pyproject.toml
+python -m pytest tests/unit/domain/test_module_exports.py \
+  tests/contract/test_renal_dose_interface_contracts.py \
+  tests/unit/app/test_renal_dose.py \
+  tests/integration/test_renal_dose_matrix.py::test_failures_are_structured_and_sanitized -q
 ```
 
 Result:
 
-- Exit status: 0
-- 98 tests passed.
-- Both extreme-creatinine parameter cases passed.
-- Exact supplied Decimal values remained unchanged.
-- The caller's Decimal context configuration, traps, and flags remained unchanged.
-- No production calculator change was required.
+- Final lint exit status: 0; `All checks passed!`.
+- Focused pytest exit status: 0; 43 tests passed.
 
-Supplemental sanity check:
+Supplemental full-suite verification:
 
-- A standalone Python check exercised the exact context-state fields across the two configured extreme
-  creatinine values and confirmed that a `localcontext()` calculation left the caller context state
-  unchanged.
-- Result: `2 Decimal-context preservation cases passed`.
-- This check supports the assertion design but is not a substitute for the required repository pytest
-  command.
+```bash
+python -m pytest -q
+```
 
-Static repository verification:
+Result:
 
-- GitHub comparison against `main` before this state-note update showed exactly one modified file:
-  `tests/unit/services/test_renal.py`.
-- The focused test diff contained 16 additions and 2 deletions: one small helper and the two assertion
-  replacements.
-- Complete focused review confirmed that no production calculator file was changed.
+- Exit status: 1.
+- 930 tests passed, 16 placeholder tests skipped, and 2 known strict xfails remained xfailed.
+- `test_cefepime_golden_cases_byte_match_canonical_regeneration` failed at byte 1251 with the previously
+  reviewed cefepime summary-casing mismatch.
+- The full-suite failure is outside this lint-baseline task and was not hidden, reclassified, or
+  repaired here.
 
 ## Remaining repair areas
 
-1. **Work Package 5:** establish and remediate the intended Ruff baseline without repository-wide
-   automatic fixes.
+1. Reconcile the cefepime golden byte mismatch still exposed by the supplemental full suite without
+   weakening the test or overwriting the golden without semantic review.
 2. **Work Package 6:** resolve placeholder skips and repair durable release-evidence capture.
 3. **Work Package 7:** select and fully verify a new release candidate only after the preceding work
    packages are complete.
@@ -105,7 +126,7 @@ Static repository verification:
 
 ## Blockers
 
-- The intended Ruff ruleset and effective configuration remain unresolved.
+- The supplemental full suite still fails the cefepime canonical-regeneration byte comparison.
 - Placeholder-skip dispositions, CLI evidence, clean candidate evidence, independent calculation
   approval, qualified content review, PHI review, release-custodian approval, and a final decision record
   remain incomplete.
@@ -117,24 +138,30 @@ These blockers still prevent an honest release `go` or prototype milestone tag.
 
 ## Files changed
 
-- `CURRENT.md` - records the successful focused Work Package 4 verification and advances the next exact
-  action to Work Package 5.
+- `pyproject.toml` - makes the intended `E4`, `E7`, `E9`, and `F` Ruff ruleset explicit.
+- `src/cds/domain/models.py` - narrowly documents intentional compatibility re-exports.
+- `tests/contract/test_renal_dose_interface_contracts.py` - removes one unused import.
+- `tests/unit/app/test_renal_dose.py` - removes one unused import.
+- `tests/integration/test_renal_dose_matrix.py` - replaces one assigned throwing lambda with an
+  equivalent nested function.
+- `CURRENT.md` - records Work Package 5 completion, verification, limitations, and the next action.
 
-No implementation, test, clinical-content, snapshot, golden, dependency, workflow, or lint-configuration
-file was changed.
+No clinical content, snapshot, golden, dependency, workflow, validation, serialization, calculator, or
+public-contract behavior was changed.
 
 ## Additional files inspected
 
 - `docs/TASK_TEMPLATE.md` - bounded-task, targeted-verification, and close-procedure requirements.
 - `docs/SAFETY_INVARIANTS.md` - purity, exact Decimal behavior, auditability, and safety constraints.
-- `docs/PROTOTYPE_RELEASE_REMEDIATION_PLAN.md` - Work Package 4 scope, required context properties,
+- `docs/PROTOTYPE_RELEASE_REMEDIATION_PLAN.md` - Work Package 5 scope, classification constraints,
   verification command, and acceptance gate.
-- `src/cds/services/renal.py` - confirmed the calculator uses `localcontext()` and supplied no direct
-  evidence of global-context mutation.
-- `pyproject.toml` - confirmed the declared Python and focused pytest environment.
+- `BACKLOG.md` - confirmed that rule selection and intentional negative-test diagnostics required a
+  policy decision.
+- `tests/unit/domain/test_module_exports.py` - confirmed compatibility attributes must remain module
+  attributes while staying outside `__all__`.
 
 ## Next exact action
 
-Use `docs/TASK_TEMPLATE.md` to formulate and execute a separate bounded task for **Work Package 5 —
-Establish and remediate the intended Ruff baseline**. Capture the effective configuration before editing
-and do not use repository-wide automatic fixes.
+Use `docs/TASK_TEMPLATE.md` to formulate and execute a separate bounded task that first reconciles the
+cefepime golden byte mismatch still exposed by the full suite, preserving the prior semantic-review
+requirements and changing only the affected golden or generator after the exact difference is confirmed.

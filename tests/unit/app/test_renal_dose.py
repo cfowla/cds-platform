@@ -5,8 +5,6 @@ from dataclasses import replace
 from datetime import date, datetime, timezone
 from decimal import Decimal
 
-import pytest
-
 import cds.app.renal_dose as renal_dose_module
 from cds.app.renal_dose import RenalDoseUseCase
 from cds.domain.clinical import LabResult, MedicationOrder, Patient
