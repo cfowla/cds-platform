@@ -19,48 +19,71 @@ acceptance evidence.
 - PR #55 repaired the bounded route and indication integration fixtures.
 - PR #58 merged canonical non-exponent renal-value normalization as
   `86a14d397b3e0f89e5a1f56f164933d45b76d627`.
-- **INT-2 renal integration acceptance is complete.**
+- **INT-2 renal integration acceptance remains complete.**
+- **Work Package 2 renal-content snapshot scope is complete.**
 
-## INT-2 acceptance result
+## Work Package 2 result
 
-Verified in a complete, clean checkout of `cc2c4226c768c81fbdf9de67ce9e0976eee76deb` at `2026-07-25T03:19:31Z`.
+Verified from current `main` commit `a54be8efef7b4457f5078f9c32be8c9742052474` in a complete GitHub-hosted checkout
+at `2026-07-25T03:47:03Z`.
+
+Policy decision:
+
+- The renal review contract uses an **explicit selected-content snapshot**.
+- Selected clinical documents are enumerated by `_EXPECTED_DOCUMENTS` in
+  `tests/contract/test_renal_content_snapshots.py`.
+- The loader reads only those enumerated filenames and fails explicitly when a selected document is
+  missing.
+- `cefepime_synthetic_fixture.yaml` remains present but intentionally outside the clinical-review
+  snapshot.
+- The synthetic fixture remains separately covered as structurally loadable, draft, and ineligible for
+  recommendation matching.
 
 Environment:
 
-- `Python 3.12.1`
+- `Python 3.12.13`
 - `pytest 9.1.1`
-- Python source: `repository .venv`
+- Python source: GitHub Actions `actions/setup-python` isolated runner
 
-Exact command:
+Baseline command:
 
 ```bash
-python -m pytest -q \
-  tests/integration/test_renal_dose_matrix.py \
-  tests/integration/test_renal_safety_invariants.py
+python -m pytest tests/contract/test_renal_content_snapshots.py -q
 ```
 
-Exact result:
+Baseline result before the bounded test change:
 
-- `117 passed, 2 xfailed in 14.05s`
-- Exit status: `0`
-- The 39 previously failing parameterized `renal_value` textual comparisons now pass.
-- Boundary band selection and exact serialized renal-value assertions pass without expectation changes.
-- `test_declared_weight_type_conflict_fails_closed` remains strict XFAIL.
-- `UNSUP-FAM-WEIGHT` remains strict XFAIL.
-- No unrelated failure, error, XPASS, or skip occurred in the two focused files.
-- The mismatch was resolved by canonical output normalization already present on `main`; this acceptance
-  task changed no implementation, fixture, expected value, safety boundary, public contract, or XFAIL
-  marker.
+- `1 failed, 1 passed in 0.21s`
+- Exit status: `1`
+- The failure was caused by the directory-wide loader including the separately maintained synthetic
+  fixture that was intentionally absent from `_EXPECTED_DOCUMENTS`.
+
+Focused verification commands:
+
+```bash
+python -m pytest tests/contract/test_renal_content_snapshots.py -q
+python -m pytest \
+  tests/integration/test_cefepime_end_to_end.py::test_yaml_loaded_draft_content_remains_ineligible_after_validated_calculation \
+  -q
+```
+
+Exact results:
+
+- Snapshot contract: `3 passed in 0.19s`; exit status `0`.
+- Synthetic-fixture draft/eligibility test: `1 passed in 0.08s`; exit status `0`.
+- The contract names and helper structure now make the selected scope explicit.
+- The synthetic fixture still exists and loads through the YAML repository in the focused integration
+  test.
+- Its review status remains `draft`, rule evaluation remains `incomplete`, and no recommendation is
+  emitted.
 
 ## Remaining repair areas
 
-1. **Work Package 2:** deliberately resolve the renal-content snapshot scope and run only the focused
-   snapshot and synthetic-fixture eligibility verification required by the remediation plan.
-2. Review the cefepime golden semantic diff before any regeneration.
-3. Correct the Decimal-context preservation assertions in the focused renal service tests.
-4. Establish and remediate the intended Ruff baseline without repository-wide automatic fixes.
-5. Resolve placeholder skips and repair durable release-evidence capture.
-6. Select and fully verify a new release candidate only after the preceding work packages are complete.
+1. **Work Package 3:** review the cefepime golden semantic diff before any regeneration.
+2. Correct the Decimal-context preservation assertions in the focused renal service tests.
+3. Establish and remediate the intended Ruff baseline without repository-wide automatic fixes.
+4. Resolve placeholder skips and repair durable release-evidence capture.
+5. Select and fully verify a new release candidate only after the preceding work packages are complete.
 
 ## Active constraints
 
@@ -78,33 +101,39 @@ Exact result:
 
 ## Blockers
 
-- The renal-content snapshot policy is unresolved for synthetic fixtures.
 - The cefepime golden semantic difference has not been reviewed.
 - Decimal-context tests contain invalid object-equality assertions.
 - The intended Ruff ruleset and effective configuration remain unresolved.
 - Placeholder-skip dispositions, CLI evidence, clean candidate evidence, independent calculation
   approval, qualified content review, PHI review, release-custodian approval, and a final decision record
   remain incomplete.
-- Existing known clinical and architecture limitations remain outside this acceptance task, including
-  weight-type conflict handling, the famotidine adult minimum-weight boundary, content supersession,
-  standalone CLI composition, and logging-policy wiring.
+- Existing known clinical and architecture limitations remain outside this task, including weight-type
+  conflict handling, the famotidine adult minimum-weight boundary, content supersession, standalone CLI
+  composition, and logging-policy wiring.
 
 These blockers still prevent an honest release `go` or prototype milestone tag.
 
 ## Files changed
 
-- `CURRENT.md` - records the successful, reproducible INT-2 acceptance result and the next separate work
+- `tests/contract/test_renal_content_snapshots.py` - defines the explicit selected-content loader and
+  assertions while keeping the synthetic fixture outside the clinical-review snapshot.
+- `CURRENT.md` - records the policy decision, baseline, focused verification, bounded scope, and next work
   package.
 
-No production code, tests, fixtures, content, snapshots, goldens, workflow configuration, or safety
-invariant documentation changed.
+No clinical YAML, production implementation, snapshot data, golden files, safety behavior, eligibility
+rule, public contract, or lint configuration changed.
 
 ## Additional files inspected
 
-None beyond the files named by the INT-2 acceptance task and repository/PR metadata needed to verify the
-current `main` commit and publish this documentation-only result.
+- `src/cds/content/renal/cefepime_synthetic_fixture.yaml` - confirmed the fixture is explicitly synthetic,
+  draft, and not eligible for rule matching; it was not edited.
+- `docs/PROTOTYPE_RELEASE_REMEDIATION_PLAN.md` - confirmed Work Package 2 permits the explicit
+  selected-content policy and requires separate synthetic-fixture coverage.
+- `tests/integration/test_cefepime_end_to_end.py` - identified the focused test that loads the fixture,
+  proves draft status, and verifies recommendation ineligibility after validated calculation.
 
 ## Next exact action
 
-Use `docs/TASK_TEMPLATE.md` to formulate and execute a separate bounded task for **Work Package 2 —
-Resolve the renal-content snapshot scope**. Do not begin that work in the INT-2 pull request.
+Use `docs/TASK_TEMPLATE.md` to formulate and execute a separate bounded task for **Work Package 3 —
+Review the cefepime golden semantic diff**. Do not regenerate or overwrite any golden before recording the
+exact changed field and its semantic meaning.
