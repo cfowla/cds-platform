@@ -2,7 +2,7 @@ name: Temporary WP2 renal snapshot verification
 
 on:
   pull_request:
-    types: [opened]
+    types: [opened, synchronize]
     branches: [main]
 
 permissions:
@@ -27,6 +27,8 @@ jobs:
 
       - name: Install declared development dependencies
         run: |
+          sudo apt-get update
+          sudo apt-get install -y ripgrep
           python -m pip install --upgrade pip
           python -m pip install -e ".[dev]"
 
@@ -45,6 +47,7 @@ jobs:
             exit 1
           fi
 
+          rg --version
           rg -n \
             "cefepime_synthetic_fixture|synthetic.*fixture|draft.*eligible|eligible.*draft|ineligible" \
             tests src/cds | tee /tmp/eligibility-search.txt
@@ -128,7 +131,7 @@ jobs:
       - name: Record Work Package 2 in CURRENT.md
         shell: bash
         run: |
-          export BASE_MAIN_SHA="$(git rev-parse HEAD^)"
+          export BASE_MAIN_SHA="$(git merge-base HEAD origin/main)"
           export VERIFIED_AT="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
           python - <<'PY'
           from __future__ import annotations
