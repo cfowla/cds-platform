@@ -225,6 +225,20 @@ def _valid_calculation_arguments() -> dict[str, object]:
     }
 
 
+def _decimal_context_state() -> dict[str, object]:
+    context = getcontext()
+    return {
+        "prec": context.prec,
+        "rounding": context.rounding,
+        "Emin": context.Emin,
+        "Emax": context.Emax,
+        "capitals": context.capitals,
+        "clamp": context.clamp,
+        "traps": context.traps.copy(),
+        "flags": context.flags.copy(),
+    }
+
+
 def _assert_calculation_error_without_result(
     arguments: dict[str, object],
     monkeypatch: pytest.MonkeyPatch,
@@ -444,7 +458,7 @@ def test_finite_positive_extreme_creatinine_is_used_exactly_as_supplied(
     assert isinstance(lab, LabResult)
     assert isinstance(weight, ValueWithUnit)
     lab.value.value = creatinine
-    original_context = getcontext().copy()
+    original_context_state = _decimal_context_state()
 
     result = calculate_cockcroft_gault(**arguments)  # type: ignore[arg-type]
 
@@ -457,7 +471,7 @@ def test_finite_positive_extreme_creatinine_is_used_exactly_as_supplied(
     assert result.value.value == expected
     assert result.serum_creatinine.value is creatinine
     assert result.serum_creatinine.value.as_tuple() == creatinine.as_tuple()
-    assert getcontext() == original_context
+    assert _decimal_context_state() == original_context_state
 
 
 def test_normal_cockcroft_gault_case_matches_hand_calculated_value() -> None:
