@@ -77,11 +77,27 @@ Run the configured checks from the repository root in a complete development env
 install missing dependencies in a constrained verification environment merely to produce a passing
 claim.
 
+Use the version-controlled capture procedure so a failed command cannot prevent later evidence from
+being retained:
+
+```bash
+python tools/capture_release_verification.py \
+  --release-custodian "<name and role>"
+```
+
+The runner requires a clean initial tree, embeds
+[`docs/RELEASE_TEST_DISPOSITIONS.md`](RELEASE_TEST_DISPOSITIONS.md), records the exact candidate and
+environment, and executes these commands without short-circuiting:
+
 ```bash
 python -m pytest -q
-python -m ruff check .
+python -m ruff check . --config pyproject.toml
 PYTHONPATH=src python examples/cli_walkthrough.py --verify
 ```
+
+It writes a new untracked artifact under `artifacts/verification`. Review that artifact for PHI,
+accuracy, complete counts, and every skip/XFAIL/XPASS disposition before committing it. The runner
+does not complete independent reviews or make a release decision.
 
 For each command, record:
 
