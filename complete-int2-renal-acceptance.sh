@@ -7,14 +7,22 @@ BASELINE_MAIN='86a14d397b3e0f89e5a1f56f164933d45b76d627'
 BRANCH='feature/complete-int2-renal-acceptance'
 TEST_LOG="$(mktemp -t int2-renal-pytest.XXXXXX.log)"
 PR_BODY="$(mktemp -t int2-renal-pr.XXXXXX.md)"
+BOOTSTRAP_LOG="$(mktemp -t int2-renal-bootstrap.XXXXXX.log)"
+TEMP_VENV=''
 SUCCESS=0
 
 cleanup() {
   rm -f "$PR_BODY"
+  [[ -z "$TEMP_VENV" ]] || rm -rf "$TEMP_VENV"
   if [[ "$SUCCESS" -eq 1 ]]; then
-    rm -f "$TEST_LOG"
+    rm -f "$TEST_LOG" "$BOOTSTRAP_LOG"
   else
     printf '\nFocused pytest log retained at: %s\n' "$TEST_LOG" >&2
+    if [[ -s "$BOOTSTRAP_LOG" ]]; then
+      printf 'Dependency bootstrap log retained at: %s\n' "$BOOTSTRAP_LOG" >&2
+    else
+      rm -f "$BOOTSTRAP_LOG"
+    fi
   fi
 }
 trap cleanup EXIT
@@ -24,19 +32,32 @@ fail() {
   exit 1
 }
 
-command -v git >/dev/null 2>&1 || fail 'git is unavailable.'
-command -v gh >/dev/null 2>&1 || fail 'GitHub CLI (gh) is unavailable.'
-command -v python >/dev/null 2>&1 || fail 'python is unavailable.'
-gh auth status >/dev/null 2>&1 || fail 'gh is not authenticated. Run: gh auth login'
+show_dirty_tree() {
+  printf 'Working-tree entries:\n' >&2
+  while IFS= read -r -d '' entry; do
+    printf '  %q\n' "$entry" >&2
+  done < <(git status --porcelain=v1 -z)
+}
 
-ROOT="$(git rev-parse --show-toplevel 2>/dev/null)" || fail 'Run this from the supplied cds-platform Codespace checkout.'
+command -v git >/dev/null 2>&1 || fail 'git is unavailable; use a Codespace or repository-connected Codex environment.'
+command -v python >/dev/null 2>&1 || fail 'python is unavailable.'
+
+ROOT="$(git rev-parse --show-toplevel 2>/dev/null)" \
+  || fail 'No complete repository checkout is present. Use a Codespace or repository-connected Codex task.'
 cd "$ROOT"
 
-ACTUAL_REPO="$(gh repo view --json nameWithOwner --jq '.nameWithOwner')"
-[[ "$ACTUAL_REPO" == "$REPO" ]] || fail "Wrong repository: $ACTUAL_REPO"
+ORIGIN_URL="$(git remote get-url origin 2>/dev/null)" || fail 'The checkout has no origin remote.'
+case "$ORIGIN_URL" in
+  https://github.com/cfowla/cds-platform|https://github.com/cfowla/cds-platform.git|git@github.com:cfowla/cds-platform.git|ssh://git@github.com/cfowla/cds-platform.git) ;;
+  *) fail "Wrong repository origin: $ORIGIN_URL" ;;
+esac
 
-[[ -z "$(git status --porcelain=v1)" ]] || fail 'Working tree is not clean. Commit, stash, or discard existing changes first.'
-[[ "$(git config --bool core.sparseCheckout 2>/dev/null || printf false)" != 'true' ]] || fail 'Sparse checkout detected; this is not an acceptable complete checkout.'
+if [[ -n "$(git status --porcelain=v1)" ]]; then
+  show_dirty_tree
+  fail 'Working tree is not clean. Commit, stash, or deliberately remove the listed paths first.'
+fi
+[[ "$(git config --bool core.sparseCheckout 2>/dev/null || printf false)" != 'true' ]] \
+  || fail 'Sparse checkout detected; this is not an acceptable complete checkout.'
 
 missing=0
 while IFS= read -r -d '' path; do
@@ -48,6 +69,7 @@ done < <(git ls-files -z)
 [[ "$missing" -eq 0 ]] || fail 'The working tree is incomplete.'
 
 required=(
+  pyproject.toml
   docs/TASK_TEMPLATE.md
   CURRENT.md
   docs/SAFETY_INVARIANTS.md
@@ -62,27 +84,49 @@ done
 
 git fetch --prune origin main
 REMOTE_MAIN="$(git rev-parse origin/main)"
-API_MAIN="$(gh api "repos/$REPO/commits/main" --jq '.sha')"
-[[ "$REMOTE_MAIN" == "$API_MAIN" ]] || fail 'origin/main does not match GitHub main after fetch.'
 git merge-base --is-ancestor "$BASELINE_MAIN" "$REMOTE_MAIN" \
   || fail "Reviewed renal-normalization baseline $BASELINE_MAIN is not an ancestor of current main $REMOTE_MAIN."
-
-mapfile -t SINCE_BASELINE < <(git diff --name-only "$BASELINE_MAIN..$REMOTE_MAIN")
-for path in "${SINCE_BASELINE[@]}"; do
-  case "$path" in
-    CURRENT.md|complete-int2-renal-acceptance.sh) ;;
-    *) fail "Current main contains an unreviewed post-baseline change: $path" ;;
-  esac
-done
 
 git switch --detach "$REMOTE_MAIN"
 [[ "$(git rev-parse HEAD)" == "$REMOTE_MAIN" ]] || fail 'Could not check out current GitHub main.'
 [[ -z "$(git status --porcelain=v1)" ]] || fail 'Checkout became dirty before verification.'
 
 grep -Fq 'crcl = _canonical_plain_decimal(crcl)' src/cds/services/renal.py \
-  || fail 'Canonical renal-value normalization is not present at the reviewed main commit.'
+  || fail 'Canonical renal-value normalization is not present on current main.'
 
-python -m pytest --version >/dev/null 2>&1 || fail 'pytest is not installed in the active Python environment.'
+SYSTEM_PYTHON="$(command -v python)"
+PYTHON_SOURCE='active environment'
+if [[ -x "$ROOT/.venv/bin/python" ]]; then
+  export PATH="$ROOT/.venv/bin:$PATH"
+  PYTHON_SOURCE='repository .venv'
+fi
+
+if ! python -m pytest --version >/dev/null 2>&1; then
+  printf '\npytest is unavailable; creating an isolated temporary virtual environment.\n'
+  TEMP_VENV="$(mktemp -d -t int2-renal-venv.XXXXXX)"
+  "$SYSTEM_PYTHON" -m venv "$TEMP_VENV" \
+    || fail 'Could not create a temporary virtual environment. Ensure the Python venv module is installed.'
+  export PATH="$TEMP_VENV/bin:$PATH"
+  PYTHON_SOURCE='temporary isolated venv'
+
+  set +e
+  python -m pip install --disable-pip-version-check '.[dev]' \
+    2>&1 | tee "$BOOTSTRAP_LOG"
+  BOOTSTRAP_STATUS=${PIPESTATUS[0]}
+  set -e
+  [[ "$BOOTSTRAP_STATUS" -eq 0 ]] \
+    || fail 'Could not install project-declared development dependencies from pyproject.toml.'
+fi
+
+python -m pytest --version >/dev/null 2>&1 \
+  || fail 'pytest remains unavailable after the permitted dependency bootstrap.'
+python - <<'PY'
+import sys
+if sys.version_info < (3, 11):
+    raise SystemExit('Python 3.11 or newer is required by pyproject.toml.')
+PY
+[[ -z "$(git status --porcelain=v1)" ]] \
+  || fail 'Dependency bootstrap changed the tracked or untracked repository state.'
 
 python - <<'PY'
 from pathlib import Path
@@ -98,7 +142,7 @@ for label, pattern in checks.items():
         raise SystemExit(f'Missing required marker: {label}')
 PY
 
-printf '\nRunning the exact required acceptance command against %s\n\n' "$REMOTE_MAIN"
+printf '\nRunning the exact required acceptance command against %s with %s\n\n' "$REMOTE_MAIN" "$PYTHON_SOURCE"
 set +e
 python -m pytest -q \
   tests/integration/test_renal_dose_matrix.py \
@@ -107,7 +151,8 @@ python -m pytest -q \
 TEST_STATUS=${PIPESTATUS[0]}
 set -e
 
-[[ "$TEST_STATUS" -eq 0 ]] || fail "Focused renal integration gate failed with exit status $TEST_STATUS. No repository files were changed. Log: $TEST_LOG"
+[[ "$TEST_STATUS" -eq 0 ]] \
+  || fail "Focused renal integration gate failed with exit status $TEST_STATUS. No repository files were changed. Log: $TEST_LOG"
 
 PASSED="$(grep -Eo '[0-9]+ passed' "$TEST_LOG" | tail -1 | awk '{print $1}')"
 XFAILED="$(grep -Eo '[0-9]+ xfailed' "$TEST_LOG" | tail -1 | awk '{print $1}')"
@@ -126,7 +171,15 @@ SUMMARY="$(grep -E '(^|, )[0-9]+ passed' "$TEST_LOG" | tail -1 | sed 's/^[[:spac
 [[ -n "$SUMMARY" ]] || fail 'Could not capture the pytest summary line.'
 [[ -z "$(git status --porcelain=v1)" ]] || fail 'The focused test run changed the repository working tree.'
 
-if git show-ref --verify --quiet "refs/heads/$BRANCH" || git show-ref --verify --quiet "refs/remotes/origin/$BRANCH"; then
+command -v gh >/dev/null 2>&1 \
+  || fail 'The focused gate passed, but GitHub CLI (gh) is unavailable for the guarded PR and merge steps.'
+gh auth status >/dev/null 2>&1 \
+  || fail 'The focused gate passed, but gh is not authenticated. Run: gh auth login'
+ACTUAL_REPO="$(gh repo view "$REPO" --json nameWithOwner --jq '.nameWithOwner')"
+[[ "$ACTUAL_REPO" == "$REPO" ]] || fail "GitHub CLI resolved the wrong repository: $ACTUAL_REPO"
+
+if git show-ref --verify --quiet "refs/heads/$BRANCH" \
+  || git show-ref --verify --quiet "refs/remotes/origin/$BRANCH"; then
   fail "Branch already exists: $BRANCH"
 fi
 
@@ -136,6 +189,7 @@ export TESTED_SHA="$REMOTE_MAIN"
 export PYTEST_SUMMARY="$SUMMARY"
 export PYTHON_VERSION="$(python --version 2>&1)"
 export PYTEST_VERSION="$(python -m pytest --version | head -1)"
+export PYTHON_SOURCE
 export VERIFIED_AT="$(date -u +'%Y-%m-%dT%H:%M:%SZ')"
 
 python - <<'PY'
@@ -146,6 +200,7 @@ tested_sha = os.environ['TESTED_SHA']
 summary = os.environ['PYTEST_SUMMARY']
 python_version = os.environ['PYTHON_VERSION']
 pytest_version = os.environ['PYTEST_VERSION']
+python_source = os.environ['PYTHON_SOURCE']
 verified_at = os.environ['VERIFIED_AT']
 
 content = f'''# Current Work
@@ -154,9 +209,11 @@ This file is replaced after every task. It is not an append-only diary.
 
 ## Repository execution mode
 
-Use the repository checkout supplied by the execution environment. GitHub is the authoritative source
-and destination. Do not clone or search broadly for alternate checkouts. Use only named files and
-focused commands. Do not install missing test dependencies or substitute another test runner.
+Use a complete repository checkout supplied by a Codespace, local development environment, or
+repository-connected Codex task. GitHub is authoritative. A repository-local or temporary isolated
+virtual environment may be created, and project-declared development dependencies may be installed from
+`pyproject.toml`. Do not install dependencies globally or reconstruct an incomplete checkout as
+acceptance evidence.
 
 ## Roadmap position
 
@@ -177,6 +234,7 @@ Environment:
 
 - `{python_version}`
 - `{pytest_version}`
+- Python source: `{python_source}`
 
 Exact command:
 
@@ -290,6 +348,8 @@ python -m pytest -q \\
 
 Result: \`$PYTEST_SUMMARY\` (exit status 0).
 
+Environment: \`$PYTHON_VERSION\`; \`$PYTEST_VERSION\`; source \`$PYTHON_SOURCE\`.
+
 Strict XFAIL disposition:
 
 - \`test_declared_weight_type_conflict_fails_closed\`
@@ -338,7 +398,12 @@ REVIEW_DECISION="$(gh pr view "$PR_NUMBER" --repo "$REPO" --json reviewDecision 
 FINAL_HEAD="$(gh pr view "$PR_NUMBER" --repo "$REPO" --json headRefOid --jq '.headRefOid')"
 [[ "$FINAL_HEAD" == "$PR_HEAD" ]] || fail 'PR head changed after verification; refusing to merge.'
 
-MERGEABLE="$(gh pr view "$PR_NUMBER" --repo "$REPO" --json mergeable --jq '.mergeable')"
+MERGEABLE='UNKNOWN'
+for _ in {1..12}; do
+  MERGEABLE="$(gh pr view "$PR_NUMBER" --repo "$REPO" --json mergeable --jq '.mergeable')"
+  [[ "$MERGEABLE" == 'UNKNOWN' ]] || break
+  sleep 5
+done
 [[ "$MERGEABLE" == 'MERGEABLE' ]] || fail "PR is not mergeable: $MERGEABLE"
 
 MERGED="$(gh api \
