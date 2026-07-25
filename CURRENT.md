@@ -4,9 +4,17 @@ This file is replaced after every task. It is not an append-only diary.
 
 ## Repository execution mode
 
-Use the complete repository checkout supplied by the execution environment. GitHub is the authoritative
-source and destination. Do not search broadly for alternate checkouts, reconstruct an incomplete tree as
-acceptance evidence, install missing dependencies, or substitute another test runner.
+Use a complete repository checkout supplied by a Codespace, local development environment, or
+repository-connected Codex task. GitHub is authoritative.
+
+A generic Work or artifact sandbox containing only directories such as `work/` and `outputs/`, without
+`.git`, Git, or Bash, cannot execute repository acceptance. Stop there rather than reconstructing an
+incomplete checkout.
+
+In a complete checkout, a repository-local or temporary isolated virtual environment may be created.
+Project-declared development dependencies may be installed from `pyproject.toml`; do not install them
+globally. Record the Python and test-tool versions used. If virtual-environment creation or declared
+dependency installation fails, stop without changing repository files.
 
 ## Roadmap position
 
@@ -17,18 +25,22 @@ acceptance evidence, install missing dependencies, or substitute another test ru
 - PR #55 repaired the bounded route and indication integration fixtures.
 - PR #58 merged canonical non-exponent renal-value normalization as
   `86a14d397b3e0f89e5a1f56f164933d45b76d627`.
-- **INT-2 renal integration acceptance is still pending execution in a complete checkout.**
+- PR #59 added the root INT-2 acceptance runner.
+- **INT-2 renal integration acceptance remains pending execution in a complete checkout.**
 
 ## Current state
 
-The repository root now includes `complete-int2-renal-acceptance.sh`, a fail-closed acceptance runner for
-the remaining INT-2 gate.
+The root `complete-int2-renal-acceptance.sh` runner now supports dependency bootstrap in a complete
+checkout. It:
 
-The runner:
-
-- requires a complete, clean `cfowla/cds-platform` checkout with authenticated `git`, `gh`, and Python;
-- verifies that the reviewed renal-normalization baseline remains an ancestor of current `main`;
-- permits only `CURRENT.md` and the runner itself as post-baseline changes before acceptance execution;
+- requires Git and a complete checkout, but does not require GitHub CLI until after focused tests pass;
+- identifies the repository from the `origin` remote rather than using GitHub CLI;
+- verifies current remote `main` contains the reviewed renal normalization baseline;
+- reports dirty paths using shell-safe quoting instead of returning only a generic clean-tree error;
+- checks out exact current `origin/main` in detached mode;
+- prefers `.venv/bin/python` when available;
+- otherwise creates a temporary isolated virtual environment and installs only `.[dev]` from
+  `pyproject.toml`, which provides the declared `pytest` and Ruff dependencies;
 - runs exactly:
 
   ```bash
@@ -38,23 +50,17 @@ The runner:
   ```
 
 - requires exactly `117 passed, 2 xfailed`, with no failure, error, skip, or XPASS result;
-- confirms the two existing strict XFAIL markers remain present;
-- changes only `CURRENT.md` after successful verification;
-- creates `feature/complete-int2-renal-acceptance`, opens a focused pull request, verifies its scope and
-  review state, and squash-merges only when the head commit is unchanged and GitHub permits merging; and
-- makes no repository change when the focused gate fails.
+- confirms `test_declared_weight_type_conflict_fails_closed` and `UNSUP-FAM-WEIGHT` remain strict XFAIL;
+- requires authenticated GitHub CLI only for branch, pull-request, review, check, and guarded merge steps;
+- changes only `CURRENT.md` after successful verification; and
+- makes no repository change when acceptance fails.
 
-The two strict XFAIL cases currently recognized by the focused integration files are:
+No Infinity or NaN strict-XFAIL scenarios exist in the two focused integration files, so the runner does
+not invent such a requirement.
 
-- `test_declared_weight_type_conflict_fails_closed`; and
-- `UNSUP-FAM-WEIGHT`.
+## Verification for this execution-support task
 
-No Infinity or NaN strict-XFAIL scenarios were found in the two focused integration files, so the runner
-does not fabricate such an acceptance requirement.
-
-## Verification for this publication task
-
-Performed against the exact runner content before repository publication:
+Performed against the revised runner before publication:
 
 ```bash
 bash -n complete-int2-renal-acceptance.sh
@@ -62,25 +68,20 @@ bash -n complete-int2-renal-acceptance.sh
 
 Result: exit status `0`.
 
-Runner SHA-256:
-
-`bb789e0642d8fb4349984a7a60c2366383842046d2d04995a313772039155a70`
-
-The focused pytest acceptance command was not run during this publication task. Therefore, INT-2 is not
-marked complete and no focused test result is recorded here.
+The focused renal pytest acceptance command was not run for this execution-support task. Therefore,
+INT-2 is not marked complete here.
 
 ## Remaining repair areas
 
-1. Execute the root acceptance runner in a complete Codespace checkout and allow it to record and merge
-   INT-2 only if the focused result is exactly reproducible.
+1. Execute the root acceptance runner in a fresh Codespace, local checkout, or repository-connected Codex
+   environment and allow it to record and merge INT-2 only if the exact focused result is reproducible.
 2. Resolve the synthetic-content snapshot policy intentionally and rerun its focused contract test.
 3. Inspect the semantic cefepime golden diff, then regenerate only if the changed canonical output is
    approved.
 4. Replace invalid `Context == Context.copy()` assertions with property-by-property comparisons and
    rerun the focused renal service tests.
-5. Capture Ruff effective settings, establish the intended ruleset, then fix or narrowly suppress only
-   diagnostics produced by that configuration.
-6. Resolve or explicitly accept the placeholder skips and repair complete release-evidence capture.
+5. Establish and remediate the intended Ruff baseline without repository-wide automatic fixes.
+6. Resolve placeholder skips and repair complete release-evidence capture.
 7. Select and fully verify a new release candidate only after the preceding work packages are complete.
 
 ## Active constraints
@@ -118,34 +119,29 @@ These blockers still prevent an honest release `go` or prototype milestone tag.
 
 ## Files changed
 
-- `complete-int2-renal-acceptance.sh` - adds the complete-checkout INT-2 acceptance, documentation,
-  pull-request, and guarded merge workflow.
-- `CURRENT.md` - records the runner, its safeguards, publication verification, unresolved acceptance
-  state, and the exact next action.
+- `complete-int2-renal-acceptance.sh` - permits declared dependency bootstrap, improves environment and
+  dirty-tree diagnostics, and postpones GitHub CLI requirements until publication.
+- `CURRENT.md` - records the corrected execution model and exact next action.
 
-No production code, test, fixture, clinical content, snapshot, golden, workflow configuration, or safety
-invariant documentation changed.
+No production code, integration test, fixture, clinical content, snapshot, golden, XFAIL marker, workflow,
+or safety-invariant document changed.
 
 ## Additional files inspected
 
-- `tests/integration/test_renal_dose_matrix.py` - confirmed the expected focused count and the two strict
-  XFAIL cases enforced by the runner.
-- `tests/integration/test_renal_safety_invariants.py` - confirmed the second focused acceptance file and
-  absence of additional strict non-finite XFAIL scenarios.
-- `src/cds/services/renal.py` - confirmed the canonical renal-value normalization baseline checked by the
-  runner.
-- `docs/PROTOTYPE_RELEASE_REMEDIATION_PLAN.md` - confirmed INT-2 must complete before the separate renal
-  snapshot-policy work.
+- `AGENTS.md` - confirmed repository-connected complete checkouts are preferred and that declared test
+  dependencies may be installed when focused verification requires them.
+- `pyproject.toml` - confirmed `pytest>=8.0` and `ruff>=0.5` are declared under the `dev` extra.
+- `.gitignore` - confirmed `.venv/`, test caches, build output, and package metadata are ignored.
 
 ## Next exact action
 
-From a complete Codespace checkout after pulling current `main`, run:
+Create a fresh Codespace from current `main`, or start a repository-connected Codex task. Then run:
 
 ```bash
 git switch main
 git pull --ff-only
-chmod +x complete-int2-renal-acceptance.sh
-./complete-int2-renal-acceptance.sh
+bash complete-int2-renal-acceptance.sh
 ```
 
-Do not begin Work Package 2 unless that runner records and merges a successful INT-2 acceptance result.
+Do not run `chmod +x`; changing the tracked executable bit makes the clean-tree gate fail. Do not begin
+Work Package 2 unless the runner records and merges a successful INT-2 acceptance result.
