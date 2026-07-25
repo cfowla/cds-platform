@@ -19,8 +19,7 @@ acceptance evidence.
 - **INT-2 renal integration acceptance remains complete.**
 - **Work Package 2 renal-content snapshot scope remains complete.**
 - **Work Package 3 cefepime golden semantic review remains complete.**
-- **Work Package 4 Decimal-context assertion correction is implemented; focused repository verification
-  remains pending.**
+- **Work Package 4 Decimal-context assertion correction and focused verification are complete.**
 
 ## Work Package 4 result
 
@@ -48,20 +47,20 @@ Approved bounded change:
 
 ## Verification
 
-Required focused command:
+Executed in a complete GitHub Codespace checkout:
 
 ```bash
 python -m pytest tests/unit/services/test_renal.py -q
 ```
 
-Executable result:
+Result:
 
-- Not run against a complete repository checkout in this connector session.
-- The supplied execution directory was probed once with `git rev-parse --show-toplevel` and was not a Git
-  checkout.
-- Python 3.13.5 and pytest 9.0.2 were available, but outbound repository download was unavailable and an
-  incomplete reconstructed tree is not accepted as repository verification.
-- Do not claim the focused pytest file passed.
+- Exit status: 0
+- 98 tests passed.
+- Both extreme-creatinine parameter cases passed.
+- Exact supplied Decimal values remained unchanged.
+- The caller's Decimal context configuration, traps, and flags remained unchanged.
+- No production calculator change was required.
 
 Supplemental sanity check:
 
@@ -82,13 +81,12 @@ Static repository verification:
 
 ## Remaining repair areas
 
-1. Execute the focused Work Package 4 pytest command in a complete checkout and record the real result.
-2. **Work Package 5:** establish and remediate the intended Ruff baseline without repository-wide
+1. **Work Package 5:** establish and remediate the intended Ruff baseline without repository-wide
    automatic fixes.
-3. **Work Package 6:** resolve placeholder skips and repair durable release-evidence capture.
-4. **Work Package 7:** select and fully verify a new release candidate only after the preceding work
+2. **Work Package 6:** resolve placeholder skips and repair durable release-evidence capture.
+3. **Work Package 7:** select and fully verify a new release candidate only after the preceding work
    packages are complete.
-5. Tag the prototype milestone only after an explicit `go` decision for one exact unchanged candidate.
+4. Tag the prototype milestone only after an explicit `go` decision for one exact unchanged candidate.
 
 ## Active constraints
 
@@ -107,7 +105,6 @@ Static repository verification:
 
 ## Blockers
 
-- The focused Work Package 4 pytest command still requires execution in a complete checkout.
 - The intended Ruff ruleset and effective configuration remain unresolved.
 - Placeholder-skip dispositions, CLI evidence, clean candidate evidence, independent calculation
   approval, qualified content review, PHI review, release-custodian approval, and a final decision record
@@ -120,12 +117,11 @@ These blockers still prevent an honest release `go` or prototype milestone tag.
 
 ## Files changed
 
-- `tests/unit/services/test_renal.py` - replaces ineffective Decimal `Context` object equality with an
-  explicit snapshot of all required caller-context properties.
-- `CURRENT.md` - records the root cause, bounded change, verification limitation, and next exact action.
+- `CURRENT.md` - records the successful focused Work Package 4 verification and advances the next exact
+  action to Work Package 5.
 
-No production service, domain model, validator, serializer, clinical YAML, snapshot, golden, public API,
-workflow, dependency, or lint configuration is changed.
+No implementation, test, clinical-content, snapshot, golden, dependency, workflow, or lint-configuration
+file was changed.
 
 ## Additional files inspected
 
@@ -139,10 +135,6 @@ workflow, dependency, or lint configuration is changed.
 
 ## Next exact action
 
-Use `docs/TASK_TEMPLATE.md` to formulate and execute a separate acceptance-verification task for the
-merged Work Package 4 assertion correction in a complete repository checkout. Make no code changes unless
-the focused failure proves a real defect, and run:
-
-```bash
-python -m pytest tests/unit/services/test_renal.py -q
-```
+Use `docs/TASK_TEMPLATE.md` to formulate and execute a separate bounded task for **Work Package 5 —
+Establish and remediate the intended Ruff baseline**. Capture the effective configuration before editing
+and do not use repository-wide automatic fixes.
