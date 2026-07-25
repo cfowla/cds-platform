@@ -15,75 +15,76 @@ acceptance evidence.
 - Days 1-82 are complete.
 - **Day 83 - Tag the prototype milestone** remains incomplete.
 - The original Day 83 candidate `73c3fcfd10548db31c2bf6707e73f65c5e7f2eb0` remains a release
-  `no-go`; this focused acceptance result does not certify a new release candidate.
-- PR #55 repaired the bounded route and indication integration fixtures.
-- PR #58 merged canonical non-exponent renal-value normalization as
-  `86a14d397b3e0f89e5a1f56f164933d45b76d627`.
+  `no-go`; this bounded golden review does not certify a new release candidate.
 - **INT-2 renal integration acceptance remains complete.**
-- **Work Package 2 renal-content snapshot scope is complete.**
+- **Work Package 2 renal-content snapshot scope remains complete.**
+- **Work Package 3 cefepime golden semantic review is complete.**
 
-## Work Package 2 result
+## Work Package 3 result
 
-Verified from current `main` commit `a54be8efef7b4457f5078f9c32be8c9742052474` in a complete GitHub-hosted checkout
-at `2026-07-25T03:47:03Z`.
+Reviewed from current `main` base commit `c69248686885307497c0342f136dfc9a7d5f66b9`.
 
-Policy decision:
+Exact semantic difference:
 
-- The renal review contract uses an **explicit selected-content snapshot**.
-- Selected clinical documents are enumerated by `_EXPECTED_DOCUMENTS` in
-  `tests/contract/test_renal_content_snapshots.py`.
-- The loader reads only those enumerated filenames and fails explicitly when a selected document is
-  missing.
-- `cefepime_synthetic_fixture.yaml` remains present but intentionally outside the clinical-review
-  snapshot.
-- The synthetic fixture remains separately covered as structurally loadable, draft, and ineligible for
-  recommendation matching.
+- Field: top-level `RuleResult.summary` for the successful `normal`, `impaired`, and
+  `exact_boundary` cefepime golden cases.
+- Committed text: `Exact reviewed cefepime content matched one renal band.`
+- Canonical generated text: `Exact reviewed Cefepime content matched one renal band.`
+- The difference is one ASCII character per affected file: lowercase `c` versus uppercase `C`.
 
-Environment:
+Classification and decision:
 
-- `Python 3.12.13`
-- `pytest 9.1.1`
-- Python source: GitHub Actions `actions/setup-python` isolated runner
+- The changed value is a clinician-facing display summary, not a coded identifier, enum wire value,
+  renal unit, dose value, boundary value, or serialization-only numeric format.
+- The shared exact matcher deliberately builds the sentence from
+  `ExactRenalDoseRuleConfig.medication_display`.
+- The cefepime rule explicitly configures that display value as `Cefepime`.
+- The generated uppercase display is therefore the intended canonical output.
+- Accepting it does not normalize or change the exact medication identifier `cefepime`, the `mL/min`
+  unit, content identifiers, regimen identifiers, warning codes, renal bands, dose values, or safety
+  behavior.
 
-Baseline command:
+Approved bounded change:
+
+- Updated only `examples/golden/cefepime_rule/normal.json`.
+- Updated only `examples/golden/cefepime_rule/impaired.json`.
+- Updated only `examples/golden/cefepime_rule/exact_boundary.json`.
+- Each affected golden changes only the reviewed top-level summary character.
+- The four fail-closed or unsupported goldens were inspected and did not require replacement.
+
+## Verification
+
+Required focused command:
 
 ```bash
-python -m pytest tests/contract/test_renal_content_snapshots.py -q
+python -m pytest tests/unit/rules/test_cefepime_golden_cases.py -q
 ```
 
-Baseline result before the bounded test change:
+Executable result:
 
-- `1 failed, 1 passed in 0.21s`
-- Exit status: `1`
-- The failure was caused by the directory-wide loader including the separately maintained synthetic
-  fixture that was intentionally absent from `_EXPECTED_DOCUMENTS`.
+- Not run in this connector session because no runnable repository checkout or active project virtual
+  environment was supplied.
+- A temporary branch-only GitHub Actions workflow was attempted, but GitHub exposed no workflow run or
+  commit status for the head commit. The temporary workflow was removed and is absent from the final
+  diff.
+- Do not treat this task as release-candidate verification or claim pytest passed.
 
-Focused verification commands:
+Static repository verification:
 
-```bash
-python -m pytest tests/contract/test_renal_content_snapshots.py -q
-python -m pytest \
-  tests/integration/test_cefepime_end_to_end.py::test_yaml_loaded_draft_content_remains_ineligible_after_validated_calculation \
-  -q
-```
-
-Exact results:
-
-- Snapshot contract: `3 passed in 0.19s`; exit status `0`.
-- Synthetic-fixture draft/eligibility test: `1 passed in 0.08s`; exit status `0`.
-- The contract names and helper structure now make the selected scope explicit.
-- The synthetic fixture still exists and loads through the YAML repository in the focused integration
-  test.
-- Its review status remains `draft`, rule evaluation remains `incomplete`, and no recommendation is
-  emitted.
+- GitHub comparison against `main` showed exactly the three intended golden files before this state-note
+  update.
+- Each golden reported one line added and one line deleted because the canonical JSON is stored on one
+  line.
+- Complete content review confirmed that the only semantic replacement in each affected file is
+  `cefepime` to `Cefepime` in the top-level result summary.
 
 ## Remaining repair areas
 
-1. **Work Package 3:** review the cefepime golden semantic diff before any regeneration.
-2. Correct the Decimal-context preservation assertions in the focused renal service tests.
-3. Establish and remediate the intended Ruff baseline without repository-wide automatic fixes.
-4. Resolve placeholder skips and repair durable release-evidence capture.
-5. Select and fully verify a new release candidate only after the preceding work packages are complete.
+1. **Work Package 4:** correct the Decimal-context preservation assertions in the focused renal service
+   tests.
+2. Establish and remediate the intended Ruff baseline without repository-wide automatic fixes.
+3. Resolve placeholder skips and repair durable release-evidence capture.
+4. Select and fully verify a new release candidate only after the preceding work packages are complete.
 
 ## Active constraints
 
@@ -94,14 +95,14 @@ Exact results:
   conversion or clinical rounding.
 - Preserve public imports, exception behavior, serialization contracts, clinical content, and safety
   boundaries unless a separate task explicitly authorizes a change.
-- Do not weaken tests, remove fixtures, overwrite snapshots, regenerate goldens, alter XFAIL markers, or
+- Do not weaken tests, remove fixtures, overwrite unrelated snapshots or goldens, alter XFAIL markers, or
   modify lint configuration merely to produce a pass.
 - Do not create a prototype tag without an explicit `go` decision for one exact unchanged candidate and
   its selected content versions.
 
 ## Blockers
 
-- The cefepime golden semantic difference has not been reviewed.
+- The focused cefepime golden pytest command still requires execution in a complete checkout.
 - Decimal-context tests contain invalid object-equality assertions.
 - The intended Ruff ruleset and effective configuration remain unresolved.
 - Placeholder-skip dispositions, CLI evidence, clean candidate evidence, independent calculation
@@ -115,25 +116,39 @@ These blockers still prevent an honest release `go` or prototype milestone tag.
 
 ## Files changed
 
-- `tests/contract/test_renal_content_snapshots.py` - defines the explicit selected-content loader and
-  assertions while keeping the synthetic fixture outside the clinical-review snapshot.
-- `CURRENT.md` - records the policy decision, baseline, focused verification, bounded scope, and next work
-  package.
+- `examples/golden/cefepime_rule/normal.json` - accepts the configured `Cefepime` display in the successful
+  result summary.
+- `examples/golden/cefepime_rule/impaired.json` - accepts the configured `Cefepime` display in the
+  successful result summary.
+- `examples/golden/cefepime_rule/exact_boundary.json` - accepts the configured `Cefepime` display in the
+  successful result summary.
+- `CURRENT.md` - records the exact semantic review, approved scope, verification limitation, and next
+  bounded work package.
 
-No clinical YAML, production implementation, snapshot data, golden files, safety behavior, eligibility
-rule, public contract, or lint configuration changed.
+No production rule, serializer, clinical YAML, validation behavior, public identifier, unit, numeric
+value, boundary, warning code, test logic, lint configuration, or workflow file remains changed.
 
 ## Additional files inspected
 
-- `src/cds/content/renal/cefepime_synthetic_fixture.yaml` - confirmed the fixture is explicitly synthetic,
-  draft, and not eligible for rule matching; it was not edited.
-- `docs/PROTOTYPE_RELEASE_REMEDIATION_PLAN.md` - confirmed Work Package 2 permits the explicit
-  selected-content policy and requires separate synthetic-fixture coverage.
-- `tests/integration/test_cefepime_end_to_end.py` - identified the focused test that loads the fixture,
-  proves draft status, and verifies recommendation ineligibility after validated calculation.
+- `docs/TASK_TEMPLATE.md` - bounded-task, targeted-verification, and close-procedure requirements.
+- `docs/PROTOTYPE_RELEASE_REMEDIATION_PLAN.md` - Work Package 3 scope, review questions, and acceptance
+  gate.
+- `tests/unit/rules/test_cefepime_golden_cases.py` - canonical case builder, byte-match test, and affected
+  successful cases.
+- `src/cds/rules/cefepime.py` - confirms the configured medication display is `Cefepime`.
+- `src/cds/rules/exact_renal_dose.py` - confirms the successful summary uses the configured medication
+  display without identifier normalization.
+- The seven committed cefepime golden JSON files - identified the three affected successful cases and
+  confirmed the other four require no change.
+- `pyproject.toml` - confirmed the declared focused pytest environment and development dependencies.
 
 ## Next exact action
 
-Use `docs/TASK_TEMPLATE.md` to formulate and execute a separate bounded task for **Work Package 3 —
-Review the cefepime golden semantic diff**. Do not regenerate or overwrite any golden before recording the
-exact changed field and its semantic meaning.
+Use `docs/TASK_TEMPLATE.md` to formulate and execute a separate bounded task for **Work Package 4 —
+Correct the Decimal-context preservation assertions**. Edit only the focused tests in
+`tests/unit/services/test_renal.py` unless a direct failure proves the calculator mutates global context,
+and run:
+
+```bash
+python -m pytest tests/unit/services/test_renal.py -q
+```
