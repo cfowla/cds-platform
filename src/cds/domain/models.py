@@ -15,24 +15,24 @@ from cds.domain.clinical import (
 )
 from cds.domain.outputs import (
     Alert,
-    AlertCategory,
+    AlertCategory,  # noqa: F401 - compatibility attribute excluded from __all__
     CDSRecommendation,
     Contraindication,
     DoseRecommendation,
-    RecommendationAction,
-    RecommendationStrength,
+    RecommendationAction,  # noqa: F401 - compatibility attribute excluded from __all__
+    RecommendationStrength,  # noqa: F401 - compatibility attribute excluded from __all__
     RenalFunctionResult,
     RuleResult,
-    SupportingValue,
+    SupportingValue,  # noqa: F401 - compatibility attribute excluded from __all__
 )
 from cds.domain.support import (
     Assumption,
     EvidenceItem,
-    EvidenceLevel,
+    EvidenceLevel,  # noqa: F401 - compatibility attribute excluded from __all__
     Provenance,
-    ProvenanceSourceType,
+    ProvenanceSourceType,  # noqa: F401 - compatibility attribute excluded from __all__
     WarningNote,
-    WarningSeverity,
+    WarningSeverity,  # noqa: F401 - compatibility attribute excluded from __all__
 )
 from cds.domain.value_objects import CodeableConcept, TimeRange, ValueWithUnit
 

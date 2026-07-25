@@ -659,7 +659,13 @@ def test_failures_are_structured_and_sanitized(failure, code, stage, monkeypatch
     case = BY_KEY["CEF-Q8"]
     _, repo, engine = _runtime()
     secret = "synthetic payload must not escape"
-    throwing = lambda error: lambda **kwargs: (_ for _ in ()).throw(error)
+
+    def throwing(error):
+        def raise_error(**kwargs):
+            raise error
+
+        return raise_error
+
     if failure == "validation":
         monkeypatch.setattr(
             renal_dose_module,
