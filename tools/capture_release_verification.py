@@ -200,6 +200,10 @@ def _package_version(root: Path) -> str:
 
 def main(argv: Sequence[str] | None = None) -> int:
     arguments = _parse_arguments(argv)
+    release_custodian = arguments.release_custodian.strip()
+    if not release_custodian:
+        print("ERROR: release custodian must include a name and role.", file=sys.stderr)
+        return 2
 
     try:
         supplied_root = arguments.repository_root.resolve()
@@ -258,7 +262,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         evidence.write(f"Repository root: {root}\n")
         evidence.write(f"Package version: {_package_version(root)}\n")
         evidence.write(f"Python executable: {sys.executable}\n")
-        evidence.write(f"Release custodian: {arguments.release_custodian}\n")
+        evidence.write(f"Release custodian: {release_custodian}\n")
         evidence.write(f"Evidence generated at: {generated_at}\n")
         evidence.write(f"Operating system: {platform.platform()}\n")
         evidence.write(f"Architecture: {platform.machine()}\n")

@@ -20,7 +20,7 @@ development dependencies may be installed from `pyproject.toml`. Do not install 
 - The original Day 83 candidate `73c3fcfd10548db31c2bf6707e73f65c5e7f2eb0` remains a release
   `no-go`; this bounded tooling task does not select or certify a new candidate.
 - **INT-2 renal integration acceptance remains complete.**
-- **Work Packages 2-6 are complete.**
+- **Work Packages 1-6 are complete.**
 - **Work Package 7 remains next:** select one new exact candidate and perform the full software gate
   with the repaired evidence procedure.
 
@@ -73,7 +73,7 @@ python -m ruff check tools/capture_release_verification.py \
 
 Result:
 
-- Focused pytest exit status: 0; 3 tests passed.
+- Focused pytest exit status: 0; 4 tests passed.
 - Focused Ruff exit status: 0; `All checks passed!`.
 - The disposition inventory contains exactly 16 unique placeholder paths.
 

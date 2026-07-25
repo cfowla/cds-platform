@@ -174,3 +174,29 @@ def test_dirty_candidate_is_rejected_before_artifact_creation(
     assert exit_status == 2
     assert not output.exists()
     assert "requires a clean working tree" in capsys.readouterr().err
+
+
+def test_blank_release_custodian_is_rejected(
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    module = _load_module()
+    root, disposition = _repository(tmp_path)
+    output = root / "artifacts" / "verification" / "must-not-exist.txt"
+
+    exit_status = module.main(
+        [
+            "--release-custodian",
+            "   ",
+            "--repository-root",
+            str(root),
+            "--dispositions",
+            str(disposition),
+            "--output",
+            str(output),
+        ]
+    )
+
+    assert exit_status == 2
+    assert not output.exists()
+    assert "must include a name and role" in capsys.readouterr().err
