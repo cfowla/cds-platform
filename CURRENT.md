@@ -16,81 +16,55 @@ development dependencies may be installed from `pyproject.toml`. Do not install 
 ## Roadmap position
 
 - Days 1-82 are complete.
-- **Day 83 - Tag the prototype milestone** remains incomplete.
-- The original Day 83 candidate `73c3fcfd10548db31c2bf6707e73f65c5e7f2eb0` remains a release
-  `no-go`; this bounded tooling task does not select or certify a new candidate.
-- **INT-2 renal integration acceptance remains complete.**
-- **Work Packages 1-6 are complete.**
-- **Work Package 7 remains next:** select one new exact candidate and perform the full software gate
-  with the repaired evidence procedure.
+- **Day 83 - Tag the prototype milestone remains incomplete.**
+- **Work Packages 1-7 software remediation and verification are complete.**
+- The verified software candidate is
+  `179c22842caa45d3a1c5e8c04b0bd83025418545`.
+- Current `main` is `ce5e68bd33a5f121e02f8d061a1a347f8b02b040`; that later commit adds
+  the retained evidence artifact and must not be described or tagged as the verified candidate.
+- The overall prototype release decision remains **no-go**.
 
-## Work Package 6 result
+## Work Package 7 result
 
-Implemented from current `main` base commit
-`00bf1bdccff19934bf069bf6d899bb358e48c25c`.
+The retained evidence is
+`artifacts/verification/full-verification-20260726T023944Z.txt`.
 
-Placeholder disposition:
+The unchanged candidate passed the complete software gate:
 
-- The prior artifact's 16 skips came from 16 identical placeholder modules that asserted no
-  behavior.
-- `docs/RELEASE_TEST_DISPOSITIONS.md` maps every placeholder path to existing behavior-specific
-  contract, integration, mapper, repository, serialization, or validation coverage.
-- All 16 placeholder modules were removed. Their removal is not counted as a passing test, and future
-  components require behavior-specific tests rather than reserved skipped paths.
-- The two known strict XFAIL signals remain explicit, unresolved nonclinical prototype limitations:
-  weight-type conflict handling and the famotidine adult minimum-weight boundary.
+- Pytest: 935 passed, 2 strict XFAILs; exit status 0.
+- Ruff: `All checks passed!`; exit status 0.
+- CLI walkthrough: 7 synthetic scenarios verified; exit status 0.
+- Pre-verification working tree: clean.
+- Post-verification tracked candidate state: unchanged.
+- Overall software verification: **PASS**.
 
-Durable evidence capture:
+The two strict XFAILs remain unresolved and blocking:
 
-- `tools/capture_release_verification.py` requires a named release custodian and a clean initial
-  working tree.
-- It records the exact commit and branch, package version, repository root, Python executable,
-  Python/pytest/Ruff versions, operating system, architecture, timezone-aware timestamps, test
-  dispositions, and durable artifact path.
-- It records each exact verification command before complete combined output, along with start,
-  completion, and exit status, and it continues through all three commands after a failure.
-- It requires the exact seven-scenario CLI confirmation, rejects artifact overwrite, verifies that
-  the candidate SHA and tracked tree remain unchanged, and rejects unexpected generated files.
-- It marks PHI review, independent calculation review, qualified clinical-content review, and the
-  final release decision as blocking manual gates. Generated evidence must be reviewed before commit.
+1. conflicting supplied versus declared weight type is not rejected before calculation;
+2. the famotidine adult minimum-weight boundary is not enforced in the full flow.
 
-No production implementation, clinical content, public contract, snapshot, golden, lint policy,
-strict-XFAIL behavior, or clinical safety boundary changed.
+## Completed independent reviews
 
-## Verification
+On 2026-07-26, the project owner confirmed that **Connor Fowler, PharmD** completed the required
+independent human reviews for the exact candidate:
 
-The evidence runner, its tests, disposition record, and `pyproject.toml` were materialized in a
-bounded checkout. An isolated virtual environment installed only the repository-declared pytest and
-Ruff development dependencies.
+- independent calculation review;
+- qualified clinical-content review for the selected content set; and
+- PHI review of the retained verification artifact.
 
-Final targeted verification:
+These completed reviews close the corresponding human-review activities recorded as blocking when
+the artifact was generated. They do not resolve the two fail-closed implementation gaps, do not
+change draft clinical-content status or reviewer metadata by themselves, and do not authorize a tag.
 
-```bash
-python -m pytest tests/unit/tools/test_capture_release_verification.py -q
-python -m ruff check tools/capture_release_verification.py \
-  tests/unit/tools/test_capture_release_verification.py --config pyproject.toml
-```
+## Remaining release blockers
 
-Result:
-
-- Focused pytest exit status: 0; 4 tests passed.
-- Focused Ruff exit status: 0; `All checks passed!`.
-- The disposition inventory contains exactly 16 unique placeholder paths.
-
-The complete test suite and release commands were deliberately not run because Work Package 6
-changes verification tooling and therefore cannot select its own release candidate. No new durable
-candidate artifact was generated.
-
-## Remaining repair and review areas
-
-1. **Work Package 7:** select the exact clean commit produced after this merge, run
-   `tools/capture_release_verification.py` in a complete repository environment, and review every
-   result without changing the candidate.
-2. Complete independent calculation review for that exact candidate.
-3. Complete qualified independent clinical-content review for every selected exact content version.
-4. Complete PHI review of retained evidence and record release-custodian approval.
-5. Record an explicit `go` or `no-go`; tag the prototype milestone only in a later bounded task after
-   an explicit `go`.
+1. Resolve and independently verify the supplied-versus-declared weight-type conflict.
+2. Resolve and independently verify the famotidine adult minimum-weight boundary.
+3. Commit exact reviewed status and reviewer metadata for each selected clinical-content version
+   where the source files still record `draft`.
+4. Select and verify a new exact clean candidate after those changes.
+5. Record an explicit final release decision. Create a prototype tag only in a later bounded task
+   after an explicit `go`.
 
 ## Active constraints
 
@@ -107,58 +81,19 @@ candidate artifact was generated.
 - Do not create a prototype tag without an explicit `go` decision for one exact unchanged candidate
   and its selected content versions.
 
-## Blockers
+## Files changed in this task
 
-- A new exact candidate has not yet been selected or run through the repaired full evidence
-  procedure.
-- Independent calculation approval, qualified content review, PHI review, release-custodian approval,
-  and a final decision record remain incomplete.
-- Known limitations still include weight-type conflict handling, the famotidine adult minimum-weight
-  boundary, content supersession, standalone CLI composition, and logging-policy wiring.
+Edited only:
 
-These blockers still prevent an honest release `go` or prototype milestone tag.
-
-## Files changed
-
-Created:
-
-- `tools/capture_release_verification.py`
-- `tests/unit/tools/test_capture_release_verification.py`
-- `docs/RELEASE_TEST_DISPOSITIONS.md`
-
-Edited:
-
-- `docs/PROTOTYPE_RELEASE_CHECKLIST.md`
 - `CURRENT.md`
+- `BACKLOG.md`
+- `docs/PROTOTYPE_RELEASE_CHECKLIST.md`
 
-Deleted:
-
-- The 16 exact placeholder test modules inventoried in
-  `docs/RELEASE_TEST_DISPOSITIONS.md`.
-
-## Additional files inspected
-
-- `docs/TASK_TEMPLATE.md` - bounded-task, evidence, and close-procedure requirements.
-- `docs/SAFETY_INVARIANTS.md` - prototype, synthetic-data, auditability, and safety constraints.
-- `docs/PROTOTYPE_RELEASE_REMEDIATION_PLAN.md` - Work Package 6 scope and acceptance gate.
-- `docs/PROTOTYPE_RELEASE_CHECKLIST.md` - required environment, command, disposition, and review
-  fields.
-- `artifacts/verification/full-verification-20260724T082921Z.txt` - exact list of 16 placeholder
-  skips and the incomplete prior evidence structure.
-- `pyproject.toml` - declared Python, pytest, Ruff, and lint configuration.
-- `.gitignore` - confirmed generated verification artifacts are visible for review rather than
-  silently ignored.
-- `examples/cli_walkthrough.py` and `tests/unit/interfaces/test_cli_walkthrough.py` - exact seven
-  scenario success contract.
-- Directly corresponding concrete contract, integration, application, mapper, repository,
-  serialization, and validation tests - confirmed each placeholder was redundant.
-- `project_sources/01-Architect-for-CDS.txt` - confirmed that the task changes verification tooling,
-  not clinical-layer boundaries.
+No production, test, clinical-content, snapshot, golden, or configuration file is changed.
 
 ## Next exact action
 
-Use `docs/TASK_TEMPLATE.md` to formulate and execute Work Package 7 as a separate release-candidate
-verification task: select the exact clean post-merge commit, run
-`tools/capture_release_verification.py --release-custodian "<name and role>"` in a complete repository
-environment, retain and review the generated artifact, and do not modify the candidate during
-verification.
+After this documentation reconciliation is reviewed and merged, create
+`fix/fail-closed-weight-type-conflict`. Make conflicting supplied and declared weight types fail
+before calculation, convert the corresponding strict XFAIL to a normal passing test, and run the
+focused integration verification. Do not begin a generic rule-engine feature.
