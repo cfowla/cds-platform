@@ -39,56 +39,43 @@ The normative document shape, type rules, exact matching, renal-boundary semanti
 versions, review states, reviewer fields, sources, and validation invariants are governed by
 [`docs/RENAL_DOSE_CONTENT_SCHEMA.md`](docs/RENAL_DOSE_CONTENT_SCHEMA.md).
 
-- **Partially resolved — Canonical identifiers:** exact first-slice medication IDs and identifier
-  syntax are defined. [`docs/CEFEPIME_CONTENT_SELECTION.md`](docs/CEFEPIME_CONTENT_SELECTION.md)
-  defines the initial cefepime identifiers.
+- **Resolved for the selected set — Canonical identifiers:** exact first-slice medication IDs and
+  identifier syntax are defined. [`docs/CEFEPIME_CONTENT_SELECTION.md`](docs/CEFEPIME_CONTENT_SELECTION.md)
+  defines the selected cefepime identifiers.
   [`docs/PIPERACILLIN_TAZOBACTAM_CONTENT_SELECTION.md`](docs/PIPERACILLIN_TAZOBACTAM_CONTENT_SELECTION.md)
-  defines the initial piperacillin–tazobactam identifiers, and three source-based draft YAML
-  documents encode them. [`docs/FAMOTIDINE_CONTENT_SELECTION.md`](docs/FAMOTIDINE_CONTENT_SELECTION.md)
-  defines one exact oral film-coated-tablet, symptomatic-nonerosive-GERD regimen plus its content,
-  rule, source, indication, route, formulation, dose, and frequency identifiers; one source-based
-  draft YAML document now encodes those exact identifiers.
-- **Partially resolved — Governing evidence:** cefepime and piperacillin–tazobactam sources are
-  recorded in their selection documents. The governing famotidine source is the selected
-  Sportpharm DailyMed SPL version 1, updated `2026-06-26` and revised `06/2026`, recorded in
-  [`docs/FAMOTIDINE_CONTENT_SELECTION.md`](docs/FAMOTIDINE_CONTENT_SELECTION.md) and preserved in the
-  draft famotidine YAML. The selected record is a repackaged FDA-approved label; independent review
-  must confirm that source choice or replace it through a separately versioned decision.
-- **Partially resolved — Supported variants:** the initial cefepime set remains limited to four exact
-  IV powder-for-solution maintenance regimens over 30 minutes. Three draft
-  piperacillin–tazobactam documents encode two exact FDA-labeled standard-infusion regimens and one
-  exact primary-literature extended-infusion regimen. One draft famotidine document encodes only
-  oral film-coated tablets, `adult_symptomatic_nonerosive_gerd`, and the exact `20 mg` every
-  `12 hours` parent regimen. Famotidine suspension, `10 mg` formulations, IV products, other
-  indications, and other regimens remain unsupported.
-- **Partially resolved — Renal boundaries:** the selected cefepime and piperacillin–tazobactam
-  partitions are recorded or encoded as draft content. The draft famotidine document encodes a
-  complete positive unrounded partition of greater than `0` to less than `30`, `30` to less than
-  `60`, and greater than or equal to `60 mL/min`. Independent review must approve assigning exactly
-  `60` to the no-adjustment band based on label section 8.6 despite the renal table's compact
-  `30 to 60` heading.
-- **Open — Regulatory-label evidence level:** the version 1 schema lacks a `regulatory_label`
-  evidence level. The cefepime, piperacillin–tazobactam, and famotidine source records and draft
-  documents provisionally map FDA-approved prescribing information to `guideline`. Independent
-  review must approve that mapping or a separately scoped schema change is required before reviewed
-  label-derived content is eligible for matching.
-- **Partially resolved — Extended-infusion representation:** the piperacillin–tazobactam draft
-  document provisionally represents the Patel publication with
-  `hospitalized_serious_gram_negative_infection`, `formulation_id: null`, and a continuous
-  less-than-or-equal-to `20 mL/min` adjustment band. Independent review must approve or replace those
-  representations and confirm that the off-label modeling source is acceptable for the frozen
-  prototype.
-- **Partially resolved — Famotidine maximum-dose representation:** the selected label describes renal
-  rows as recommended maximum dosages and offers alternate formulations for some lower-dose
-  regimens. The draft document models only exact `20 mg` tablet outcomes, explicitly excludes
-  alternate-formulation dosing, and retains source-based CNS and QT monitoring statements.
-  Independent review must approve the maximum-dose interpretation, exact formulation, source
-  transcription, monitoring text, exclusions, and fail-closed representation before content can
-  become reviewed.
-- **Partially resolved — Independent review:** required review fields and medication-specific
-  attestations are defined for all three medications. Existing source-based documents remain
-  `draft`; a named independent clinical-content reviewer is required before any may be marked
-  `reviewed` or become eligible for rule matching.
+  defines the selected piperacillin–tazobactam identifiers.
+  [`docs/FAMOTIDINE_CONTENT_SELECTION.md`](docs/FAMOTIDINE_CONTENT_SELECTION.md) defines the selected
+  famotidine content, rule, source, indication, route, formulation, dose, and frequency identifiers.
+- **Resolved for the selected set — Governing evidence:** the selected cefepime and standard-infusion
+  piperacillin–tazobactam DailyMed sources, the Patel et al. extended-infusion source, and the selected
+  Sportpharm famotidine DailyMed SPL version 1 were included in the completed qualified independent
+  clinical-content review. The versioned documents retain exact source identifiers, versions, dates,
+  citations, and limitations.
+- **Resolved for the selected set — Supported variants:** reviewed content remains limited to four
+  exact cefepime IV powder-for-solution maintenance regimens over 30 minutes, two exact labeled
+  piperacillin–tazobactam standard-infusion regimens, one exact primary-literature extended-infusion
+  regimen, and one exact famotidine oral film-coated-tablet regimen for
+  `adult_symptomatic_nonerosive_gerd`. All unlisted variants remain unsupported.
+- **Resolved for the selected set — Renal boundaries:** the exact continuous Decimal partitions and
+  boundary ownership recorded in the eight selected documents were included in the independent
+  clinical-content review, including cefepime boundaries, piperacillin–tazobactam 20 and 40 mL/min
+  boundaries, and famotidine assignment of exactly 60 mL/min to the no-adjustment band.
+- **Resolved for the selected versions — Regulatory-label evidence level:** the qualified review
+  accepted the version 1 schema's `guideline` evidence-level mapping for the selected FDA-approved
+  prescribing-information sources. A future schema may add `regulatory_label`, but that is not a
+  blocker for these exact reviewed versions.
+- **Resolved for the selected version — Extended-infusion representation:** the qualified review
+  included the Patel publication, `hospitalized_serious_gram_negative_infection`,
+  `formulation_id: null`, the continuous positive renal domain, and the less-than-or-equal-to
+  `20 mL/min` adjustment threshold. The document continues to disclose its off-label modeling basis,
+  target limitations, and unsupported extrapolations.
+- **Resolved for the selected version — Famotidine maximum-dose representation:** the qualified review
+  included the repackaged FDA-approved source, recommended-maximum-dose interpretation, exact tablet
+  formulation, 30 and 60 mL/min boundaries, monitoring text, exclusions, and fail-closed scope.
+- **Resolved — Independent review metadata:** all eight selected exact content versions retain
+  `content_version: 1.0.0-draft` as their immutable reviewed version identifier and now record
+  `status: reviewed`, `reviewed_content_version: 1.0.0-draft`, Connor Fowler, PharmD as the independent
+  qualified clinical-content reviewer, reviewer role, and review date `2026-07-26`.
 
 ## Release-gate remediation backlog
 
@@ -104,9 +91,8 @@ The durable record is
 - Ruff: pass; exit status 0.
 - CLI walkthrough: all 7 synthetic scenarios verified; exit status 0.
 - Overall software verification: **PASS**.
-- Current `main` is the later evidence-only commit
-  `cbb69a486b0a5ba0c52e2126f35a60f6b4a78498`; it contains later steering-document and
-  fail-closed implementation changes and is not the verified candidate.
+- Later fail-closed implementation, steering-document, and reviewed-content metadata changes mean
+  that candidate is no longer the prospective release state.
 
 ### Completed remediation
 
@@ -120,10 +106,11 @@ The following previously open remediation work is complete and must not be prese
 - Ruff baseline selection and remediation;
 - complete command and environment capture;
 - seven-scenario CLI walkthrough capture;
-- placeholder-skip disposition; and
-- exact candidate selection and Work Package 7 software verification; and
-- supplied-versus-declared weight-type conflict rejection; and
-- famotidine adult minimum-weight fail-closed enforcement.
+- placeholder-skip disposition;
+- exact candidate selection and Work Package 7 software verification;
+- supplied-versus-declared weight-type conflict rejection;
+- famotidine adult minimum-weight fail-closed enforcement; and
+- exact reviewed status and reviewer metadata for all eight selected clinical-content versions.
 
 ### Completed independent review
 
@@ -131,20 +118,18 @@ On 2026-07-26, the project owner confirmed that **Connor Fowler, PharmD** comple
 independent calculation review, qualified clinical-content review for the selected content set, and
 PHI review of the retained evidence for the exact verified candidate.
 
-The human review activities are complete. Where selected source content still records `draft`,
-the exact reviewed status, reviewer identity, review date, and reviewed version must be committed
-before that content is eligible for recommendation matching.
+The selected YAML documents now record the completed qualified review with exact version equality,
+reviewer identity, reviewer role, and review date. This metadata makes those exact versions eligible
+for software rule matching; it does not authorize direct clinical use or constitute clinical validation.
 
 ### Remaining bounded work
 
-1. **Open - Clinical-content review metadata:** record exact reviewed status and Connor Fowler,
-   PharmD as reviewer for every selected content version covered by the completed qualified review.
-   Do not alter medication facts, source transcription, dose bands, boundaries, or recommendations
-   in this bookkeeping task.
-2. **Open - Final candidate verification:** after implementation and review-metadata changes, select
-   one exact clean commit and rerun full pytest, Ruff, and CLI capture with no unresolved XFAILs.
-3. **Open - Release decision:** complete the final checklist and record an explicit `go` or
-   `no-go`. Tag only in a separate bounded task after an explicit `go`.
+1. **Open - Final candidate verification:** select one exact clean post-metadata commit and rerun full
+   pytest, Ruff, and CLI capture with no unresolved XFAILs. The retained Work Package 7 artifact does
+   not verify the later implementation and content-metadata changes.
+2. **Open - Release decision:** complete the final checklist and record an explicit `go` or `no-go` for
+   that exact unchanged candidate and its selected content versions. Tag only in a separate bounded
+   task after an explicit `go`.
 
 ## Later decisions
 
