@@ -4,7 +4,7 @@
 
 - Repository: `cfowla/cds-platform`
 - Authoritative branch: `main`
-- Active task branch: `docs/record-reviewed-content-metadata`
+- Completed task branch: `docs/record-reviewed-content-metadata`
 - Prototype remains nonclinical and is not authorized for patient-care use.
 - Repository files, not prior chat history, are the durable source of truth.
 
@@ -54,13 +54,14 @@ verification and the explicit release decision as bounded release-gate work.
 Observed in this execution environment:
 
 - The task branch is based on `main` commit `45d630032f63c43bd4abdf21f153800a21b3af35`
-  and is not behind `main` at the time of comparison.
+  and was not behind `main` at the time of comparison.
 - GitHub branch comparison shows only the eight selected YAML documents, the selected-content
   snapshot contract, `BACKLOG.md`, and this file as intended task changes.
 - Direct branch reads confirm complete review metadata and exact reviewed-version equality for all
   eight selected documents.
 - The exact Git blob identities returned by GitHub for all eight YAML files are recorded in the
   contract snapshot.
+- Python static compilation of the revised snapshot module passed.
 
 Not executed in this environment:
 
@@ -99,8 +100,8 @@ not a substitute for repository test execution. Full verification remains a bloc
 
 ## Next exact action
 
-After this task PR is merged, create a new bounded final-candidate-verification task from clean
-current `main`. Select and record the exact candidate commit, then run:
+Create a new bounded final-candidate-verification task from clean current `main`. Select and record
+the exact candidate commit, then run:
 
 ```bash
 python tools/capture_release_verification.py \
