@@ -189,14 +189,13 @@ sources:
   publication_date: '2026-06-23'
   url: https://dailymed.nlm.nih.gov/dailymed/lookup.cfm?setid=5fd857e5-591f-44ca-80cf-fd903660b03c&version=17
 review:
-  status: draft
-  reviewed_content_version: null
-  reviewer: null
-  reviewer_role: null
-  reviewed_on: null
-  notes: Draft transcription from the selected DailyMed source. Independent review of source fidelity, continuous
-    renal-band boundaries, evidence-level mapping, source-unit preservation, 30-minute infusion representation,
-    monitoring text, exclusions, and prototype warning remains required.
+  status: reviewed
+  reviewed_content_version: 1.0.0-draft
+  reviewer: Connor Fowler, PharmD
+  reviewer_role: independent qualified clinical-content reviewer
+  reviewed_on: '2026-07-26'
+  notes: Independent review completed for the exact content version and its recorded source fidelity, renal-band boundaries,
+    evidence mapping, units, monitoring text, exclusions, limitations, and prototype warning.
 limitations:
 - Prototype only — not for direct clinical use; use only with synthetic or properly de-identified cases.
 - Draft content is not eligible for rule matching and has not received independent clinical-content review.

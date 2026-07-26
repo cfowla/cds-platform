@@ -151,15 +151,13 @@ sources:
   publication_date: '2026-06-24'
   url: https://dailymed.nlm.nih.gov/dailymed/lookup.cfm?setid=17a400ae-cbaa-4d07-95f4-c6917dfc0585&version=14
 review:
-  status: draft
-  reviewed_content_version: null
-  reviewer: null
-  reviewer_role: null
-  reviewed_on: null
-  notes: Draft transcription from Patel et al. with the selected DailyMed label included only for separately
-    identified safety monitoring. Independent review of the off-label modeling source, source context,
-    nullable formulation, continuous unrounded renal partition, total-product dose units, evidence-level
-    mappings, monitoring text, limitations, and prototype warnings remains required.
+  status: reviewed
+  reviewed_content_version: 1.0.0-draft
+  reviewer: Connor Fowler, PharmD
+  reviewer_role: independent qualified clinical-content reviewer
+  reviewed_on: '2026-07-26'
+  notes: Independent review completed for the exact content version and its recorded sources, off-label model context,
+    renal partition, units, monitoring text, limitations, exclusions, and prototype warnings.
 limitations:
 - Prototype only — not for direct clinical use; use only with synthetic or properly de-identified cases.
 - Draft content is not eligible for rule matching and has not received independent clinical-content review.

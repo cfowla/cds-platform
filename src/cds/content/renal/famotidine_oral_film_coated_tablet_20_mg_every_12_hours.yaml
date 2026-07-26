@@ -133,12 +133,13 @@ sources:
   publication_date: '2026-06-26'
   url: https://dailymed.nlm.nih.gov/dailymed/lookup.cfm?setid=4421ceb7-a114-436c-871a-7bc5444f8154&version=1
 review:
-  status: draft
-  reviewed_content_version: null
-  reviewer: null
-  reviewer_role: null
-  reviewed_on: null
-  notes: Draft transcription from the selected repackaged FDA-approved label. Independent review of source acceptability and fidelity, exact 30 and 60 mL/min boundaries, maximum-dose representation, oral film-coated-tablet formulation, provisional guideline evidence mapping, monitoring text, exclusions, and prototype warnings remains required.
+  status: reviewed
+  reviewed_content_version: 1.0.0-draft
+  reviewer: Connor Fowler, PharmD
+  reviewer_role: independent qualified clinical-content reviewer
+  reviewed_on: '2026-07-26'
+  notes: Independent review completed for the exact content version and its recorded source acceptability, renal boundaries,
+    maximum-dose representation, formulation, evidence mapping, monitoring text, exclusions, limitations, and prototype warning.
 limitations:
 - Prototype only — not for direct clinical use; use only with synthetic or properly de-identified cases.
 - Draft content is not eligible for rule matching and has not received independent clinical-content review.
