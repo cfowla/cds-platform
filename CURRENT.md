@@ -1,113 +1,113 @@
-# Current Work
+# Current Project State
 
-This file is replaced after every task. It is not an append-only diary.
+## Execution mode
 
-## Repository execution mode
-
-Use a complete repository checkout supplied by a Codespace, local development environment, or
-repository-connected Codex task for release-candidate verification. GitHub is authoritative. For a
-bounded focused task, `docs/TASK_TEMPLATE.md` permits a connector-materialized verification checkout
-containing only the named files and concretely required imports. A bounded checkout may prove the
-focused deliverable but does not replace clean, hash-verified release-candidate evidence.
-
-A repository-local or temporary isolated virtual environment may be created, and project-declared
-development dependencies may be installed from `pyproject.toml`. Do not install dependencies globally.
+- Repository: `cfowla/cds-platform`
+- Authoritative branch: `main`
+- Active task branch: `docs/record-reviewed-content-metadata`
+- Prototype remains nonclinical and is not authorized for patient-care use.
+- Repository files, not prior chat history, are the durable source of truth.
 
 ## Roadmap position
 
-- Days 1-82 are complete.
-- **Day 83 - Tag the prototype milestone remains incomplete.**
-- **Work Packages 1-7 software remediation and verification are complete.**
-- The verified software candidate is
-  `179c22842caa45d3a1c5e8c04b0bd83025418545`.
-- This task is based on current `main`
-  `cbb69a486b0a5ba0c52e2126f35a60f6b4a78498`, which contains later steering-document and
-  fail-closed implementation changes and must not be described or tagged as the verified candidate.
-- The overall prototype release decision remains **no-go**.
+- Days 1-82: complete.
+- Day 83 release gate: incomplete.
+- The historical Day 83 candidate remains a release `no-go`.
+- Work Packages 1-7 completed the bounded software remediation and produced a successful retained
+  verification artifact for candidate `179c22842caa45d3a1c5e8c04b0bd83025418545`.
+- Later fail-closed implementation changes and the reviewed-content metadata recorded by this task
+  require selection and full verification of a new exact candidate.
 
-## Work Package 7 result
+## Completed in this bounded task
 
-The retained evidence is
-`artifacts/verification/full-verification-20260726T023944Z.txt`.
+The selected clinical-content review metadata is now recorded for all eight exact YAML documents:
 
-The unchanged candidate passed the complete software gate:
+- four cefepime regimens;
+- two piperacillin–tazobactam standard-infusion regimens;
+- one piperacillin–tazobactam extended-infusion regimen; and
+- one famotidine oral film-coated-tablet regimen.
 
-- Pytest: 935 passed, 2 strict XFAILs; exit status 0.
-- Ruff: `All checks passed!`; exit status 0.
-- CLI walkthrough: 7 synthetic scenarios verified; exit status 0.
-- Pre-verification working tree: clean.
-- Post-verification tracked candidate state: unchanged.
-- Overall software verification: **PASS**.
+Each selected document now records:
 
-The retained candidate had two strict XFAILs. Both have now been resolved in separate bounded
-implementation tasks. A new exact release candidate has not been selected or verified.
+- `status: reviewed`;
+- `reviewed_content_version: 1.0.0-draft`;
+- `reviewer: Connor Fowler, PharmD`;
+- `reviewer_role: independent qualified clinical-content reviewer`; and
+- `reviewed_on: 2026-07-26`.
 
-## Famotidine adult minimum-weight result
+The existing exact `content_version: 1.0.0-draft` identifiers were not renamed or reused. The task
+changed only each selected document's `review` mapping. Medication facts, source records, regimen
+facts, indications, formulations, doses, frequencies, infusion durations, renal domains, renal
+bands, boundary ownership, recommendation payloads, monitoring text, and limitations were not
+changed.
 
-The famotidine rule now configures the documented exact minimum supported adult weight as `40 kg`.
-The shared exact matcher enforces that optional medication-specific boundary against the exact
-calculation input retained in `RenalFunctionResult.weight_used`.
+`tests/contract/test_renal_content_snapshots.py` now protects every complete selected YAML document
+by exact Git blob identity, asserts the complete review metadata and exact reviewed-version equality,
+preserves source-to-band traceability checks, and continues to exclude
+`cefepime_synthetic_fixture.yaml` from the selected clinical snapshot.
 
-Patients immediately below `40 kg` receive a structured unsupported-population result with no
-recommendation. Patients at and immediately above `40 kg` remain eligible for exact matching. The
-former strict XFAIL is now a normal passing integration test. Focused unit and integration
-verification produced 108 passed. Full repository verification produced 940 passed with no skips,
-XFAILs, or XPASSes. Focused and full Ruff checks passed.
+`BACKLOG.md` now records the review-metadata item as complete and leaves only final candidate
+verification and the explicit release decision as bounded release-gate work.
 
-## Completed independent reviews
+## Verification status
 
-On 2026-07-26, the project owner confirmed that **Connor Fowler, PharmD** completed the required
-independent human reviews for the exact candidate:
+Observed in this execution environment:
 
-- independent calculation review;
-- qualified clinical-content review for the selected content set; and
-- PHI review of the retained verification artifact.
+- The task branch is based on `main` commit `45d630032f63c43bd4abdf21f153800a21b3af35`
+  and is not behind `main` at the time of comparison.
+- GitHub branch comparison shows only the eight selected YAML documents, the selected-content
+  snapshot contract, `BACKLOG.md`, and this file as intended task changes.
+- Direct branch reads confirm complete review metadata and exact reviewed-version equality for all
+  eight selected documents.
+- The exact Git blob identities returned by GitHub for all eight YAML files are recorded in the
+  contract snapshot.
 
-These completed reviews close the corresponding human-review activities recorded as blocking when
-the artifact was generated. They do not change draft clinical-content status or reviewer metadata by
-themselves and do not authorize a tag.
+Not executed in this environment:
 
-## Remaining release blockers
+- focused pytest;
+- full pytest;
+- Ruff; and
+- the seven-scenario CLI release capture.
 
-1. Commit exact reviewed status and reviewer metadata for each selected clinical-content version
-   where the source files still record `draft`.
-2. Select and verify a new exact clean candidate after those changes.
-3. Record an explicit final release decision. Create a prototype tag only in a later bounded task
-   after an explicit `go`.
+Reason: this session has no repository checkout, `gh` is unavailable, shell network access to GitHub
+is unavailable, and no GitHub Actions workflow is attached to the branch. Connector inspection is
+not a substitute for repository test execution. Full verification remains a blocking next task.
 
-## Active constraints
+## Current blockers
 
-- Preserve the prototype warning and use only synthetic or properly de-identified data.
-- Validate before calculation or rule matching; unsupported or insufficient cases fail closed.
-- Keep identifiers, coding systems, units, and case exact; do not infer, alias, convert, or normalize
-  them.
-- Preserve exact Decimal behavior and numeric-string serialization without binary floating-point
-  conversion or clinical rounding.
-- Preserve public imports, exception behavior, serialization contracts, clinical content, and safety
-  boundaries unless a separate task explicitly authorizes a change.
-- Do not weaken tests, remove required fixtures, overwrite unrelated snapshots or goldens, alter
-  expected-failure markers, or modify lint configuration merely to produce a pass.
-- Do not create a prototype tag without an explicit `go` decision for one exact unchanged candidate
-  and its selected content versions.
+1. Select one exact clean post-merge commit as the new release candidate.
+2. Run full pytest, Ruff, and the seven-scenario CLI capture against that exact unchanged commit.
+3. Resolve every failure, skip, warning, or limitation without changing the candidate after evidence
+   capture.
+4. Complete the release checklist and record an explicit `go` or `no-go` for the exact candidate and
+   selected content versions.
+5. Create a prototype tag only in a separate bounded task after an explicit `go` decision.
 
 ## Files changed in this task
 
-Edited:
-
-- `src/cds/rules/exact_renal_dose.py`
-- `src/cds/rules/famotidine.py`
-- `tests/unit/rules/test_famotidine.py`
-- `tests/integration/test_renal_dose_matrix.py`
-- `docs/RELEASE_TEST_DISPOSITIONS.md`
-- `docs/PROTOTYPE_RELEASE_CHECKLIST.md`
 - `CURRENT.md`
 - `BACKLOG.md`
-
-No clinical-content, snapshot, golden, or configuration file is changed.
+- `tests/contract/test_renal_content_snapshots.py`
+- `src/cds/content/renal/cefepime_iv_500_mg_every_12_hours_over_30_minutes.yaml`
+- `src/cds/content/renal/cefepime_iv_1_g_every_12_hours_over_30_minutes.yaml`
+- `src/cds/content/renal/cefepime_iv_2_g_every_12_hours_over_30_minutes.yaml`
+- `src/cds/content/renal/cefepime_iv_2_g_every_8_hours_over_30_minutes.yaml`
+- `src/cds/content/renal/piperacillin_tazobactam_standard_infusion_iv_3_375_g_every_6_hours_over_30_minutes.yaml`
+- `src/cds/content/renal/piperacillin_tazobactam_standard_infusion_iv_4_5_g_every_6_hours_over_30_minutes.yaml`
+- `src/cds/content/renal/piperacillin_tazobactam_extended_infusion_iv_3_375_g_every_8_hours_over_240_minutes.yaml`
+- `src/cds/content/renal/famotidine_oral_film_coated_tablet_20_mg_every_12_hours.yaml`
 
 ## Next exact action
 
-After this task is reviewed and merged, create
-`docs/record-reviewed-content-metadata`. Record exact reviewed status and Connor Fowler, PharmD as
-reviewer for each selected content version covered by the completed qualified review. Do not alter
-medication facts, source transcription, renal bands, boundaries, or recommendations.
+After this task PR is merged, create a new bounded final-candidate-verification task from clean
+current `main`. Select and record the exact candidate commit, then run:
+
+```bash
+python tools/capture_release_verification.py \
+  --release-custodian "Connor Fowler, project owner and release custodian"
+```
+
+The capture must include full pytest, Ruff, all seven synthetic CLI scenarios, environment and
+version evidence, final clean-tree evidence, PHI review, and an explicit disposition for every
+failure, skip, warning, and limitation. Do not change implementation, tests, content, or review
+metadata during that verification task. Do not tag the repository.
