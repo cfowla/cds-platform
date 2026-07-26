@@ -310,11 +310,24 @@ def test_supplied_weight_with_unknown_weight_type_is_rejected() -> None:
     assert result.issues[0].field_path == "declared_weight_type"
 
 
+def test_actual_body_weight_with_actual_declaration_is_accepted() -> None:
+    patient = _patient()
+
+    result = validate_patient_structure(
+        patient,
+        evaluation_at=UTC_EVALUATION,
+        declared_weight_type=WeightType.ACTUAL,
+    )
+
+    assert result.is_valid is True
+    assert patient.actual_body_weight.value == Decimal("70")
+
+
 @pytest.mark.parametrize(
     "declared_weight_type",
-    [WeightType.ACTUAL, WeightType.IDEAL, WeightType.ADJUSTED, WeightType.OTHER],
+    [WeightType.IDEAL, WeightType.ADJUSTED, WeightType.OTHER],
 )
-def test_nonunknown_declared_weight_type_is_preserved(
+def test_actual_body_weight_with_conflicting_declaration_is_rejected(
     declared_weight_type: WeightType,
 ) -> None:
     patient = _patient()
@@ -325,8 +338,9 @@ def test_nonunknown_declared_weight_type_is_preserved(
         declared_weight_type=declared_weight_type,
     )
 
-    assert result.is_valid is True
-    assert declared_weight_type is not WeightType.UNKNOWN
+    assert _codes(result) == ["conflicting_weight_type"]
+    assert result.issues[0].field_path == "declared_weight_type"
+    assert result.is_valid is False
     assert patient.actual_body_weight.value == Decimal("70")
 
 

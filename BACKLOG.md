@@ -120,7 +120,8 @@ The following previously open remediation work is complete and must not be prese
 - complete command and environment capture;
 - seven-scenario CLI walkthrough capture;
 - placeholder-skip disposition; and
-- exact candidate selection and Work Package 7 software verification.
+- exact candidate selection and Work Package 7 software verification; and
+- supplied-versus-declared weight-type conflict rejection.
 
 ### Completed independent review
 
@@ -134,17 +135,15 @@ before that content is eligible for recommendation matching.
 
 ### Remaining bounded work
 
-1. **Open - Weight-type conflict:** conflicting supplied and declared weight types must fail before
-   calculation; replace the corresponding strict XFAIL with a passing test.
-2. **Open - Famotidine adult minimum weight:** below-scope patients must receive no recommendation;
+1. **Open - Famotidine adult minimum weight:** below-scope patients must receive no recommendation;
    replace the corresponding strict XFAIL with a passing test.
-3. **Open - Clinical-content review metadata:** record exact reviewed status and Connor Fowler,
+2. **Open - Clinical-content review metadata:** record exact reviewed status and Connor Fowler,
    PharmD as reviewer for every selected content version covered by the completed qualified review.
    Do not alter medication facts, source transcription, dose bands, boundaries, or recommendations
    in this bookkeeping task.
-4. **Open - Final candidate verification:** after implementation and review-metadata changes, select
+3. **Open - Final candidate verification:** after implementation and review-metadata changes, select
    one exact clean commit and rerun full pytest, Ruff, and CLI capture with no unresolved XFAILs.
-5. **Open - Release decision:** complete the final checklist and record an explicit `go` or
+4. **Open - Release decision:** complete the final checklist and record an explicit `go` or
    `no-go`. Tag only in a separate bounded task after an explicit `go`.
 
 ## Later decisions

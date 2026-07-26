@@ -139,14 +139,28 @@ def validate_patient_structure(
                 )
             )
 
-    if weight_value is not None and declared_weight_type == WeightType.UNKNOWN:
-        issues.append(
-            _error(
-                code="weight_type_required",
-                message="A body-weight type must be declared when actual body weight is supplied.",
-                field_path="declared_weight_type",
+    if weight_value is not None:
+        if declared_weight_type == WeightType.UNKNOWN:
+            issues.append(
+                _error(
+                    code="weight_type_required",
+                    message="A body-weight type must be declared when actual body weight is supplied.",
+                    field_path="declared_weight_type",
+                )
             )
-        )
+        elif isinstance(declared_weight_type, WeightType) and (
+            declared_weight_type is not WeightType.ACTUAL
+        ):
+            issues.append(
+                _error(
+                    code="conflicting_weight_type",
+                    message=(
+                        "Patient.actual_body_weight cannot be declared as a non-actual "
+                        "body-weight type."
+                    ),
+                    field_path="declared_weight_type",
+                )
+            )
 
     return ValidationResult(
         is_valid=not any(issue.severity == "error" for issue in issues),
