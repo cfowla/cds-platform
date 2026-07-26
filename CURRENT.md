@@ -20,8 +20,9 @@ development dependencies may be installed from `pyproject.toml`. Do not install 
 - **Work Packages 1-7 software remediation and verification are complete.**
 - The verified software candidate is
   `179c22842caa45d3a1c5e8c04b0bd83025418545`.
-- Current `main` is `ce5e68bd33a5f121e02f8d061a1a347f8b02b040`; that later commit adds
-  the retained evidence artifact and must not be described or tagged as the verified candidate.
+- Current `main` is `d7aa94e37d122f6d484c8194f7d68158a07c63b2`; it contains the retained
+  evidence and reconciled steering documents and must not be described or tagged as the verified
+  candidate.
 - The overall prototype release decision remains **no-go**.
 
 ## Work Package 7 result
@@ -38,10 +39,20 @@ The unchanged candidate passed the complete software gate:
 - Post-verification tracked candidate state: unchanged.
 - Overall software verification: **PASS**.
 
-The two strict XFAILs remain unresolved and blocking:
+The retained candidate had two strict XFAILs. This task resolves the supplied-versus-declared
+weight-type conflict. The famotidine adult minimum-weight boundary remains unresolved and blocking.
 
-1. conflicting supplied versus declared weight type is not rejected before calculation;
-2. the famotidine adult minimum-weight boundary is not enforced in the full flow.
+## Weight-type conflict result
+
+`validate_patient_structure` now rejects an explicitly supplied `Patient.actual_body_weight` when
+the caller declares it as ideal, adjusted, or other weight. The structured
+`conflicting_weight_type` error is returned during initial validation, before content lookup,
+calculation, or rule evaluation, and no recommendation is produced.
+
+The former strict XFAIL is now a normal passing integration test. Focused validation and integration
+verification produced 286 passed and 1 unrelated strict XFAIL. Full repository verification
+produced 936 passed and the same famotidine strict XFAIL. Ruff passed for the changed files and the
+full repository.
 
 ## Completed independent reviews
 
@@ -53,17 +64,16 @@ independent human reviews for the exact candidate:
 - PHI review of the retained verification artifact.
 
 These completed reviews close the corresponding human-review activities recorded as blocking when
-the artifact was generated. They do not resolve the two fail-closed implementation gaps, do not
+the artifact was generated. They do not resolve the remaining fail-closed implementation gap, do not
 change draft clinical-content status or reviewer metadata by themselves, and do not authorize a tag.
 
 ## Remaining release blockers
 
-1. Resolve and independently verify the supplied-versus-declared weight-type conflict.
-2. Resolve and independently verify the famotidine adult minimum-weight boundary.
-3. Commit exact reviewed status and reviewer metadata for each selected clinical-content version
+1. Resolve and independently verify the famotidine adult minimum-weight boundary.
+2. Commit exact reviewed status and reviewer metadata for each selected clinical-content version
    where the source files still record `draft`.
-4. Select and verify a new exact clean candidate after those changes.
-5. Record an explicit final release decision. Create a prototype tag only in a later bounded task
+3. Select and verify a new exact clean candidate after those changes.
+4. Record an explicit final release decision. Create a prototype tag only in a later bounded task
    after an explicit `go`.
 
 ## Active constraints
@@ -83,17 +93,21 @@ change draft clinical-content status or reviewer metadata by themselves, and do 
 
 ## Files changed in this task
 
-Edited only:
+Edited:
 
+- `src/cds/validation/patient.py`
+- `tests/unit/validation/test_patient.py`
+- `tests/integration/test_renal_dose_matrix.py`
+- `docs/RELEASE_TEST_DISPOSITIONS.md`
+- `docs/PROTOTYPE_RELEASE_CHECKLIST.md`
 - `CURRENT.md`
 - `BACKLOG.md`
-- `docs/PROTOTYPE_RELEASE_CHECKLIST.md`
 
-No production, test, clinical-content, snapshot, golden, or configuration file is changed.
+No clinical-content, snapshot, golden, or configuration file is changed.
 
 ## Next exact action
 
-After this documentation reconciliation is reviewed and merged, create
-`fix/fail-closed-weight-type-conflict`. Make conflicting supplied and declared weight types fail
-before calculation, convert the corresponding strict XFAIL to a normal passing test, and run the
-focused integration verification. Do not begin a generic rule-engine feature.
+After this task is reviewed and merged, create
+`fix/fail-closed-famotidine-adult-weight-boundary`. Make patients below the exact supported adult
+minimum weight receive no recommendation, convert the remaining strict XFAIL to a normal passing
+test, and run the focused integration verification. Do not begin a generic rule-engine feature.
