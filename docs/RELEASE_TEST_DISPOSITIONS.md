@@ -34,10 +34,8 @@ reintroduced merely to reserve a path.
 
 ## Expected failures
 
-Two strict XFAIL signals remain intentional and unresolved:
+One strict XFAIL signal remains intentional and unresolved:
 
-- `tests/integration/test_renal_dose_matrix.py::test_declared_weight_type_conflict_fails_closed` —
-  the full flow does not yet reject a conflict between supplied and declared weight type.
 - `tests/integration/test_renal_dose_matrix.py::test_exact_unsupported_contexts_fail_closed[UNSUP-FAM-WEIGHT]`
   — the full flow does not yet enforce the famotidine adult minimum-weight boundary.
 
@@ -49,5 +47,5 @@ they are resolved in separately verified implementation tasks.
 
 For every candidate, the durable verification artifact must reproduce the actual pytest
 skip/XFAIL/XPASS report. Any skip, XFAIL, or XPASS not named here is unreviewed and blocks a release
-decision until it receives an exact disposition. An XPASS for either strict XFAIL above is a test
+decision until it receives an exact disposition. An XPASS for the strict XFAIL above is a test
 failure and must not be accepted as success.
