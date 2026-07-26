@@ -16,31 +16,31 @@ _CONTENT_DIRECTORY = _REPOSITORY_ROOT / "src" / "cds" / "content" / "renal"
 # identity only after reviewing the corresponding file diff.
 _EXPECTED_SELECTED_BLOBS = {
     "cefepime_iv_500_mg_every_12_hours_over_30_minutes.yaml": (
-        "823b1659ae09f0e932de7ee2e7b993c218f8e4c7"
+        "1ae0f27a5a5008d0d8f2070c71107b907d97153a"
     ),
     "cefepime_iv_1_g_every_12_hours_over_30_minutes.yaml": (
-        "cc31f5c9af01bc75ee9f0c0f2d8a9fcff6cc5456"
+        "c126935224f8988a8be7ba26c3f46bad6632d335"
     ),
     "cefepime_iv_2_g_every_12_hours_over_30_minutes.yaml": (
-        "969313aee45aaf14f053a95bbaa858f893e67801"
+        "750a72ee6acbf71c2faa041c1f20f5cd7b7fa8e9"
     ),
     "cefepime_iv_2_g_every_8_hours_over_30_minutes.yaml": (
-        "4e3076a5ef8aefd3d19c6ec267210b7dedba6d79"
+        "3ed7eaa2062e5f0cfaa62cf2f1c150df3763a0b9"
     ),
     (
         "piperacillin_tazobactam_standard_infusion_iv_3_375_g_"
         "every_6_hours_over_30_minutes.yaml"
-    ): "66d0453fc04e7328f0f5794a2fd53e858dced7a2",
+    ): "fd12a44ae6927aeb4e234d3fc9d4db0d59848fcd",
     (
         "piperacillin_tazobactam_standard_infusion_iv_4_5_g_"
         "every_6_hours_over_30_minutes.yaml"
-    ): "68f8cdf5f8994c80adf686b00629b959e7eac9d8",
+    ): "4e4a04c1bc4fede52a97cb5b4b20814c124dd2ee",
     (
         "piperacillin_tazobactam_extended_infusion_iv_3_375_g_"
         "every_8_hours_over_240_minutes.yaml"
-    ): "e3e5fb78be11277ddb26ea2f25508c1332e9e63a",
+    ): "37ba49e3facbca8a6539f038a8b35837b629e6a5",
     "famotidine_oral_film_coated_tablet_20_mg_every_12_hours.yaml": (
-        "10415a4be5214545d84e7cf8cb0dec8c775ceda5"
+        "7600bda8dffdb54972ae351b651bc03889ad76e1"
     ),
 }
 
