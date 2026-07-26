@@ -34,18 +34,15 @@ reintroduced merely to reserve a path.
 
 ## Expected failures
 
-One strict XFAIL signal remains intentional and unresolved:
+No skip, XFAIL, or XPASS is currently approved for the release suite.
 
-- `tests/integration/test_renal_dose_matrix.py::test_exact_unsupported_contexts_fail_closed[UNSUP-FAM-WEIGHT]`
-  — the full flow does not yet enforce the famotidine adult minimum-weight boundary.
-
-These are known nonclinical prototype limitations, not passing tests. They remain blocking unless
-the release custodian and appropriate reviewers explicitly accept them for one exact candidate or
-they are resolved in separately verified implementation tasks.
+The former `UNSUP-FAM-WEIGHT` strict XFAIL is a normal passing integration case after enforcement of
+the exact famotidine 40 kg adult minimum-weight boundary. The earlier retained Work Package 7
+artifact remains historically accurate for its candidate and still records the limitations present
+at that time.
 
 ## Runtime disposition rule
 
 For every candidate, the durable verification artifact must reproduce the actual pytest
 skip/XFAIL/XPASS report. Any skip, XFAIL, or XPASS not named here is unreviewed and blocks a release
-decision until it receives an exact disposition. An XPASS for the strict XFAIL above is a test
-failure and must not be accepted as success.
+decision until it receives an exact disposition.
