@@ -40,6 +40,7 @@ class ExactRenalDoseRuleConfig:
     warning_code_prefix: str
     recommendation_title: str
     provenance_source_name: str
+    minimum_weight: RenalDoseQuantity | None = None
 
 
 __all__ = ["ExactRenalDoseRuleConfig", "evaluate_exact_renal_dose_rule"]
@@ -232,6 +233,27 @@ def evaluate_exact_renal_dose_rule(
             code=_warning_code(config, "population"),
             config=config,
         )
+
+    if config.minimum_weight is not None:
+        if _quantity_is_missing(renal_function.weight_used, config.minimum_weight):
+            return _incomplete(result, "Required patient weight or unit is missing.")
+        if renal_function.weight_used.unit != config.minimum_weight.unit:
+            return _unsupported(
+                result,
+                f"Patient weight unit is outside the reviewed {config.medication_display} "
+                "content context.",
+                code=_warning_code(config, "population"),
+                config=config,
+            )
+        if renal_function.weight_used.value < config.minimum_weight.value:
+            return _unsupported(
+                result,
+                f"Patients weighing less than {config.minimum_weight.value} "
+                f"{config.minimum_weight.unit} are outside the reviewed "
+                f"{config.medication_display} adult content context.",
+                code=_warning_code(config, "population"),
+                config=config,
+            )
 
     if renal_function.method is RenalMethod.UNKNOWN:
         return _incomplete(result, "Required renal method is missing or unknown.")
