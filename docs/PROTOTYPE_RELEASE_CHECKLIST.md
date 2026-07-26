@@ -25,8 +25,8 @@ interpreted as passing.
 
 The exact software candidate is
 `179c22842caa45d3a1c5e8c04b0bd83025418545`. Current `main`,
-`ce5e68bd33a5f121e02f8d061a1a347f8b02b040`, is a later evidence-only commit and is not the
-verified candidate.
+`cbb69a486b0a5ba0c52e2126f35a60f6b4a78498`, contains later steering-document and fail-closed
+implementation changes and is not the verified candidate.
 
 - Candidate reference: `release/wp7-verify-179c22842caa`
 - Package version: 0.1.0
@@ -54,14 +54,10 @@ These human review activities are complete. Exact reviewed status and reviewer m
 be committed for any selected content file that continues to record `draft`; the attestation alone
 does not change content eligibility.
 
-The release remains a no-go because two fail-closed implementation gaps remain unresolved:
-
-1. conflicting supplied and declared weight type is not rejected before calculation;
-2. the famotidine adult minimum-weight boundary is not enforced in the full flow.
-
-Both appear as strict XFAILs in the retained evidence. Resolve them in separate bounded
-implementation tasks, reconcile selected-content review metadata without changing clinical facts,
-and verify a new exact candidate before reconsidering the milestone.
+The two strict XFAILs recorded in the retained evidence have since been resolved in separate bounded
+implementation tasks. A new release candidate has not been selected or verified. Reconcile
+selected-content review metadata without changing clinical facts, then select and verify a new exact
+candidate before reconsidering the milestone.
 
 ## 1. Identify the exact candidate
 
@@ -331,7 +327,8 @@ the exact candidate rather than copying them forward as stale history.
 - [ ] The content schema has no explicit supersession relationship.
 - [x] Conflicting supplied and declared body-weight type is rejected before calculation with no
       recommendation; final candidate verification remains required.
-- [ ] The famotidine adult minimum-weight boundary is not enforced in the full flow.
+- [x] Patients below the exact famotidine 40 kg adult minimum-weight boundary receive no
+      recommendation; final candidate verification remains required.
 - [ ] Privacy-preserving logging helpers are not yet wired into every application or interface
       failure path.
 - [ ] Any previously deferred focused pytest or full-repository verification has been rerun or

@@ -153,7 +153,7 @@ def _order() -> MedicationOrder:
     )
 
 
-def _renal(value: str = "60") -> RenalFunctionResult:
+def _renal(value: str = "60", *, weight: str = "40") -> RenalFunctionResult:
     return RenalFunctionResult(
         result_id="synthetic-renal-1",
         patient_id="synthetic-patient-1",
@@ -162,6 +162,7 @@ def _renal(value: str = "60") -> RenalFunctionResult:
         value=ValueWithUnit(value=Decimal(value), unit="mL/min"),
         normalized_to_bsa=False,
         age_years=65,
+        weight_used=ValueWithUnit(value=Decimal(weight), unit="kg"),
     )
 
 
@@ -219,6 +220,34 @@ def test_draft_content_fails_closed() -> None:
     assert result.applied is False
     assert result.passed is None
     assert result.recommendations == []
+
+
+@pytest.mark.parametrize(
+    ("weight", "expected_status"),
+    [
+        ("39.999", ResultStatus.NOT_APPLICABLE),
+        ("40", ResultStatus.SUCCESS),
+        ("40.001", ResultStatus.SUCCESS),
+    ],
+)
+def test_exact_adult_minimum_weight_boundary_fails_closed(
+    weight: str, expected_status: ResultStatus
+) -> None:
+    result = _evaluate(renal_function=_renal(weight=weight))
+
+    assert result.status is expected_status
+    if expected_status is ResultStatus.NOT_APPLICABLE:
+        assert result.applied is False
+        assert result.passed is None
+        assert result.recommendations == []
+        assert result.supporting_data["outcome_category"] == "unsupported"
+        assert [warning.code for warning in result.warnings] == [
+            "unsupported_famotidine_population"
+        ]
+    else:
+        assert result.applied is True
+        assert result.passed is True
+        assert len(result.recommendations) == 1
 
 
 @pytest.mark.parametrize(

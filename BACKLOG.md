@@ -105,7 +105,8 @@ The durable record is
 - CLI walkthrough: all 7 synthetic scenarios verified; exit status 0.
 - Overall software verification: **PASS**.
 - Current `main` is the later evidence-only commit
-  `ce5e68bd33a5f121e02f8d061a1a347f8b02b040`; it is not the verified candidate.
+  `cbb69a486b0a5ba0c52e2126f35a60f6b4a78498`; it contains later steering-document and
+  fail-closed implementation changes and is not the verified candidate.
 
 ### Completed remediation
 
@@ -121,7 +122,8 @@ The following previously open remediation work is complete and must not be prese
 - seven-scenario CLI walkthrough capture;
 - placeholder-skip disposition; and
 - exact candidate selection and Work Package 7 software verification; and
-- supplied-versus-declared weight-type conflict rejection.
+- supplied-versus-declared weight-type conflict rejection; and
+- famotidine adult minimum-weight fail-closed enforcement.
 
 ### Completed independent review
 
@@ -135,15 +137,13 @@ before that content is eligible for recommendation matching.
 
 ### Remaining bounded work
 
-1. **Open - Famotidine adult minimum weight:** below-scope patients must receive no recommendation;
-   replace the corresponding strict XFAIL with a passing test.
-2. **Open - Clinical-content review metadata:** record exact reviewed status and Connor Fowler,
+1. **Open - Clinical-content review metadata:** record exact reviewed status and Connor Fowler,
    PharmD as reviewer for every selected content version covered by the completed qualified review.
    Do not alter medication facts, source transcription, dose bands, boundaries, or recommendations
    in this bookkeeping task.
-3. **Open - Final candidate verification:** after implementation and review-metadata changes, select
+2. **Open - Final candidate verification:** after implementation and review-metadata changes, select
    one exact clean commit and rerun full pytest, Ruff, and CLI capture with no unresolved XFAILs.
-4. **Open - Release decision:** complete the final checklist and record an explicit `go` or
+3. **Open - Release decision:** complete the final checklist and record an explicit `go` or
    `no-go`. Tag only in a separate bounded task after an explicit `go`.
 
 ## Later decisions

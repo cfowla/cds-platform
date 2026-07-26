@@ -558,10 +558,6 @@ UNSUPPORTED = (
         "FAM-PO-20",
         "fam_weight",
         id="UNSUP-FAM-WEIGHT",
-        marks=pytest.mark.xfail(
-            strict=True,
-            reason="Known gap: famotidine adult-weight floor is not enforced.",
-        ),
     ),
     pytest.param("CEF-Q8", "rrt", id="UNSUP-RRT"),
     pytest.param("CEF-Q8", "unstable", id="UNSUP-UNSTABLE"),

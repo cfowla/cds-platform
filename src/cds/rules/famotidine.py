@@ -3,17 +3,18 @@
 from __future__ import annotations
 
 from datetime import datetime
+from decimal import Decimal
 
 from cds.domain.clinical import MedicationOrder
 from cds.domain.outputs import RenalFunctionResult, RuleResult
-from cds.repositories.renal_content import RenalDoseContent
+from cds.repositories.renal_content import RenalDoseContent, RenalDoseQuantity
 from cds.rules.exact_renal_dose import (
     ExactRenalDoseRuleConfig,
     evaluate_exact_renal_dose_rule,
 )
 
 FAMOTIDINE_MEDICATION_ID = "famotidine"
-FAMOTIDINE_RULE_IMPLEMENTATION_VERSION = "1.0.0"
+FAMOTIDINE_RULE_IMPLEMENTATION_VERSION = "1.1.0"
 
 _CONFIG = ExactRenalDoseRuleConfig(
     medication_id=FAMOTIDINE_MEDICATION_ID,
@@ -22,6 +23,7 @@ _CONFIG = ExactRenalDoseRuleConfig(
     warning_code_prefix="famotidine",
     recommendation_title="Famotidine renal-dose recommendation",
     provenance_source_name="famotidine_rule",
+    minimum_weight=RenalDoseQuantity(value=Decimal("40"), unit="kg"),
 )
 
 __all__ = [
