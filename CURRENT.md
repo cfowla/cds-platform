@@ -3,87 +3,103 @@
 ## Execution mode
 
 - Repository: `cfowla/cds-platform`
-- Authoritative branch: `main`
-- Completed task branch: `docs/record-final-verification-environment-blocker`
+- Active implementation branch: `experimental/generic-evaluation-contracts`
+- Branch purpose: unrestricted experimental architecture work; not a release candidate.
 - Prototype remains nonclinical and is not authorized for patient-care use.
+- Development and tests must use synthetic or properly de-identified data.
 - Repository files, not prior chat history, are the durable source of truth.
 
 ## Roadmap position
 
-- Days 1-82: complete.
-- Day 83 release gate: incomplete.
-- The historical Day 83 candidate remains a release `no-go`.
-- Work Packages 1-7 completed the bounded software remediation and produced a successful retained
-  verification artifact for candidate `179c22842caa45d3a1c5e8c04b0bd83025418545`.
-- Later fail-closed implementation changes and reviewed-content metadata require selection and full
-  verification of a new exact candidate.
+- The bounded renal-dose vertical slice on `main` remains the only clinically implemented feature.
+- The historical release decision remains `no-go`; this experimental branch does not select, verify,
+  or replace a release candidate.
+- Broad refactors and incomplete intermediate states are permitted on this branch, but fail-closed
+  behavior, exact identifiers, explicit units, inspectable content, provenance, sanitized failures,
+  and the clinical-use prohibition remain mandatory.
 
-## Current selected candidate
+## Completed experimental milestone
 
-Current `main` commit `4d14625cf2525df73006c3954890a5084b2e2efa` is the exact prospective
-candidate that must be verified next. No implementation, test, clinical-content, review-metadata,
-configuration, snapshot, golden, or dependency change is authorized during that verification task.
+The first platform-contract package is implemented additively without changing the renal execution
+path:
 
-## Verification attempt and blocker
+- `src/cds/domain/calculations.py`
+  - adds immutable, feature-neutral `CalculationResult`;
+  - preserves exact `Decimal | None`, unit, method, implementation version, inputs, assumptions,
+    warnings, and provenance.
+- `src/cds/domain/failures.py`
+  - adds sanitized `FailureDetail` and shared failure categories;
+  - excludes exception text and traceback fields.
+- `src/cds/app/results.py`
+  - adds canonical application-owned `EvaluationResult`;
+  - uses empty recommendation and alert tuples as safe defaults;
+  - records validation, calculations, evidence, provenance, evaluation time, failure details, and
+    evaluated rule identifiers.
+- `src/cds/app/features.py`
+  - adds exact `FeatureDefinition` and `FeatureRegistry` contracts;
+  - rejects duplicate feature identifiers and performs no normalization or fallback.
+- `src/cds/app/composition.py`
+  - adds an explicit composition-root contract;
+  - performs no environment lookup, file discovery, implicit content selection, or clinical
+    registration.
+- `src/cds/rules/rule.py`
+  - adds generic `EvaluationContext`, `Rule`, and `RuleOutcome` contracts;
+  - performs no I/O, content loading, normalization, or calculation.
+- `ARCHITECTURE.md`
+  - distinguishes stable renal behavior, implemented experimental contracts, compatibility layers,
+    and planned migration work.
 
-The final-candidate-verification task could not be executed in the current ChatGPT Work environment.
-The environment was probed directly and the following blockers were observed:
+## Compatibility and safety disposition
 
-- `gh` is not installed, so GitHub CLI authentication and publish workflow prerequisites are absent;
-- no local Git checkout is present;
-- shell DNS/network access cannot resolve `github.com`, so the public repository cannot be cloned;
-- no existing open pull request was present at task start;
-- no existing dispatchable verification workflow was found in the repository; and
-- the GitHub connector can inspect and edit repository files but cannot execute the full pytest, Ruff,
-  and CLI release-capture commands against a complete unchanged checkout.
+The following remain unchanged:
 
-No verification result, release evidence, or passing claim was fabricated. The candidate remains
-unverified and the overall release decision remains `no-go`.
+- `RenalDoseUseCase` and `RenalDoseUseCaseResult`;
+- `RenalDoseRuleEngine` and `RenalDoseRuleRegistry`;
+- renal validators, calculators, clinical-content models, YAML documents, and exact lookup behavior;
+- renal response mapper and CLI contract;
+- supported medications, populations, indications, formulations, regimens, and content versions;
+- calculation equations, unrounded values, boundary ownership, and recommendation behavior;
+- prototype warning and release `no-go`.
 
-## Completed prerequisite state
+The generic contracts do not make any additional feature clinically supported merely because it can
+be registered by identifier.
 
-The selected clinical-content review metadata is recorded for all eight exact YAML documents:
+## Verification status
 
-- four cefepime regimens;
-- two piperacillin–tazobactam standard-infusion regimens;
-- one piperacillin–tazobactam extended-infusion regimen; and
-- one famotidine oral film-coated-tablet regimen.
+The GitHub connector was used to inspect the current repository and publish the additive files. This
+environment did not provide a complete runnable checkout, so pytest, Ruff, architecture tests, and
+serialization contracts were not executed. No passing test or release claim is made.
 
-Each selected document records `status: reviewed`, exact reviewed-version equality, Connor Fowler,
-PharmD as the independent qualified clinical-content reviewer, reviewer role, and review date
-`2026-07-26`. The selected-content snapshot protects the complete YAML documents by exact Git blob
-identity and keeps the synthetic fixture outside the selected clinical snapshot.
+Static review performed through repository reads confirms:
 
-## Current blockers
+- new `domain` modules import only `domain`;
+- new `rules` contracts import only `domain` and `rules`-local concepts;
+- new `app` contracts import inward application dependencies;
+- no existing renal implementation file was modified;
+- no clinical content, tests, snapshots, goldens, dependencies, or interface files were modified.
 
-1. Use a complete clean checkout of current `main` at exact commit
-   `4d14625cf2525df73006c3954890a5084b2e2efa`.
-2. Ensure repository-declared development dependencies are installed in an isolated environment.
-3. Run the repository release-capture command against that unchanged candidate.
-4. Preserve the candidate commit and tracked working tree unchanged throughout verification.
-5. Record every pytest, Ruff, CLI, environment, clean-tree, PHI, failure, skip, warning, and limitation
-   disposition in the durable evidence artifact.
-6. Complete the release checklist and record an explicit `go` or `no-go` for that exact candidate and
-   selected content versions.
-7. Create a prototype tag only in a separate bounded task after an explicit `go` decision.
+## Deferred work
 
-## Files changed in this task
-
-- `CURRENT.md`
-
-This task records an execution-environment blocker only. It does not modify or verify the selected
-candidate's implementation, tests, clinical content, review metadata, snapshots, goldens,
-configuration, or dependencies.
+- renal calculation adapter to `CalculationResult`;
+- renal rule adapter to generic `RuleOutcome`;
+- generic `EvaluationResult` assembly with a legacy renal compatibility adapter;
+- feature-aware generic rule engine and registry behavior;
+- shared content-model extraction;
+- second low-risk experimental feature;
+- CLI composition-root migration;
+- legacy result or compatibility deletion;
+- full test and lint reconciliation.
 
 ## Next exact action
 
-From a complete clean checkout, confirm that `HEAD` is exactly
-`4d14625cf2525df73006c3954890a5084b2e2efa`, confirm `git status --short` is empty, and run:
+Implement the renal compatibility adapter package without changing the existing renal response
+contract:
 
-```bash
-python tools/capture_release_verification.py \
-  --release-custodian "Connor Fowler, project owner and release custodian"
-```
+1. add a pure adapter from `RenalFunctionResult` to `CalculationResult`;
+2. add a pure adapter from `RuleResult` plus `ValidationResult` to `EvaluationResult`;
+3. add focused unit tests proving success and every non-success state preserve no-recommendation
+   fail-closed behavior;
+4. leave `RenalDoseUseCase`, the renal mapper, CLI, content contracts, clinical behavior, and exact
+   identifiers unchanged.
 
-Do not modify the candidate during verification. If the command cannot run or any gate fails, retain
-an explicit `no-go`, record the exact blocker or failure, and do not tag the repository.
+Do not begin content-model extraction or a second clinical feature in that package.
