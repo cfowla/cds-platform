@@ -21,30 +21,47 @@ A release decision is **no-go** until every required item is complete and every 
 has an explicit disposition. Unchecked, unknown, unavailable, or not-applicable evidence must not be
 interpreted as passing.
 
-## Latest recorded verification attempt
+## Latest recorded verification and review state
 
-This section records a failed attempt. It does not complete any unchecked item below and must not be
-copied forward as evidence for a repaired candidate.
+The exact software candidate is
+`179c22842caa45d3a1c5e8c04b0bd83025418545`. Current `main`,
+`ce5e68bd33a5f121e02f8d061a1a347f8b02b040`, is a later evidence-only commit and is not the
+verified candidate.
 
-- Tested candidate: `73c3fcfd10548db31c2bf6707e73f65c5e7f2eb0`
+- Candidate reference: `release/wp7-verify-179c22842caa`
+- Package version: 0.1.0
 - Python: 3.12.1
-- Durable evidence: `artifacts/verification/full-verification-20260724T082921Z.txt`
-- Pytest: 63 failed, 869 passed, 16 skipped; exit status 1
-- Ruff: 284 diagnostics, 261 reported fixable; exit status 1
-- CLI walkthrough: not recorded
-- Evidence-only PR: #53
-- Evidence merge commit: `196a351eb48b30a70616d862a640190e0201c9e6`
-- Decision: **no-go**
+- Environment: Linux x86_64
+- Verification timestamp: 2026-07-26T02:39:44+00:00
+- Release custodian: Connor Fowler, project owner and release custodian
+- Durable evidence: `artifacts/verification/full-verification-20260726T023944Z.txt`
+- Pytest: 935 passed, 2 strict XFAILs; exit status 0
+- Ruff: `All checks passed!`; exit status 0
+- CLI walkthrough: 7 synthetic scenarios verified; exit status 0
+- Candidate tree: clean before verification and unchanged after verification
+- Software decision: **PASS**
+- Overall prototype release decision: **no-go**
 
-Primary software blockers are stale integration route and indication coding-system fixtures, an
-unresolved synthetic-content snapshot policy, an unreviewed cefepime golden-output case change, and
-invalid Decimal-context object-equality assertions. The Ruff artifact does not establish the intended
-ruleset because it omits the exact command and effective settings. Required environment facts,
-clean-tree status, CLI result, and disposition of all 16 placeholder skips are also incomplete.
+The evidence artifact records the manual gates as blocking at generation time. On 2026-07-26, the
+project owner subsequently confirmed that **Connor Fowler, PharmD** completed all three required
+independent human reviews for this exact candidate:
 
-Follow `docs/PROTOTYPE_RELEASE_REMEDIATION_PLAN.md`. Any repair to implementation, tests, snapshots,
-goldens, content, configuration, or verification tooling creates a new candidate that must be
-verified from the beginning.
+- independent calculation review;
+- qualified clinical-content review for the selected content set; and
+- PHI review of the retained evidence, with no PHI or real patient identifiers identified.
+
+These human review activities are complete. Exact reviewed status and reviewer metadata still must
+be committed for any selected content file that continues to record `draft`; the attestation alone
+does not change content eligibility.
+
+The release remains a no-go because two fail-closed implementation gaps remain unresolved:
+
+1. conflicting supplied and declared weight type is not rejected before calculation;
+2. the famotidine adult minimum-weight boundary is not enforced in the full flow.
+
+Both appear as strict XFAILs in the retained evidence. Resolve them in separate bounded
+implementation tasks, reconcile selected-content review metadata without changing clinical facts,
+and verify a new exact candidate before reconsidering the milestone.
 
 ## 1. Identify the exact candidate
 
@@ -147,12 +164,12 @@ commit. Running the production calculator against its own expected values is not
 
 Independent calculation review record:
 
-- Candidate commit: `<commit-sha>`
-- Reviewer: `<name-and-role>`
-- Review date: `<date>`
-- Method and evidence: `<location>`
-- Outcome: `<approved-requested-changes-rejected>`
-- Limitations: `<details-or-none>`
+- Candidate commit: `179c22842caa45d3a1c5e8c04b0bd83025418545`
+- Reviewer: Connor Fowler, PharmD — independent human reviewer
+- Review date: 2026-07-26
+- Method and evidence: `docs/RENAL_CALCULATOR_VERIFICATION.md` plus independent review of the exact candidate
+- Outcome: approved
+- Limitations: the two separately recorded fail-closed integration gaps remain blocking
 
 The existing arithmetic record in `docs/RENAL_CALCULATOR_VERIFICATION.md` is supporting evidence. It
 does not by itself prove independent human review or clinical validity.
@@ -169,8 +186,8 @@ candidate. A software test cannot substitute for independent clinical-content re
 - Content version: `<exact-version>`
 - Rule identifier: `<exact-id>`
 - Review status: `<draft-reviewed-retired>`
-- Reviewer name and role: `<name-and-role>`
-- Review date: `<date>`
+- Reviewer name and role: Connor Fowler, PharmD — independent human reviewer
+- Review date: 2026-07-26
 - Reviewed content version: `<exact-version>`
 - Source versions and citations: `<evidence-location>`
 - [ ] Status is exactly `reviewed`.
@@ -185,8 +202,8 @@ candidate. A software test cannot substitute for independent clinical-content re
 - Content version: `<exact-version>`
 - Rule identifier: `<exact-id>`
 - Review status: `<draft-reviewed-retired>`
-- Reviewer name and role: `<name-and-role>`
-- Review date: `<date>`
+- Reviewer name and role: Connor Fowler, PharmD — independent human reviewer
+- Review date: 2026-07-26
 - Reviewed content version: `<exact-version>`
 - Source versions and citations: `<evidence-location>`
 - [ ] Status is exactly `reviewed`.
@@ -201,8 +218,8 @@ candidate. A software test cannot substitute for independent clinical-content re
 - Content version: `<exact-version>`
 - Rule identifier: `<exact-id>`
 - Review status: `<draft-reviewed-retired>`
-- Reviewer name and role: `<name-and-role>`
-- Review date: `<date>`
+- Reviewer name and role: Connor Fowler, PharmD — independent human reviewer
+- Review date: 2026-07-26
 - Reviewed content version: `<exact-version>`
 - Source versions and citations: `<evidence-location>`
 - [ ] Status is exactly `reviewed`.
@@ -262,7 +279,7 @@ agent.
 
 Record the PHI review method, reviewer, date, scope, and evidence location:
 
-`<phi-review-record>`
+Connor Fowler, PharmD reviewed `artifacts/verification/full-verification-20260726T023944Z.txt` on 2026-07-26 and confirmed that it contains no PHI or real patient identifiers.
 
 ## 8. Confirm provenance and auditability
 
