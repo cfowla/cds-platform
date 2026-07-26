@@ -329,7 +329,8 @@ the exact candidate rather than copying them forward as stale history.
 - [ ] No API, EHR, batch, streaming, persistence, or network interface is implemented or authorized.
 - [ ] No automatic active-content-version registry exists.
 - [ ] The content schema has no explicit supersession relationship.
-- [ ] Conflicting supplied and declared body-weight type is not rejected before calculation.
+- [x] Conflicting supplied and declared body-weight type is rejected before calculation with no
+      recommendation; final candidate verification remains required.
 - [ ] The famotidine adult minimum-weight boundary is not enforced in the full flow.
 - [ ] Privacy-preserving logging helpers are not yet wired into every application or interface
       failure path.
