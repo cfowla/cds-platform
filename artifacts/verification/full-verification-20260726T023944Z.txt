@@ -1,0 +1,155 @@
+Prototype only -- not for direct clinical use. Use only synthetic or properly de-identified data.
+
+===== CANDIDATE =====
+Candidate commit: 179c22842caa45d3a1c5e8c04b0bd83025418545
+Candidate reference: release/wp7-verify-179c22842caa
+Repository root: /workspaces/cds-platform
+Package version: 0.1.0
+Python executable: /workspaces/cds-platform/.venv/bin/python
+Release custodian: Connor Fowler, project owner and release custodian
+Evidence generated at: 2026-07-26T02:39:44+00:00
+Operating system: Linux-6.8.0-1052-azure-x86_64-with-glibc2.39
+Architecture: x86_64
+Pre-verification working tree: clean
+Durable artifact location: /workspaces/cds-platform/artifacts/verification/full-verification-20260726T023944Z.txt
+
+===== MANUAL GATES =====
+PHI review: BLOCKING until a named reviewer confirms this artifact contains no PHI or real patient identifiers.
+Independent calculation review: BLOCKING until completed for this exact candidate.
+Qualified clinical-content review: BLOCKING until completed for every selected exact content version.
+Release decision: BLOCKING; this evidence run does not record a go decision or authorize milestone tagging.
+
+===== ENVIRONMENT RECORD =====
+$ git rev-parse HEAD
+Started: 2026-07-26T02:39:44+00:00
+179c22842caa45d3a1c5e8c04b0bd83025418545
+Completed: 2026-07-26T02:39:44+00:00
+Exit status: 0
+
+$ git status --short
+Started: 2026-07-26T02:39:44+00:00
+<no output>
+Completed: 2026-07-26T02:39:44+00:00
+Exit status: 0
+
+$ python --version
+Started: 2026-07-26T02:39:44+00:00
+Python 3.12.1
+Completed: 2026-07-26T02:39:44+00:00
+Exit status: 0
+
+$ python -m pytest --version
+Started: 2026-07-26T02:39:44+00:00
+pytest 9.1.1
+Completed: 2026-07-26T02:39:44+00:00
+Exit status: 0
+
+$ python -m ruff --version
+Started: 2026-07-26T02:39:44+00:00
+ruff 0.16.0
+Completed: 2026-07-26T02:39:44+00:00
+Exit status: 0
+
+===== TEST DISPOSITIONS =====
+Source: /workspaces/cds-platform/docs/RELEASE_TEST_DISPOSITIONS.md
+
+# Release Test Dispositions
+
+> **Prototype only — not for direct clinical use.** This record concerns software-test coverage
+> only. It does not authorize patient-care use, accept a clinical limitation, complete independent
+> review, or constitute a release decision.
+
+## Placeholder skip inventory
+
+The failed Day 83 evidence recorded 16 skipped placeholder modules. Each contained the same skipped
+`test_placeholder` and asserted no behavior. The modules are removed because the intended behavior
+is now exercised by the concrete tests listed below. Their removal is not counted as a passing test.
+
+| Removed placeholder | Existing concrete coverage |
+| --- | --- |
+| `tests/contract/test_input_contract.py` | `tests/contract/test_renal_dose_interface_contracts.py`; `tests/unit/mappers/test_renal_dose_request.py` |
+| `tests/contract/test_output_contract.py` | `tests/contract/test_domain_serialization_contracts.py`; `tests/contract/test_renal_dose_interface_contracts.py`; `tests/unit/mappers/test_renal_dose_response.py` |
+| `tests/integration/test_application_flow.py` | `tests/integration/test_renal_dose_matrix.py`; `tests/integration/test_safety_failure_drill.py` |
+| `tests/integration/test_renal_dosing_flow.py` | `tests/integration/test_cefepime_end_to_end.py`; `tests/integration/test_renal_dose_matrix.py`; `tests/integration/test_renal_safety_invariants.py` |
+| `tests/unit/app/test_use_cases.py` | `tests/unit/app/test_renal_dose.py` |
+| `tests/unit/content/test_content_schema.py` | `tests/unit/repositories/test_renal_content_schema.py`; `tests/unit/repositories/test_yaml_renal_content.py` |
+| `tests/unit/domain/test_constants.py` | `tests/unit/domain/test_enums.py`; `tests/unit/domain/test_module_exports.py` |
+| `tests/unit/mappers/test_input.py` | `tests/unit/mappers/test_renal_dose_request.py` |
+| `tests/unit/mappers/test_output.py` | `tests/unit/mappers/test_renal_dose_response.py` |
+| `tests/unit/repositories/test_content.py` | `tests/unit/repositories/test_renal_content.py`; medication-specific repository tests |
+| `tests/unit/repositories/test_protocols.py` | `tests/unit/repositories/test_renal_content.py` |
+| `tests/unit/utils/test_datetime.py` | `tests/unit/utils/test_serialization.py` |
+| `tests/unit/utils/test_identifiers.py` | `tests/contract/test_renal_dose_interface_contracts.py`; `tests/unit/mappers/test_renal_dose_request.py` |
+| `tests/unit/validation/test_results.py` | `tests/unit/validation/test_models.py` |
+| `tests/unit/validation/test_structural.py` | `tests/unit/validation/test_lab.py`; `tests/unit/validation/test_patient.py`; `tests/unit/validation/test_validation_matrix.py` |
+| `tests/unit/validation/test_sufficiency.py` | `tests/unit/validation/test_medication.py`; `tests/unit/validation/test_renal.py`; `tests/unit/validation/test_validation_matrix.py` |
+
+Future components or contracts require behavior-specific tests. A placeholder skip must not be
+reintroduced merely to reserve a path.
+
+## Expected failures
+
+Two strict XFAIL signals remain intentional and unresolved:
+
+- `tests/integration/test_renal_dose_matrix.py::test_declared_weight_type_conflict_fails_closed` —
+  the full flow does not yet reject a conflict between supplied and declared weight type.
+- `tests/integration/test_renal_dose_matrix.py::test_exact_unsupported_contexts_fail_closed[UNSUP-FAM-WEIGHT]`
+  — the full flow does not yet enforce the famotidine adult minimum-weight boundary.
+
+These are known nonclinical prototype limitations, not passing tests. They remain blocking unless
+the release custodian and appropriate reviewers explicitly accept them for one exact candidate or
+they are resolved in separately verified implementation tasks.
+
+## Runtime disposition rule
+
+For every candidate, the durable verification artifact must reproduce the actual pytest
+skip/XFAIL/XPASS report. Any skip, XFAIL, or XPASS not named here is unreviewed and blocks a release
+decision until it receives an exact disposition. An XPASS for either strict XFAIL above is a test
+failure and must not be accepted as success.
+
+===== RELEASE VERIFICATION =====
+$ python -m pytest -q
+Started: 2026-07-26T02:39:44+00:00
+........................................................................ [  7%]
+.................................x.................x.................... [ 15%]
+........................................................................ [ 23%]
+........................................................................ [ 30%]
+........................................................................ [ 38%]
+........................................................................ [ 46%]
+........................................................................ [ 53%]
+........................................................................ [ 61%]
+........................................................................ [ 69%]
+........................................................................ [ 76%]
+........................................................................ [ 84%]
+........................................................................ [ 92%]
+........................................................................ [ 99%]
+.                                                                        [100%]
+=========================== short test summary info ============================
+XFAIL tests/integration/test_renal_dose_matrix.py::test_declared_weight_type_conflict_fails_closed - Known gap: supplied actual weight can be declared as another weight type.
+XFAIL tests/integration/test_renal_dose_matrix.py::test_exact_unsupported_contexts_fail_closed[UNSUP-FAM-WEIGHT] - Known gap: famotidine adult-weight floor is not enforced.
+935 passed, 2 xfailed in 16.27s
+Completed: 2026-07-26T02:40:01+00:00
+Exit status: 0
+
+$ python -m ruff check . --config pyproject.toml
+Started: 2026-07-26T02:40:01+00:00
+All checks passed!
+Completed: 2026-07-26T02:40:02+00:00
+Exit status: 0
+
+$ PYTHONPATH=src python examples/cli_walkthrough.py --verify
+Started: 2026-07-26T02:40:02+00:00
+7 synthetic CLI walkthrough scenarios verified.
+Completed: 2026-07-26T02:40:02+00:00
+Exit status: 0
+
+CLI confirmation: 7 synthetic CLI walkthrough scenarios verified.
+
+===== POST-VERIFICATION STATE =====
+Candidate commit after checks: 179c22842caa45d3a1c5e8c04b0bd83025418545
+Tracked candidate state: unchanged
+Unexpected generated files: none
+Complete working-tree status after evidence generation:
+?? artifacts/verification/full-verification-20260726T023944Z.txt
+Generated evidence is expected to be untracked after verification and is not part of the candidate. Review it for PHI and accuracy before committing it.
+Overall software verification: PASS
