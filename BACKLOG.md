@@ -92,60 +92,60 @@ versions, review states, reviewer fields, sources, and validation invariants are
 
 ## Release-gate remediation backlog
 
-Candidate `73c3fcfd10548db31c2bf6707e73f65c5e7f2eb0` failed the Day 83 software gate. The durable
-record is `artifacts/verification/full-verification-20260724T082921Z.txt`. The ordered execution plan
-is maintained in
-[`docs/PROTOTYPE_RELEASE_REMEDIATION_PLAN.md`](docs/PROTOTYPE_RELEASE_REMEDIATION_PLAN.md).
+The original Day 83 candidate
+`73c3fcfd10548db31c2bf6707e73f65c5e7f2eb0` remains a historical release `no-go`.
+Work Packages 1-7 completed the bounded software remediation and selected
+`179c22842caa45d3a1c5e8c04b0bd83025418545` as the verified software candidate.
 
-### Immediate verification repairs
+The durable record is
+`artifacts/verification/full-verification-20260726T023944Z.txt`:
 
-- **Open — Integration order coding systems:** add explicit synthetic route and indication coding
-  systems to the `_order()` helpers in `tests/integration/test_renal_dose_matrix.py` and
-  `tests/integration/test_renal_safety_invariants.py`. Do not weaken the validator.
-- **Open — Strict-xfail validity:** after fixture repair, prove that the declared-weight-type conflict
-  and famotidine minimum-weight cases return to strict XFAIL. An XPASS caused by an unrelated earlier
-  validation error is not evidence of limitation resolution.
-- **Open — Decimal-context test method:** replace `Context == Context.copy()` assertions with explicit
-  comparisons of precision, rounding, traps, flags, exponent bounds, capitalization, and clamp.
-  Preserve the requirement that the calculator not mutate the caller's global Decimal context.
+- Pytest: 935 passed, 2 strict XFAILs; exit status 0.
+- Ruff: pass; exit status 0.
+- CLI walkthrough: all 7 synthetic scenarios verified; exit status 0.
+- Overall software verification: **PASS**.
+- Current `main` is the later evidence-only commit
+  `ce5e68bd33a5f121e02f8d061a1a347f8b02b040`; it is not the verified candidate.
 
-### Snapshot and golden review decisions
+### Completed remediation
 
-- **Decision required — Synthetic content in the review snapshot:** decide whether
-  `tests/contract/test_renal_content_snapshots.py` intentionally snapshots every YAML file in the
-  renal-content directory or an explicit selected clinical-content set. Keep
-  `cefepime_synthetic_fixture.yaml` if it remains required for tests; do not delete it solely to make
-  the snapshot pass.
-- **Review required — Cefepime golden change:** inspect the semantic canonical-output diff caused by
-  the shared exact-matcher refactor. Regenerate the committed golden JSON only after the changed
-  output is judged intended and reviewable.
+The following previously open remediation work is complete and must not be presented as active:
 
-### Ruff policy and cleanup
+- integration route and indication coding-system fixture repair;
+- strict-XFAIL signal restoration;
+- selected-content snapshot policy;
+- cefepime golden semantic review;
+- Decimal-context assertion correction;
+- Ruff baseline selection and remediation;
+- complete command and environment capture;
+- seven-scenario CLI walkthrough capture;
+- placeholder-skip disposition; and
+- exact candidate selection and Work Package 7 software verification.
 
-- **Decision required — Intended Ruff ruleset:** record the exact command and effective settings from
-  `python -m ruff check . --config pyproject.toml --show-settings` before treating the 284-diagnostic
-  artifact as the repository lint baseline.
-- **Open — Legitimate diagnostics:** resolve diagnostics such as unused imports under the selected
-  ruleset with focused edits.
-- **Open — Intentional negative-test diagnostics:** use narrow, documented suppressions when a lint
-  rule conflicts with a test that deliberately constructs invalid input, such as timezone-naive
-  datetimes. Do not alter the invalid input and destroy the behavior under test.
-- **Constraint — No broad automatic rewrite:** do not use repository-wide `--fix` or
-  `--unsafe-fixes` until the intended ruleset is explicit and diagnostics have been classified.
+### Completed independent review
 
-### Release evidence completeness
+On 2026-07-26, the project owner confirmed that **Connor Fowler, PharmD** completed the required
+independent calculation review, qualified clinical-content review for the selected content set, and
+PHI review of the retained evidence for the exact verified candidate.
 
-- **Open — Command and environment capture:** the next evidence artifact must include the exact pytest,
-  Ruff, and CLI commands; Python, pytest, and Ruff versions; operating system and architecture;
-  timestamps; clean-tree status before verification; and every exit status.
-- **Open — CLI walkthrough evidence:** run and retain the seven-scenario synthetic CLI walkthrough
-  output and exit status.
-- **Disposition required — Placeholder skips:** all 16 placeholder skips must be removed, replaced,
-  or explicitly accepted by the release custodian with rationale. They do not silently count as
-  passing evidence.
-- **Open — Candidate identity:** any repair invalidates candidate
-  `73c3fcfd10548db31c2bf6707e73f65c5e7f2eb0`. Select and record a new exact candidate only after all
-  remediation changes are committed and the working tree is clean.
+The human review activities are complete. Where selected source content still records `draft`,
+the exact reviewed status, reviewer identity, review date, and reviewed version must be committed
+before that content is eligible for recommendation matching.
+
+### Remaining bounded work
+
+1. **Open - Weight-type conflict:** conflicting supplied and declared weight types must fail before
+   calculation; replace the corresponding strict XFAIL with a passing test.
+2. **Open - Famotidine adult minimum weight:** below-scope patients must receive no recommendation;
+   replace the corresponding strict XFAIL with a passing test.
+3. **Open - Clinical-content review metadata:** record exact reviewed status and Connor Fowler,
+   PharmD as reviewer for every selected content version covered by the completed qualified review.
+   Do not alter medication facts, source transcription, dose bands, boundaries, or recommendations
+   in this bookkeeping task.
+4. **Open - Final candidate verification:** after implementation and review-metadata changes, select
+   one exact clean commit and rerun full pytest, Ruff, and CLI capture with no unresolved XFAILs.
+5. **Open - Release decision:** complete the final checklist and record an explicit `go` or
+   `no-go`. Tag only in a separate bounded task after an explicit `go`.
 
 ## Later decisions
 
