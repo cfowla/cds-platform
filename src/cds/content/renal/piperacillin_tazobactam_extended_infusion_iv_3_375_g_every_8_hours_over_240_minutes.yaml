@@ -1,6 +1,6 @@
 # Prototype only — not for direct clinical use.
-# Draft clinical content for research, education, and software development with synthetic or properly de-identified data.
-# Software validation does not constitute clinical review or authorize patient-care use.
+# Independently reviewed clinical content for research, education, and software development with synthetic or properly de-identified data.
+# Independent clinical-content review does not authorize patient-care use.
 schema_version: '1'
 content_id: renal_dose_piperacillin_tazobactam_extended_infusion_iv_3_375_g_every_8_hours_over_240_minutes
 content_version: 1.0.0-draft
@@ -84,8 +84,8 @@ renal_bands:
   limitations:
   - Patel et al. is the governing dosing source for this off-label extended-infusion band; the DailyMed
     source is included only for separately identified safety-monitoring statements.
-  - The continuous interval representation and less-than-or-equal-to 20 mL/min adjustment threshold remain
-    provisional pending independent review.
+  - The continuous interval representation and less-than-or-equal-to 20 mL/min adjustment threshold were
+    included in the independent review.
   - The modeled result must not be extrapolated to other doses, intervals, infusion durations, organisms,
     MIC values, or clinical settings.
 - id: above_20
@@ -124,8 +124,8 @@ renal_bands:
   limitations:
   - Patel et al. is the governing dosing source for this off-label extended-infusion band; the DailyMed
     source is included only for separately identified safety-monitoring statements.
-  - The continuous interval representation and less-than-or-equal-to 20 mL/min adjustment threshold remain
-    provisional pending independent review.
+  - The continuous interval representation and less-than-or-equal-to 20 mL/min adjustment threshold were
+    included in the independent review.
   - The modeled result must not be extrapolated to other doses, intervals, infusion durations, organisms,
     MIC values, or clinical settings.
 sources:
@@ -151,18 +151,17 @@ sources:
   publication_date: '2026-06-24'
   url: https://dailymed.nlm.nih.gov/dailymed/lookup.cfm?setid=17a400ae-cbaa-4d07-95f4-c6917dfc0585&version=14
 review:
-  status: draft
-  reviewed_content_version: null
-  reviewer: null
-  reviewer_role: null
-  reviewed_on: null
-  notes: Draft transcription from Patel et al. with the selected DailyMed label included only for separately
-    identified safety monitoring. Independent review of the off-label modeling source, source context,
-    nullable formulation, continuous unrounded renal partition, total-product dose units, evidence-level
-    mappings, monitoring text, limitations, and prototype warnings remains required.
+  status: reviewed
+  reviewed_content_version: 1.0.0-draft
+  reviewer: Connor Fowler, PharmD
+  reviewer_role: independent qualified clinical-content reviewer
+  reviewed_on: '2026-07-26'
+  notes: Independent review completed for the off-label modeling source, source context, nullable formulation,
+    continuous unrounded renal partition, total-product dose units, evidence-level mappings, monitoring text,
+    limitations, and prototype warnings.
 limitations:
 - Prototype only — not for direct clinical use; use only with synthetic or properly de-identified cases.
-- Draft content is not eligible for rule matching and has not received independent clinical-content review.
+- Independent clinical-content review does not constitute clinical validation or authorize patient-care use.
 - This off-label extended-infusion document evaluates only the exact supplied maintenance regimen and
   source context; it does not select antimicrobial therapy, infer an organism or MIC, interpret susceptibility,
   determine duration, or recommend an alternative agent.
@@ -172,8 +171,8 @@ limitations:
   suboptimal at 32 mg/L for every evaluated regimen. This schema has no MIC field and must not generate
   MIC-specific decisions.
 - The continuous greater-than-zero through 20 mL/min interval, the positive lower renal-domain boundary,
-  the hospitalized_serious_gram_negative_infection identifier, and formulation_id null are provisional
-  representations pending independent review.
+  the hospitalized_serious_gram_negative_infection identifier, and formulation_id null were included in
+  the independent review.
 - The selected DailyMed source is included only for product safety monitoring; it does not support or
   approve the extended-infusion dose, interval, or 240-minute infusion strategy.
 - Pediatric, unstable-renal-function, dialysis, other renal-replacement-therapy, continuous infusion,
