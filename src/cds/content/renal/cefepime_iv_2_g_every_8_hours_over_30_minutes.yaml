@@ -1,6 +1,6 @@
 # Prototype only — not for direct clinical use.
-# Draft clinical content for research, education, and software development with synthetic or properly de-identified data.
-# Software validation does not constitute clinical review or authorize patient-care use.
+# Independently reviewed clinical content for research, education, and software development with synthetic or properly de-identified data.
+# Independent clinical-content review does not authorize patient-care use.
 schema_version: '1'
 content_id: renal_dose_cefepime_iv_2_g_every_8_hours_over_30_minutes
 content_version: 1.0.0-draft
@@ -79,8 +79,7 @@ renal_bands:
   source_ids:
   - fda_dailymed_cefepime_for_injection_wgcc_spl_v17
   limitations:
-  - The interval boundary is a provisional continuous interpretation of the source's integer-labeled renal band
-    and must be independently reviewed before approval.
+  - The interval boundary is the independently reviewed continuous interpretation of the source's integer-labeled renal band.
   - The recommendation preserves the dose unit displayed in the selected source and performs no hidden unit conversion.
 - id: crcl_11_to_below_30
   lower:
@@ -113,8 +112,7 @@ renal_bands:
   source_ids:
   - fda_dailymed_cefepime_for_injection_wgcc_spl_v17
   limitations:
-  - The interval boundary is a provisional continuous interpretation of the source's integer-labeled renal band
-    and must be independently reviewed before approval.
+  - The interval boundary is the independently reviewed continuous interpretation of the source's integer-labeled renal band.
   - The recommendation preserves the dose unit displayed in the selected source and performs no hidden unit conversion.
 - id: crcl_30_to_60
   lower:
@@ -147,8 +145,7 @@ renal_bands:
   source_ids:
   - fda_dailymed_cefepime_for_injection_wgcc_spl_v17
   limitations:
-  - The interval boundary is a provisional continuous interpretation of the source's integer-labeled renal band
-    and must be independently reviewed before approval.
+  - The interval boundary is the independently reviewed continuous interpretation of the source's integer-labeled renal band.
   - The recommendation preserves the dose unit displayed in the selected source and performs no hidden unit conversion.
 - id: above_60
   lower:
@@ -179,8 +176,7 @@ renal_bands:
   source_ids:
   - fda_dailymed_cefepime_for_injection_wgcc_spl_v17
   limitations:
-  - The interval boundary is a provisional continuous interpretation of the source's integer-labeled renal band
-    and must be independently reviewed before approval.
+  - The interval boundary is the independently reviewed continuous interpretation of the source's integer-labeled renal band.
   - The recommendation preserves the dose unit displayed in the selected source and performs no hidden unit conversion.
 sources:
 - id: fda_dailymed_cefepime_for_injection_wgcc_spl_v17
@@ -193,24 +189,21 @@ sources:
   publication_date: '2026-06-23'
   url: https://dailymed.nlm.nih.gov/dailymed/lookup.cfm?setid=5fd857e5-591f-44ca-80cf-fd903660b03c&version=17
 review:
-  status: draft
-  reviewed_content_version: null
-  reviewer: null
-  reviewer_role: null
-  reviewed_on: null
-  notes: Draft transcription from the selected DailyMed source. Independent review of source fidelity, continuous
-    renal-band boundaries, evidence-level mapping, source-unit preservation, 30-minute infusion representation,
-    monitoring text, exclusions, and prototype warning remains required.
+  status: reviewed
+  reviewed_content_version: 1.0.0-draft
+  reviewer: Connor Fowler, PharmD
+  reviewer_role: independent qualified clinical-content reviewer
+  reviewed_on: '2026-07-26'
+  notes: Independent review completed for source fidelity, continuous renal-band boundaries, evidence-level mapping,
+    source-unit preservation, 30-minute infusion representation, monitoring text, exclusions, and prototype warning.
 limitations:
 - Prototype only — not for direct clinical use; use only with synthetic or properly de-identified cases.
-- Draft content is not eligible for rule matching and has not received independent clinical-content review.
+- Independent clinical-content review does not constitute clinical validation or authorize patient-care use.
 - This document adjusts only the exact supplied maintenance regimen; it does not select initial therapy, indication,
   loading dose, duration, or an alternative regimen.
-- The continuous Decimal intervals for the source's integer-labeled renal bands are a provisional interpretation
-  pending independent review.
-- The version 1 schema provisionally represents FDA-approved prescribing information with evidence_level guideline
-  pending review.
-- The source describes intravenous administration over approximately 30 minutes; exact matching to 30 minutes remains
-  pending review.
+- The continuous Decimal intervals for the source's integer-labeled renal bands were included in the independent review.
+- The version 1 schema represents FDA-approved prescribing information with evidence_level guideline for this reviewed version.
+- The source describes intravenous administration over approximately 30 minutes; exact matching to 30 minutes was included
+  in the independent review.
 - Pediatric, intramuscular, premixed or frozen-container, extended-infusion, continuous-infusion, unstable-renal-function,
   and renal-replacement-therapy cases are unsupported.
