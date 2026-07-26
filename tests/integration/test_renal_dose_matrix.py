@@ -484,13 +484,28 @@ def test_other_initial_stop_cases(field, value, code) -> None:
     assert repo.keys == engine.calls == []
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason="Known gap: supplied actual weight can be declared as another weight type.",
-)
-def test_declared_weight_type_conflict_fails_closed() -> None:
-    result, _, _, _ = _run(BY_KEY["CEF-Q8"], weight_type=WeightType.IDEAL)
+def test_declared_weight_type_conflict_fails_closed(monkeypatch) -> None:
+    _, repo, engine = _runtime()
+    calculations = []
+    monkeypatch.setattr(
+        renal_dose_module,
+        "calculate_cockcroft_gault",
+        lambda **kwargs: calculations.append(kwargs),
+    )
+
+    result, _, _, _ = _run(
+        BY_KEY["CEF-Q8"],
+        weight_type=WeightType.IDEAL,
+        repo=repo,
+        engine=engine,
+    )
+
+    assert result.validation.is_valid is False
+    assert "conflicting_weight_type" in {
+        issue.code for issue in result.validation.issues
+    }
     _no_recommendation(result)
+    assert repo.keys == calculations == engine.calls == []
 
 
 @pytest.mark.parametrize(
