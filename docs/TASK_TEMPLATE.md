@@ -1,46 +1,46 @@
 # CDS Task Template
 
-Use this template for one bounded implementation task. Copy it into a new task, replace every placeholder, and remove sections that do not apply. Do not add project history merely to make the prompt look complete.
+Use this template for implementation work. Copy it into a new task, replace every placeholder, and remove sections that do not apply. Do not add project history merely to make the prompt look complete.
+
+## Branch mode
+
+State which mode applies:
+
+- **Coding mode** — default on `development/unrestricted-implementation`. Optimize for implementing the requested project behavior. Verification is advisory and non-blocking unless the task explicitly makes a specific check part of the deliverable.
+- **Hardening mode** — used when reconciling tests, lint, contracts, snapshots, goldens, compatibility, or technical debt before selecting a candidate.
+- **Release-verification mode** — used only for an exact frozen candidate. The release or checkpoint requirements below are mandatory in this mode.
+
+Do not apply release-candidate preservation rules to ordinary coding-mode work.
 
 ## Read first
 
-Read only the files needed to understand and verify this task:
+Read the files needed to understand and implement this task:
 
 - [`docs/SAFETY_INVARIANTS.md`](SAFETY_INVARIANTS.md)
 - `<active state or prior-note file>`
 - `<directly relevant implementation file>`
-- `<directly relevant test file>`
+- `<directly relevant test or contract file, when useful>`
 
 Treat the named repository files as authoritative. Do not reconstruct requirements from prior chat history.
 
 Read [`PROJECT_CHARTER.md`](../PROJECT_CHARTER.md) when the task changes clinical scope, supported medications or populations, safety behavior, clinical content requirements, intended users, or interfaces. Read [`FIRST_VERTICAL_SLICE.md`](../FIRST_VERTICAL_SLICE.md) when the task changes the frozen renal feature contract.
 
-Inspect an additional file only when it is necessary to resolve:
-
-1. an import or public API used by the task;
-2. a failing test or error encountered during the task; or
-3. a directly relevant repository convention that is not defined in the files above.
-
-Do not perform a broad repository review unless the task explicitly requires one.
+In coding mode, inspect any additional repository files needed to implement a coherent change. Avoid broad review that does not contribute to the requested work, but do not artificially restrict file access when dependencies, architecture, migrations, or cross-cutting behavior require it.
 
 ## Execution context
 
-- Use the repository checkout already supplied by the execution environment.
-- Probe the current working directory once with `git rev-parse --show-toplevel`.
-- Do not search the filesystem for another checkout and do not clone the repository.
-- If no checkout is available, use the GitHub connector to materialize a bounded verification checkout at `/tmp/cds-platform`.
-- Initially materialize only the `Read first` files, the focused tests, required ancestor `__init__.py` files, and `pyproject.toml` when needed.
-- Expand that checkout only for imports or resources concretely required by focused test collection or execution.
-- Preserve repository-relative paths and do not reconstruct the full repository.
-- GitHub remains authoritative for source retrieval and final repository changes; the bounded checkout exists only for implementation and focused verification.
+- Use the repository checkout supplied by the execution environment when available.
+- The GitHub connector may be used for repository reads and writes.
+- In coding mode, a partial local checkout, unavailable test runner, absent development dependency, dirty working tree, or inability to execute the full suite does not block implementation.
+- Do not claim checks passed unless they were actually run.
 
-## One deliverable
+## Deliverable
 
-Implement **`<one precise, coherent deliverable>`**.
+Implement **`<precise deliverable or coherent development objective>`**.
 
-Done when: `<one observable completion condition>`.
+Done when: `<observable implementation or documentation condition>`.
 
-Do not combine this task with adjacent cleanup, future feature work, or speculative extensibility.
+Coding-mode tasks may include multiple related changes, broad refactors, temporary compatibility breaks, partial migrations, or follow-on scaffolding when these form one coherent development objective.
 
 ## Required behavior
 
@@ -48,56 +48,62 @@ Do not combine this task with adjacent cleanup, future feature work, or speculat
 - `<observable requirement 2>`
 - `<observable requirement 3>`
 
-For CDS behavior, state how missing, invalid, unsupported, or indeterminate inputs must be represented. Do not rely on vague requirements such as “robust,” “safe,” or “production-ready” without executable acceptance criteria.
+For CDS behavior, state how missing, invalid, unsupported, or indeterminate inputs must be represented. Do not rely on vague requirements such as “robust,” “safe,” or “production-ready” without concrete behavior.
 
 ## Non-goals
 
-- Do not `<adjacent task or feature>`.
-- Do not redesign unrelated modules.
-- Do not add dependencies unless this task has a documented need for one.
-- Do not add future API, EHR, persistence, user-interface, or clinical-domain concerns.
-- Do not silently expand the frozen renal vertical slice; record proposed expansion in `BACKLOG.md` instead.
+- Do not `<excluded adjacent task or feature>`.
+- Do not use real patient data or protected health information.
+- Do not authorize direct clinical use.
+
+Include other non-goals only when they materially constrain the task. Coding mode does not require the smallest possible diff and does not prohibit speculative scaffolding when the task explicitly requests it.
 
 ## Relevant files
 
-Expected to create:
+Expected to create or edit:
 
-- `<new file, or none>`
+- `<file or area>`
+- `<file or area>`
 
-Expected to edit:
-
-- `<implementation file>`
-- `<test file>`
-
-Do not edit:
-
-- `<protected or unrelated file, if applicable>`
-
-Changes outside this list require a direct explanation tied to an import, failure, or relevant convention.
+This list is guidance rather than a hard boundary in coding mode. Changes elsewhere require a coherent connection to the requested objective, not a verification failure or import error.
 
 ## Constraints
 
 - Preserve the prototype warning and synthetic or properly de-identified data requirement.
-- Validate before calculation or rule matching.
+- Validate before calculation or rule matching in completed executable clinical paths.
 - Represent an unknown numeric value as `None`, never as zero.
-- Keep domain models free of service, validation, serialization, and I/O behavior.
-- Keep calculators and rule evaluators pure and deterministic.
+- Do not silently infer required clinical context.
+- Preserve fail-closed behavior for unsupported or insufficient clinical inputs.
+- Keep clinical content inspectable and versioned.
 - Preserve explicit units, assumptions, warnings, evidence, and provenance where applicable.
-- Prefer the smallest coherent change that satisfies the acceptance criteria.
 
-Delete any constraint above that is genuinely irrelevant to the task rather than repeating it mechanically.
+Temporary compilation errors, incomplete call sites, missing tests, failing tests, stale snapshots, lint diagnostics, and partially migrated code are permitted in coding mode. They must not be represented as verified or release-ready.
 
-## Targeted verification
+Delete any constraint above that is genuinely irrelevant only when doing so does not weaken a governing safety invariant.
 
-Run the narrowest command that proves the deliverable:
+## Verification
+
+### Coding mode
+
+Run checks when they improve implementation confidence or help diagnose the work. Verification is optional and non-blocking unless a check is explicitly included in the task's done condition.
+
+Possible commands:
 
 ```bash
-<targeted test or validation command>
+<targeted test, type check, lint command, smoke test, or none>
 ```
 
-Expected result: `<specific passing tests, output, or invariant>`.
+Report one of:
 
-Run the full suite only when the task changes shared behavior, public contracts, package structure, or when the task explicitly requires a checkpoint. Do not claim tests or CI passed unless they were actually run.
+- checks run and their actual results;
+- checks not run because they were unnecessary for this coding step; or
+- checks skipped or blocked by the environment.
+
+A failing or unavailable check does not require stopping coding-mode work. Do not weaken clinical safety behavior solely to make a check pass.
+
+### Hardening mode
+
+Define the exact regressions or verification debt to resolve. Run the checks needed to demonstrate the requested hardening objective. Full-suite execution is appropriate when shared behavior or public contracts are being reconciled.
 
 ### Release or checkpoint verification
 
@@ -133,20 +139,16 @@ Requirements:
 - The CLI output and exit status are retained.
 - A pipeline such as `tee` must not hide a failing command status.
 - Evidence generated after verification is distinguished from candidate files.
-- Any later change to code, tests, snapshots, goldens, content, configuration, or verification
-  tooling invalidates the candidate and requires a new exact commit.
-- Do not weaken tests, delete required fixtures, overwrite snapshots, regenerate goldens, or add
-  broad suppressions solely to produce a pass.
+- Any later change to code, tests, snapshots, goldens, content, configuration, or verification tooling invalidates the candidate and requires a new exact commit.
+- Do not weaken tests, delete required fixtures, overwrite snapshots, regenerate goldens, or add broad suppressions solely to produce a release pass.
 
-For a failed Day 83 release gate, follow
-[`docs/PROTOTYPE_RELEASE_REMEDIATION_PLAN.md`](PROTOTYPE_RELEASE_REMEDIATION_PLAN.md) and keep one work
-package per task.
+For a failed Day 83 release gate, follow [`docs/PROTOTYPE_RELEASE_REMEDIATION_PLAN.md`](PROTOTYPE_RELEASE_REMEDIATION_PLAN.md) when that plan remains applicable.
 
 ## Close procedure
 
 1. Summarize the files created, edited, and deleted.
-2. Report the exact verification command and result.
-3. State any unresolved limitation or skipped verification honestly.
+2. Report verification honestly, including when it was not run or remains failing.
+3. State unresolved implementation limitations that materially affect subsequent work.
 4. Update the designated active-state note by replacing stale status rather than appending a running diary.
-5. Record one exact next action that can be completed as a separate bounded task.
-6. Do not create a new dated checkpoint file unless explicitly requested.
+5. Record the next coherent development action when useful.
+6. Do not describe coding-mode output as a verified release candidate.
