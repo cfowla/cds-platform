@@ -14,6 +14,24 @@ This charter is the governing source for project scope, safety constraints, and 
 
 The full charter must be reread before any scope expansion, clinical-content change, or safety-policy change.
 
+## Development and verification policy
+
+The repository distinguishes active coding from hardening and release verification.
+
+### Active coding
+
+The designated development branch may be used as an unrestricted implementation workspace. Software verification is advisory and non-blocking during active coding unless a task explicitly includes a verification result in its completion condition. The branch may temporarily contain failing or absent tests, lint errors, incomplete migrations, broken compatibility, stale snapshots or goldens, partially implemented features, and broad refactors.
+
+Implementation commits do not need to preserve an unchanged candidate, maintain a clean tree, capture release evidence, satisfy acceptance gates, or include corresponding tests in the same commit. Multiple related work packages may be developed together when this improves implementation velocity.
+
+When checks are run, their results must be reported honestly. An unverified or failing development state must not be described as passing, release-ready, clinically validated, production-ready, or suitable for patient care.
+
+### Hardening and release verification
+
+Before release or checkpoint verification, select an exact candidate on a separate hardening or release-candidate branch. Reconcile tests, contracts, lint, snapshots, goldens, documentation, and known regressions as required for that candidate. Release claims apply only to the exact verified commit and content versions.
+
+Relaxing software verification during active coding does not relax the clinical-use prohibition, protected-health-information restrictions, fail-closed clinical behavior, clinical-content review requirements, or other safety constraints in this charter.
+
 ## Purpose
 
 The CDS Platform is a Python project for learning how to build clinical decision-support software with:
@@ -169,15 +187,15 @@ Renal-adjustment rules must be stored separately from calculation logic and incl
 - reviewer; and
 - notes describing important limitations.
 
-Rule changes require clinical-content review and corresponding test updates. The rule engine must detect missing, overlapping, or unreachable ranges rather than resolving them silently.
+Rule changes require clinical-content review and corresponding test updates before a release candidate is approved. During active coding, implementation and test updates may occur in separate commits, but unreviewed content must not be represented as reviewed, eligible, or release-ready. The rule engine must detect missing, overlapping, or unreachable ranges rather than resolving them silently.
 
 ### Deterministic implementation
 
-Calculators and rule evaluators must be pure and deterministic: typed input, typed output, no network calls, no direct file reads, and no hidden mutable state. Content must enter through a repository boundary.
+Completed calculators and rule evaluators must be pure and deterministic: typed input, typed output, no network calls, no direct file reads, and no hidden mutable state. Content must enter through a repository boundary.
 
 ### Traceable output
 
-Each result must preserve enough information to reproduce and audit the outcome, including:
+Each completed result path must preserve enough information to reproduce and audit the outcome, including:
 
 - input values and units;
 - equation and implementation version;
@@ -191,7 +209,7 @@ Each result must preserve enough information to reproduce and audit the outcome,
 
 ### Testing expectations
 
-Before a rule is considered implemented, the project must include:
+Before a rule is considered release-ready, the project must include:
 
 - unit tests for the calculator and each rule boundary;
 - parameterized tests immediately below, at, and immediately above each cutoff;
@@ -202,11 +220,11 @@ Before a rule is considered implemented, the project must include:
 - integration tests for the complete validation-to-result flow; and
 - contract tests for the serialized input and output shape.
 
-Passing tests demonstrates consistency with encoded expectations; it does not establish clinical safety or authorize clinical use.
+These tests may be added, repaired, or reconciled during later hardening rather than blocking active coding. Passing tests demonstrates consistency with encoded expectations; it does not establish clinical safety or authorize clinical use.
 
 ## Definition of done for the first feature
 
-The first feature is complete only when:
+The first feature is release-ready only when:
 
 1. Cockcroft–Gault input requirements and calculation behavior are explicit and tested.
 2. Supported population and unsupported stop conditions are enforced.
@@ -216,6 +234,8 @@ The first feature is complete only when:
 6. Results include rationale, assumptions, warnings, evidence, and provenance.
 7. The clinical-use prohibition is visible in every user-facing output.
 8. No EHR integration, autonomous action, or production deployment is included.
+
+Meeting this release-ready definition is not required for every intermediate coding commit.
 
 ## Change control
 
