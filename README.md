@@ -3,6 +3,7 @@
 A Python prototype for one auditable clinical decision-support vertical slice: adult Cockcroft–Gault creatinine-clearance calculation followed by limited renal-dose evaluation.
 
 > **Prototype only — not for direct clinical use.** Use synthetic or properly de-identified cases. This repository does not authorize diagnosis, prescribing, medication-order verification, or patient-care use.
+> **Deactivating repo for analysis and planning.**
 
 ## Scope
 
